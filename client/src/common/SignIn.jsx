@@ -12,6 +12,11 @@ const SignIn = () => {
     console.log(user);
   };
 
+  const handleTest = () => {
+    console.log(user);
+    console.log(document.cookie);
+  }
+
   const openMenu = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -38,7 +43,7 @@ const SignIn = () => {
             }}
           >
             <MUI.MenuItem onClick={closeMenu}>Profile</MUI.MenuItem>
-            <MUI.MenuItem onClick={closeMenu}>Logout</MUI.MenuItem>
+            <MUI.MenuItem onClick={logout}>Logout</MUI.MenuItem>
           </MUI.Menu>
         </>
       ) : (
@@ -46,6 +51,9 @@ const SignIn = () => {
           SIGN IN
         </MUI.Button>
       )}
+      <MUI.Button variant="contained" color="primary" onClick={handleTest}>
+        test
+      </MUI.Button>
     </MUI.Box>
   )
 }

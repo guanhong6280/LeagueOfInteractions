@@ -8,7 +8,7 @@ const SignIn = () => {
   const open = Boolean(anchorEl);
 
   const handleSignIn = () => {
-    // window.location.href = "http://localhost:5174/api/auth/google";
+    window.location.href = "http://localhost:5174/api/auth/google";
     console.log(user);
   };
 

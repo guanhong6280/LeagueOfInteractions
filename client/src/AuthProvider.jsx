@@ -15,7 +15,7 @@ const AuthProvider = ({ children }) => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const { data } = await axios.get('http://localhost:5174/api/auth/user', {withCredentials: true}); // Replace with your actual endpoint
+        const { data } = await axios.get('http://localhost:5174/api/auth/user'); // Replace with your actual endpoint
         setUser(data.user);  // Assuming the backend returns { user: ... }
         console.log("log data from authprovider")
         console.log(data);

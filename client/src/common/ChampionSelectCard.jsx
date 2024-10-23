@@ -8,6 +8,7 @@ const ChampionSelectCard = () => {
   const [passive, setPassive] = React.useState("");
 
   // Fetch champion names using async/await
+  //I wonder where i should place this fetch function
   React.useEffect(() => {
     const fetchChampionNames = async () => {
       try {

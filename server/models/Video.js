@@ -1,6 +1,7 @@
 // server/models/Video.js
 const mongoose = require('mongoose');
 
+// I will probably just grab the views and likes and comment counts from youtube? can i do that?
 const VideoSchema = new mongoose.Schema({
   champion1: { type: String, required: true },
   ability1: { type: String, required: true },

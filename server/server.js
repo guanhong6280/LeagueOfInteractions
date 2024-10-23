@@ -1,6 +1,7 @@
 const express = require('express');
 const session = require("express-session");
-const passport = require("passport");
+const cors = require("cors")
+const { passport } = require("./passport");
 const mongoose = require('mongoose');
 const userRoutes = require('./routes/userRoutes');
 const videoRoutes = require('./routes/videoRoutes');
@@ -11,11 +12,20 @@ const app = express();
 
 // Middleware for parsing JSON bodies
 app.use(express.json());
+app.use(cors({
+  origin:"http://localhost:5173",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}))
+// app.use(cors());
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    // cookie: {
+    //   httpOnly:true
+    // }
   })
 );
 
@@ -26,14 +36,14 @@ app.use(passport.session());
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+      // useNewUrlParser: true,
+      // useUnifiedTopology: true,
       // useCreateIndex: true, // If needed
     });
     console.log('MongoDB connected...');
   } catch (err) {
     console.error('MongoDB connection error:', err);
-    process.exit(1); // Exit the process with failure
+    process.exit(1);
   }
 };
 
@@ -47,4 +57,6 @@ app.use("/api/auth", authRoutes);
 connectDB();
 
 const PORT = process.env.PORT || 5174;
+
+//Listens for all incoming http requests at the specified port
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

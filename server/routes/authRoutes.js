@@ -16,21 +16,28 @@ router.get(
   '/google/callback',
   passport.authenticate('google', { failureRedirect: '/', keepSessionInfo: true }),
   (req, res) => {
-    // Redirect to the home page or desired route
-    res.redirect('http://localhost:5173/');
+    console.log("successfully authenticated");
+    res.status(200).json({success: true});
   }
 );
 
+// Handle fetch user from frontend
 router.get("/user", userController.getUser);
+
 // Logout route
 router.get('/logout', (req, res) => {
   req.logout((error) => {
     if (error) {
       return next(error);
     }
-    res.redirect('/');
+    res.clearCookie('connect.sid', { 
+      path: '/', 
+      httpOnly: true, 
+      sameSite: 'none',
+      secure: process.env.NODE_ENV === 'production'
+    });
+    res.status(200).json({message: "Logged out succesfully"});
   });
-
 });
 
 module.exports = router;

@@ -25,29 +25,16 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-exports.getUser = async (req, res) => {
-  if (req.isAuthenticated()) {
-    res.json({ user: req.user })
-  } else {
-    res.status(401).json({ user: null });
-  }
-}
-
-// Get user by ID
+//Get the currently logged in user
 exports.getUser = (req, res) => {
-  try {
-    const user = req.user; // Access the user from the request object (already populated by deserializeUser)
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    res.json(user); // Send the user data as a response
-  } catch (error) {
-    console.error('Error fetching user:', error);
-    res.status(500).json({ message: 'Server error' });
+  console.log('Session data:', req.session);
+  console.log('Authenticated user:', req.user);
+  if (req.user) {
+    res.status(200).json(req.user);
+  } else {
+    res.status(401).json({ message: 'Unauthorized' });
   }
 };
-
 
 
 // Update favorite champions

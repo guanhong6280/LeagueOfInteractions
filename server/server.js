@@ -1,30 +1,42 @@
 const express = require('express');
 const session = require("express-session");
-const cors = require("cors")
+const cors = require("cors");
 const { passport } = require("./passport");
 const mongoose = require('mongoose');
 const userRoutes = require('./routes/userRoutes');
 const videoRoutes = require('./routes/videoRoutes');
 const authRoutes = require("./routes/authRoutes");
+const championDataRoutes = require("./routes/championDataRoutes");
 require('dotenv').config();
 
 const app = express();
 
-// Middleware for parsing JSON bodies
-app.use(express.json());
+app.options('*', cors({ origin: 'http://localhost:5173', credentials: true }));
+
 app.use(cors({
-  origin:"http://localhost:5173",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
-}))
-// app.use(cors());
+  origin: 'http://localhost:5173', // Allow requests from your frontend
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Specify allowed methods
+  credentials: true // Allow cookies to be sent
+}));
+
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'http://localhost:5173'); // Only allow this origin
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  next();
+});
+
+app.use(express.json());
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     // cookie: {
-    //   httpOnly:true
+    //   maxAge: 60000 * 60 * 24,  // 1 day
+    //   httpOnly: true,
+    //   sameSite: "none",  // Required for cross-origin cookies
+    //   secure: "false"  // Enable in production over HTTPS
     // }
   })
 );
@@ -52,6 +64,8 @@ const connectDB = async () => {
 app.use('/api/users', userRoutes);
 app.use('/api/videos', videoRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/championData", championDataRoutes);
+
 
 
 connectDB();

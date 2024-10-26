@@ -4,13 +4,24 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('./models/User');
 require('dotenv').config();
 
+//Take the user object validated and store it into session.
 passport.serializeUser((user, done) => {
+  console.log("from serializeUser function");
   done(null, user.id);
 });
 
-passport.deserializeUser((id, done) => {
-  User.findById(id).then((user) => done(null, user));
+//Take this user object and attach it to the request object
+passport.deserializeUser(async (id, done) => {
+  try {
+    console.log("from deserializeUser function, fetching user by ID:", id);
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (error) {
+    console.error('Error in deserializeUser:', error);
+    done(error, null);
+  }
 });
+
 
 passport.use(
   new GoogleStrategy(

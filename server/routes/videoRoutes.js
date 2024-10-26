@@ -6,6 +6,5 @@ const videoController = require('../controllers/videoController');
 // Routes for video operations
 router.post('/upload', videoController.uploadVideo);
 router.get('/', videoController.getVideoByInteraction);
-// Add more routes as needed
 
 module.exports = router;

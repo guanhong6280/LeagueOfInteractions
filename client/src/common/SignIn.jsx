@@ -1,14 +1,19 @@
 import React from "react";
 import * as MUI from "@mui/material";
 import { useAuth } from "../AuthProvider";
+import SignInDialog from "./SignInDialog";
+import { Link } from "react-router-dom";
 
 const SignIn = () => {
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const { user, loading, login, logout } = useAuth();
+  const [dialogOpen, setDialogOpen] = React.useState(false);
+  const { user, loading, setLoading, login, logout } = useAuth();
   const open = Boolean(anchorEl);
 
   const handleSignIn = () => {
-    window.location.href = "http://localhost:5174/api/auth/google";
+    setLoading(true);
+    // window.location.href = "http://localhost:5174/api/auth/google";
+    window.open("http://localhost:5174/api/auth/google", "_self");
     console.log(user);
   };
 
@@ -24,6 +29,14 @@ const SignIn = () => {
   const closeMenu = (event) => {
     setAnchorEl(null);
   };
+
+  const openDialog = () => {
+    setDialogOpen(true);
+  };
+
+  const closeDialog = () => {
+    setDialogOpen(false);
+  }
 
   return (
     <MUI.Box display="flex" alignItems="center" justifyContent="center" gap="15px" marginLeft="auto" marginRight="20px">
@@ -47,13 +60,14 @@ const SignIn = () => {
           </MUI.Menu>
         </>
       ) : (
-        <MUI.Button variant="contained" color="primary" onClick={handleSignIn}>
+        <MUI.Button variant="contained" color="primary" onClick={openDialog}>
           SIGN IN
         </MUI.Button>
       )}
-      <MUI.Button variant="contained" color="primary" onClick={handleTest}>
+      <MUI.Button component={Link} to="/add" variant="contained" color="primary">
         test
       </MUI.Button>
+      <SignInDialog dialogOpen={dialogOpen} onClose={closeDialog} handleSignIn={handleSignIn}></SignInDialog>
     </MUI.Box>
   )
 }

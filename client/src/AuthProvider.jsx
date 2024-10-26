@@ -10,28 +10,33 @@ export const useAuth = () => useContext(AuthContext);
 // Create AuthProvider component
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  // useEffect(() => {
-  //   const fetchUser = async () => {
-  //     try {
-  //       const { data } = await axios.get('http://localhost:5174/api/auth/user', {withCredentials: true}); // Replace with your actual endpoint
-  //       setUser(data);  // Assuming the backend returns { user: ... }
-  //       console.log("log data from authprovider")
-  //       console.log(data);
-  //     } catch (error) {
-  //       console.error('Failed to fetch user', error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  //   fetchUser();
-  // }, []);
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const { data } = await axios.get('http://localhost:5174/api/auth/user', {withCredentials: true});
+        setUser(data);  // Assuming the backend returns { user: ... }
+        console.log("log data from authprovider")
+        console.log(data);
+      } catch (error) {
+        console.error('Failed to fetch user', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    // const delayFetch = setTimeout(fetchUser, 500);
 
-  const fetchUser = async () => {
+    if (!user){
+      fetchUser();
+    }
+  }, []);
+
+
+  const fetchUser = async () => {c
     try {
-      const { data } = await axios.get('http://localhost:5174/api/auth/user', { withCredentials: true }); // Replace with your actual endpoint
-      setUser(data);  // Assuming the backend returns { user: ... }
+      setLoading(true);
+      const { data } = await axios.get('http://localhost:5174/api/auth/user', { withCredentials: true });
       console.log("log data from authprovider")
       console.log(data);
     } catch (error) {
@@ -57,7 +62,7 @@ const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, fetchUser }}>
+    <AuthContext.Provider value={{ user, loading, setLoading, login, logout, fetchUser }}>
       {children}
     </AuthContext.Provider>
   );

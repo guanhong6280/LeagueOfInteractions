@@ -1,6 +1,8 @@
 import React from 'react'
 import * as MUI from "@mui/material";
 import SignIn from './SignIn';
+import { Link } from 'react-router-dom';
+import navIcon from "../assets/moba.svg";
 
 const Navigations = () => {
   return (
@@ -15,7 +17,18 @@ const Navigations = () => {
         backgroundPosition: 'top',
       }}      
     >
-      <MUI.Typography marginLeft="20px">Champion Interactions</MUI.Typography>
+      <MUI.Button 
+      color="primary" 
+      startIcon={<img src={navIcon} width="24px" height="24px"/>} 
+      variant="text" 
+      component={Link} 
+      to="/" 
+      sx={{cursor: "pointer", marginLeft: "20px"}}>
+        Champion Interactions
+        {/* <MUI.Typography>
+          Champion Interactions
+        </MUI.Typography> */}
+      </MUI.Button>
       <SignIn/>
     </MUI.Box>
   )

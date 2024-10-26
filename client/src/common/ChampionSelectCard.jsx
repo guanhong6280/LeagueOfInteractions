@@ -1,5 +1,7 @@
 import React from 'react'
 import * as MUI from "@mui/material";
+import axios from "axios";
+import { ClassNames } from '@emotion/react';
 
 const ChampionSelectCard = () => {
   const [championNames, setChampionNames] = React.useState([]);
@@ -8,13 +10,11 @@ const ChampionSelectCard = () => {
   const [passive, setPassive] = React.useState("");
 
   // Fetch champion names using async/await
-  //I wonder where i should place this fetch function
   React.useEffect(() => {
     const fetchChampionNames = async () => {
       try {
-        const response = await fetch('https://ddragon.leagueoflegends.com/cdn/14.18.1/data/en_US/champion.json');
-        const data = await response.json();
-        const names = Object.keys(data.data);
+        const data = await axios.get("http://localhost:5174/api/championData/champion_names");
+        const names = Object.keys(data.data.data);
         setChampionNames(names);
       } catch (error) {
         console.error('Error fetching champion names:', error);
@@ -31,7 +31,7 @@ const ChampionSelectCard = () => {
     try {
       const response = await fetch(url);
       const data = await response.json();
-      const championData = data.data[championName]
+      const championData = data.data[championName];
       //Extract abilities
       const championSpells = championData.spells;
       setSpells(championSpells);

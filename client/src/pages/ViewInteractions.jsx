@@ -20,7 +20,6 @@ const ViewInteractions = () => {
         ></MUI.Box>
         <ChampionSelectCard></ChampionSelectCard>
       </MUI.Box>
-
     </div>
   )
 }

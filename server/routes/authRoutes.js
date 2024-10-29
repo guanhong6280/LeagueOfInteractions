@@ -17,7 +17,7 @@ router.get(
   passport.authenticate('google', { failureRedirect: '/', keepSessionInfo: true }),
   (req, res) => {
     console.log("successfully authenticated");
-    res.status(200).json({success: true});
+    res.status(200).redirect("http://localhost:5173");
   }
 );
 

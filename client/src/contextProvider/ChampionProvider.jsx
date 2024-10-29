@@ -11,14 +11,14 @@ const ChampionProvider = ({children}) => {
 
   React.useEffect(() => {
     const fetchChampionNames = async () => {
-      // try {
-      //   const data = await axios.get("http://localhost:5174/api/championData/champion_names", {withCredentials: true});
-      //   const names = Object.keys(data.data.data);
-      //   setChampionNames(names);
-      //   console.log(names);
-      // } catch (error) {
-      //   console.error('Error fetching champion names:', error);
-      // }
+      try {
+        const data = await axios.get("http://localhost:5174/api/championData/champion_names", {withCredentials: true});
+        const names = Object.keys(data.data.data);
+        setChampionNames(names);
+        console.log(names);
+      } catch (error) {
+        console.error('Error fetching champion names:', error);
+      }
     };
 
     fetchChampionNames();

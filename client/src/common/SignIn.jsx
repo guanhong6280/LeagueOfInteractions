@@ -65,7 +65,7 @@ const SignIn = () => {
         </MUI.Button>
       )}
       <MUI.Button component={Link} to="/add" variant="contained" color="primary">
-        test
+        Add Interaction
       </MUI.Button>
       <SignInDialog dialogOpen={dialogOpen} onClose={closeDialog} handleSignIn={handleSignIn}></SignInDialog>
     </MUI.Box>

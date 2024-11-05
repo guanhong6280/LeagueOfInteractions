@@ -25,9 +25,6 @@ const Navigations = () => {
       to="/" 
       sx={{cursor: "pointer", marginLeft: "20px"}}>
         Champion Interactions
-        {/* <MUI.Typography>
-          Champion Interactions
-        </MUI.Typography> */}
       </MUI.Button>
       <SignIn/>
     </MUI.Box>

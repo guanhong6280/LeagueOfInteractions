@@ -1,9 +1,9 @@
 import React from 'react'
 import * as MUI from "@mui/material";
 import { useChampion } from '../contextProvider/ChampionProvider';
-import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import AbilitySelectCard from '../common/AbilitySelectCard';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
+import AddIcon from '@mui/icons-material/Add';
 
 export const AbilityMap = {
   0: "P",
@@ -24,6 +24,28 @@ const AddInteractions = () => {
   const [selectedFirstChampionAbility, setSelectedFirstChampionAbility] = React.useState("");
   const [selectedSecondChampionAbility, setSelectedSecondChampionAbility] = React.useState("");
   const [videoLink, setVideoLink] = React.useState("");
+
+  // Find the selected ability in the abilities array
+  const selectedFirstAbilityObject = firstChampionAbilities.find(
+    (ability) => ability.name === selectedFirstChampionAbility
+  );
+
+  const selectedSecondAbilityObject = secondChampionAbilities.find(
+    (ability) => ability.name === selectedSecondChampionAbility
+  );
+  // Construct the URL based on whether it's the passive or active ability
+  const firstAbilityImgUrl = selectedFirstAbilityObject
+    ? selectedFirstAbilityObject.name === firstChampionAbilities[0]?.name
+      ? `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/passive/${selectedFirstAbilityObject.image})`
+      : `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/spell/${selectedFirstAbilityObject.image})`
+    : 'none';
+
+  const secondAbilityImgUrl = selectedSecondAbilityObject
+    ? selectedSecondAbilityObject.name === secondChampionAbilities[0]?.name
+      ? `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/passive/${selectedSecondAbilityObject.image})`
+      : `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/spell/${selectedSecondAbilityObject.image})`
+    : 'none';
+
 
   React.useEffect(() => {
     if (firstChampion) {
@@ -93,11 +115,13 @@ const AddInteractions = () => {
   };
 
   const selectFirstChampionAbility = (event) => {
-    setSelectedFirstChampionAbility(event.target.value);
+    const abilityName = event.target.value
+    setSelectedFirstChampionAbility(abilityName);
   };
 
   const selectSecondChampionAbility = (event) => {
-    setSelectedSecondChampionAbility(event.target.value);
+    const abilityName = event.target.value
+    setSelectedSecondChampionAbility(abilityName);
   };
 
   const handleVideoLink = (event) => {
@@ -105,9 +129,16 @@ const AddInteractions = () => {
   };
 
   return (
-    <MUI.Stack spacing="20px" marginTop="50px" marginX="50px" border="1px solid black" borderRadius="10px" padding="25px">
+    <MUI.Stack
+      spacing="50px"
+      marginTop="50px"
+      marginX="50px"
+      border="1px solid black"
+      borderRadius="10px"
+      padding="50px">
       <AbilitySelectCard
         order="First"
+        bgColor="rgba(255, 0, 0, 0.5)"
         champion={firstChampion}
         abilities={firstChampionAbilities}
         selectedAbility={selectedFirstChampionAbility}
@@ -117,6 +148,7 @@ const AddInteractions = () => {
       />
       <AbilitySelectCard
         order="Second"
+        bgColor="rgba(0, 0, 255, 0.6)"
         champion={secondChampion}
         abilities={secondChampionAbilities}
         selectedAbility={selectedSecondChampionAbility}
@@ -124,23 +156,43 @@ const AddInteractions = () => {
         handleChampionSelect={handleSecondChampionSelect}
         handleAbilitySelect={selectSecondChampionAbility}
       />
-      <MUI.Box display="flex" alignItems="center" paddingX="20px">
-        <MUI.Stack spacing="10px">
-          <MUI.Typography variant="h5">Interaction Video Link</MUI.Typography>
-          <MUI.Box display="flex" gap="10px">
-            <MUI.TextField
-              label="Video Link"
-              type="text"
-              value={videoLink || ""}
-              onChange={handleVideoLink}
-              variant="outlined"
-            />
-            <MUI.Button
-              startIcon={<FileUploadIcon></FileUploadIcon>}
-              variant="contained"
-            >Upload</MUI.Button>
-          </MUI.Box>
-        </MUI.Stack>
+      <MUI.Box display="flex" alignItems="center" paddingX="20px" gap="20px">
+        <MUI.Box
+          width="64px"
+          height="64px"
+          border="2px solid rgba(255, 0, 0, 0.5)"
+          borderRadius="10px"
+          sx={{
+            backgroundImage: firstAbilityImgUrl,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
+        <AddIcon sx={{ fontSize: "80px" }} />
+        <MUI.Box
+          width="64px"
+          height="64px"
+          border="2px solid blue"
+          borderRadius="10px"
+          sx={{
+            backgroundImage: secondAbilityImgUrl,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
+        <MUI.Box display="flex" gap="10px">
+          <MUI.TextField
+            label="Video Link"
+            type="text"
+            value={videoLink || ""}
+            onChange={handleVideoLink}
+            variant="outlined"
+          />
+          <MUI.Button
+            startIcon={<FileUploadIcon></FileUploadIcon>}
+            variant="contained"
+          >Upload</MUI.Button>
+        </MUI.Box>
       </MUI.Box>
     </MUI.Stack>
 

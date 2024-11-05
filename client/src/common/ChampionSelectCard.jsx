@@ -2,54 +2,9 @@ import React from 'react'
 import * as MUI from "@mui/material";
 import axios from "axios";
 import { ClassNames } from '@emotion/react';
+import { AbilityMap } from '../pages/AddInteractions';
 
-const ChampionSelectCard = () => {
-  const [championNames, setChampionNames] = React.useState([]);
-  const [selectedChampion, setSelectedChampion] = React.useState('');
-  const [spells, setSpells] = React.useState([]);
-  const [passive, setPassive] = React.useState("");
-
-  // Fetch champion names using async/await
-  React.useEffect(() => {
-    const fetchChampionNames = async () => {
-      try {
-        const data = await axios.get("http://localhost:5174/api/championData/champion_names");
-        const names = Object.keys(data.data.data);
-        setChampionNames(names);
-      } catch (error) {
-        console.error('Error fetching champion names:', error);
-      }
-    };
-
-    fetchChampionNames();
-  }, []);
-
-  // Fetch selected champion details using async/await
-  const fetchChampionDetails = async (championName) => {
-    const url = `https://ddragon.leagueoflegends.com/cdn/14.19.1/data/en_US/champion/${championName}.json`;
-
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
-      const championData = data.data[championName];
-      //Extract abilities
-      const championSpells = championData.spells;
-      setSpells(championSpells);
-
-      // Extract the passive name
-      const championPassive = championData.passive;
-      setPassive(championPassive);
-    } catch (error) {
-      console.error('Error fetching champion details:', error);
-    }
-  };
-
-  // Handle change in selected champion
-  const handleChange = (event) => {
-    const selectedChampionName = event.target.value;
-    setSelectedChampion(selectedChampionName);
-    fetchChampionDetails(selectedChampionName); // Fetch champion details
-  };
+const ChampionSelectCard = (props) => {
 
   return (
     <MUI.Stack
@@ -71,8 +26,8 @@ const ChampionSelectCard = () => {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundImage: selectedChampion
-            ? `url(https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${selectedChampion}_0.jpg)`
+          backgroundImage: props.champion
+            ? `url(https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${props.champion?.id}_0.jpg)`
             : 'none',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -82,14 +37,14 @@ const ChampionSelectCard = () => {
       }}
     >
       <MUI.FormControl>
-        <MUI.InputLabel id="champion-select-label">Select a Champion</MUI.InputLabel>
+        <MUI.InputLabel id="champion-select-label">{`Select ${props.order} Champion`}</MUI.InputLabel>
         <MUI.Select
           labelId="champion-select-label"
-          value={selectedChampion}
-          label="Select a Champion"
-          onChange={handleChange}
+          value={props.champion?.id || ""}
+          label={`Select ${props.order} Champion`}
+          onChange={props.handleChampionSelect}
         >
-          {championNames.map((name, index) => (
+          {props.championNames.map((name, index) => (
             <MUI.MenuItem key={index} value={name}>
               {name}
             </MUI.MenuItem>
@@ -99,92 +54,30 @@ const ChampionSelectCard = () => {
       <MUI.Stack
         alignItems="center"
       >
-        <MUI.Box
-          width="64px"
-          height="64px"
-          sx={{
-            backgroundImage: selectedChampion && passive?.image?.full
-              ? `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/passive/${passive.image.full})`
-              : 'none',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
-          P
-        </MUI.Box>
-        <MUI.Typography>{passive.name}</MUI.Typography>
-      </MUI.Stack>
-      <MUI.Stack
-        alignItems="center"
-      >
-        <MUI.Box
-          width="64px"
-          height="64px"
-          sx={{
-            backgroundImage: selectedChampion && spells[0]?.image?.full
-              ? `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/spell/${spells[0].image.full})`
-              : 'none',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
-          Q
-        </MUI.Box>
-        <MUI.Typography>{spells[0]?.name}</MUI.Typography>
-      </MUI.Stack>
-      <MUI.Stack
-        alignItems="center"
-      >
-        <MUI.Box
-          width="64px"
-          height="64px"
-          sx={{
-            backgroundImage: selectedChampion && spells[1]?.image?.full
-              ? `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/spell/${spells[1].image.full})`
-              : 'none',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
-          W
-        </MUI.Box>
-        <MUI.Typography>{spells[1]?.name}</MUI.Typography>
-      </MUI.Stack>
-      <MUI.Stack
-        alignItems="center"
-      >
-        <MUI.Box
-          width="64px"
-          height="64px"
-          sx={{
-            backgroundImage: selectedChampion && spells[2]?.image?.full
-              ? `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/spell/${spells[2].image.full})`
-              : 'none',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
-          E
-        </MUI.Box>
-        <MUI.Typography>{spells[2]?.name}</MUI.Typography>
-      </MUI.Stack>
-      <MUI.Stack
-        alignItems="center"
-      >
-        <MUI.Box
-          width="64px"
-          height="64px"
-          sx={{
-            backgroundImage: selectedChampion && spells[3]?.image?.full
-              ? `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/spell/${spells[3].image.full})`
-              : 'none',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
-          R
-        </MUI.Box>
-        <MUI.Typography>{spells[3]?.name}</MUI.Typography>
+        {props.abilities?.map((ability, index) => {
+          const imageUrl =
+            index === 0
+              ? `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/passive/${props.abilities[index]?.image})`
+              : `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/spell/${props.abilities[index]?.image})`;
+
+          return (
+            <MUI.Box
+              key={index}
+              width="64px"
+              height="64px"
+              onClick={() => props.handleAbilitySelect(ability.name)}
+              sx={{
+                backgroundImage: props.abilities ? imageUrl : 'none',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                opacity: ability.name === props.selectedAbility ? 1 : 0.3,
+                cursor: "pointer"
+              }}
+            >
+              {AbilityMap[index]}
+            </MUI.Box>
+          );
+        })}
       </MUI.Stack>
     </MUI.Stack>
   )

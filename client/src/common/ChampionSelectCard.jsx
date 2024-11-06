@@ -11,12 +11,12 @@ const ChampionSelectCard = (props) => {
       border="solid 2px"
       borderRadius="5px"
       spacing="5px"
+      height="100%"
       paddingX="20px"
       paddingY="50px"
       sx={{
         position: 'relative',
         padding: 4,
-        height: "60vh",
         aspectRatio: 2 / 5,
         zIndex: 1, // Ensure content is above the background
         '&::before': {

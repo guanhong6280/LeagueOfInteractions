@@ -1,5 +1,6 @@
 import React from 'react'
 import * as MUI from "@mui/material";
+import axios from 'axios';
 import { useChampion } from '../contextProvider/ChampionProvider';
 import AbilitySelectCard from '../common/AbilitySelectCard';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
@@ -128,6 +129,40 @@ const AddInteractions = () => {
     setVideoLink(event.target.value);
   };
 
+  const uploadVideo = async () => {
+    try {
+      const ability1Index = firstChampionAbilities.findIndex(
+        (ability) => ability.name === selectedFirstChampionAbility
+      );
+      const ability2Index = secondChampionAbilities.findIndex(
+        (ability) => ability.name === selectedSecondChampionAbility
+      );
+  
+      const ability1Key = AbilityMap[ability1Index];
+      const ability2Key = AbilityMap[ability2Index];
+  
+      const payload = {
+        champion1: firstChampion?.id,
+        ability1: ability1Key,
+        champion2: secondChampion?.id,
+        ability2: ability2Key,
+        videoURL: videoLink,
+      };
+  
+      // Send the POST request to your server endpoint
+      const response = await axios.post('http://localhost:5174/api/videos/upload', payload, {
+        withCredentials: true
+      });
+  
+      console.log('Video uploaded successfully:', response.data);
+      alert('Video uploaded successfully!');
+    } catch (error) {
+      console.error('Error uploading video:', error);
+      alert('Failed to upload video');
+    }
+  };
+  
+
   return (
     <MUI.Stack
       spacing="50px"
@@ -191,6 +226,7 @@ const AddInteractions = () => {
           <MUI.Button
             startIcon={<FileUploadIcon></FileUploadIcon>}
             variant="contained"
+            onClick={uploadVideo}
           >Upload</MUI.Button>
         </MUI.Box>
       </MUI.Box>

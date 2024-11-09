@@ -8,6 +8,7 @@ const videoRoutes = require('./routes/videoRoutes');
 const authRoutes = require("./routes/authRoutes");
 const championDataRoutes = require("./routes/championDataRoutes");
 require('dotenv').config();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 

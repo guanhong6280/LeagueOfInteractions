@@ -7,6 +7,9 @@ const userRoutes = require('./routes/userRoutes');
 const videoRoutes = require('./routes/videoRoutes');
 const authRoutes = require("./routes/authRoutes");
 const championDataRoutes = require("./routes/championDataRoutes");
+const donationRoutes = require("./routes/donationRoutes");
+const webHookRoutes = require("./routes/webHookRoutes");
+const skipMiddleware = require("./middleware/skipMiddleware");
 require('dotenv').config();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
@@ -26,7 +29,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
+app.use(skipMiddleware(express.json(), '/api/webhook'));
 
 app.use(
   session({
@@ -66,6 +69,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/videos', videoRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/championData", championDataRoutes);
+app.use("/api/donations", donationRoutes);
+app.use("/api/webhook", webHookRoutes);
 
 
 

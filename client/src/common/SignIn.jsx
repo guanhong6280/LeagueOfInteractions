@@ -17,11 +17,6 @@ const SignIn = () => {
     console.log(user);
   };
 
-  const handleTest = () => {
-    console.log(user);
-    console.log(document.cookie);
-  }
-
   const openMenu = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -36,7 +31,7 @@ const SignIn = () => {
 
   const closeDialog = () => {
     setDialogOpen(false);
-  }
+  };
 
   return (
     <MUI.Box display="flex" alignItems="center" justifyContent="center" gap="15px" marginLeft="auto" marginRight="20px">
@@ -66,6 +61,15 @@ const SignIn = () => {
       )}
       <MUI.Button component={Link} to="/add" variant="contained" color="primary">
         Add Interaction
+      </MUI.Button>
+      <MUI.Button
+        color="primary"
+        variant="contained"
+        component={Link}
+        to="/donation"
+        sx={{ cursor: "pointer", marginLeft: "20px" }}
+      >
+        Donate
       </MUI.Button>
       <SignInDialog dialogOpen={dialogOpen} onClose={closeDialog} handleSignIn={handleSignIn}></SignInDialog>
     </MUI.Box>

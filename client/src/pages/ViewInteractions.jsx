@@ -123,58 +123,76 @@ const ViewInteractions = () => {
 
   return (
     <MUI.Box
-      display="flex"
-      minHeight="500px"
-      height="70vh"
-      gap="10px"
-      marginTop="50px"
-      justifyContent="center"
+      minHeight="700px"
+      height="95vh"
+      paddingTop="65px"
+      sx={{
+        backgroundImage: `url(https://cmsassets.rgpub.io/sanity/images/dsfx7636/universe/f81004a39c5502d766169beb4a342c46b0030d36-1920x946.jpg)`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
     >
-      <ChampionSelectCard
-        order="First"
-        champion={firstChampion}
-        abilities={firstChampionAbilities}
-        selectedAbility={selectedFirstChampionAbility}
-        championNames={championNames}
-        handleChampionSelect={handleFirstChampionSelect}
-        handleAbilitySelect={selectFirstChampionAbility}
-      ></ChampionSelectCard>
-      <MUI.Card sx={{ width: '60vw', height: "100%", borderRadius: '10px', boxShadow: 3 }}>
-        {videoData ? (
-          <MUI.Box height="100%" padding="20px">
-            <MUI.CardContent>
-              <MUI.Typography variant="h6">{videoData.title}</MUI.Typography>
-              <MUI.Typography variant="body2" color="text.secondary">
-                {videoData.description}
+      <MUI.Box
+        display="flex"
+        minHeight="500px"
+        height="70vh"
+        gap="25px"
+        justifyContent="center"
+      >
+        <ChampionSelectCard
+          order="First"
+          champion={firstChampion}
+          abilities={firstChampionAbilities}
+          selectedAbility={selectedFirstChampionAbility}
+          championNames={championNames}
+          handleChampionSelect={handleFirstChampionSelect}
+          handleAbilitySelect={selectFirstChampionAbility}
+        ></ChampionSelectCard>
+        <MUI.Card
+          sx={{
+            width: '60vw',
+            height: "100%",
+            borderRadius: '5px',
+            boxShadow: 10,
+            border: '3px solid',
+            borderColor: '#785A28'
+          }}>
+          {videoData ? (
+            <MUI.Box height="100%" padding="20px">
+              <MUI.CardContent>
+                <MUI.Typography variant="h6">{videoData.title}</MUI.Typography>
+                <MUI.Typography variant="body2" color="text.secondary">
+                  {videoData.description}
+                </MUI.Typography>
+              </MUI.CardContent>
+              <MUI.CardMedia
+                component="iframe"
+                height="100%"
+                src={`https://www.youtube.com/embed/${new URL(videoData.videoURL).searchParams.get('v')}`} // Use the embed format
+                title={videoData.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </MUI.Box>
+          ) : (
+            <MUI.Box width="100%" height="100%" display="flex" alignItems="center" justifyContent="center">
+              <MUI.Typography variant="body1" color="text.secondary">
+                Select abilities to view the interaction video
               </MUI.Typography>
-            </MUI.CardContent>
-            <MUI.CardMedia
-              component="iframe"
-              height="100%"
-              src={`https://www.youtube.com/embed/${new URL(videoData.videoURL).searchParams.get('v')}`} // Use the embed format
-              title={videoData.title}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          </MUI.Box>
-        ) : (
-          <MUI.Box width="100%" height="100%" display="flex" alignItems="center" justifyContent="center">
-            <MUI.Typography variant="body1" color="text.secondary">
-              Select abilities to view the interaction video
-            </MUI.Typography>
-          </MUI.Box>
-        )}
-      </MUI.Card>
-      <ChampionSelectCard
-        order="Second"
-        champion={secondChampion}
-        abilities={secondChampionAbilities}
-        selectedAbility={selectedSecondChampionAbility}
-        championNames={championNames}
-        handleChampionSelect={handleSecondChampionSelect}
-        handleAbilitySelect={selectSecondChampionAbility}
-      ></ChampionSelectCard>
-    </MUI.Box >
+            </MUI.Box>
+          )}
+        </MUI.Card>
+        <ChampionSelectCard
+          order="Second"
+          champion={secondChampion}
+          abilities={secondChampionAbilities}
+          selectedAbility={selectedSecondChampionAbility}
+          championNames={championNames}
+          handleChampionSelect={handleSecondChampionSelect}
+          handleAbilitySelect={selectSecondChampionAbility}
+        ></ChampionSelectCard>
+      </MUI.Box >
+    </MUI.Box>
   )
 }
 

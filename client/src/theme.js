@@ -4,16 +4,26 @@ import { createTheme } from '@mui/material/styles';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#556cd6', // Customize with your primary color
+      main: "#ffffff",
+      contrastText: '#blue'
     },
     secondary: {
-      main: '#19857b', // Customize with your secondary color
+      main: "#999393",
+      contrastText: '#ffffff'
     },
-  },
-  typography: {
-    fontFamily: 'Roboto, Arial, sans-serif',
-  },
-  // Add more customizations here
+    third: {
+      main: "#0AC8B9",
+      contrastText: '#C89B3C'
+    },
+    fourth: {
+      main: "#292929",
+      contrastText: "#292929"
+    },
+    background: {
+      default: '#0397AB',
+      paper: '#ffffff'
+    }
+  }
 });
 
 export default theme;

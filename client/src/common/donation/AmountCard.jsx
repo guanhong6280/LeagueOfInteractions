@@ -14,10 +14,15 @@ const AmountCard = (props) => {
       backgroundPosition: "center",
       width: "75px",
       height: "40px",
-      color: 'white', // Text color (for better contrast with the background)
+      color: "primary.main", // Text color (for better contrast with the background)
       border: '2px solid', // Define the border thickness
       borderColor: 'primary.main', // Border color (can be a custom color or theme color)
       borderRadius: '5px', // Optional: Adjust the border radius
+      transition: "transform 0.5s ease", // Slows down the transition to 0.5 seconds
+      "&:hover":{
+        transform: "scale(1.1)",
+        borderColor: "third.main"
+      }
     }}
     />
   )

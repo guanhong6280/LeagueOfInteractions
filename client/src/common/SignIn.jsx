@@ -1,28 +1,28 @@
-import React from "react";
+import React, { useState } from "react";
 import * as MUI from "@mui/material";
 import { useAuth } from "../AuthProvider";
 import SignInDialog from "./SignInDialog";
 import { Link } from "react-router-dom";
+import ProfileDropDown from "./ProfileDropDown";
+import NavButton from "./button/NavButton";
 
 const SignIn = () => {
-  const [anchorEl, setAnchorEl] = React.useState(null);
   const [dialogOpen, setDialogOpen] = React.useState(false);
-  const { user, loading, setLoading, login, logout } = useAuth();
-  const open = Boolean(anchorEl);
+  const { user, loading, setLoading, logout } = useAuth();
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const avatarRef = React.useRef(null);
+
+  const handleMouseEnter = () => {
+    setMenuOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    setMenuOpen(false);
+  };
 
   const handleSignIn = () => {
     setLoading(true);
-    // window.location.href = "http://localhost:5174/api/auth/google";
     window.open("http://localhost:5174/api/auth/google", "_self");
-    console.log(user);
-  };
-
-  const openMenu = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const closeMenu = (event) => {
-    setAnchorEl(null);
   };
 
   const openDialog = () => {
@@ -34,46 +34,107 @@ const SignIn = () => {
   };
 
   return (
-    <MUI.Box display="flex" alignItems="center" justifyContent="center" gap="15px" marginLeft="auto" marginRight="20px">
+    <MUI.Box
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      gap="15px"
+      marginLeft="auto"
+      marginRight="40px"
+    >
+      <NavButton
+        buttonColor="primary"
+        variant="text"
+        pageLocation="/donation"
+        hoverColor="third.main"
+        buttonText="Donate" />
       {loading ? (
         <MUI.CircularProgress />
       ) : user ? (
         <>
-          <MUI.Typography>{user.username}</MUI.Typography>
-          <MUI.Avatar alt={user.username} src={user.profilePictureURL} onClick={openMenu} />
-          <MUI.Menu
-            id="basic-menu"
-            anchorEl={anchorEl}
-            open={open}
-            onClose={closeMenu}
-            MenuListProps={{
-              "aria-labelledby": "basic-button",
-            }}
+          <div
+            style={{ display: 'inline-block' }}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
           >
-            <MUI.MenuItem onClick={closeMenu}>Profile</MUI.MenuItem>
-            <MUI.MenuItem onClick={logout}>Logout</MUI.MenuItem>
-          </MUI.Menu>
+            <MUI.Avatar
+              ref={avatarRef}
+              alt={user.username}
+              src={user.profilePictureURL}
+              variant="circular"
+              sx={{
+                border: "2px solid #0AC8B9", // Add a white border of 2px
+                cursor: "pointer",
+                position: "relative",
+                zIndex: 2000,
+                transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                transform: menuOpen
+                  ? "translateY(15px) scale(1.5)" // Move down and scale when menu is open
+                  : "translateY(0) scale(1)", // Reset position and scale when menu is closed
+                boxShadow: menuOpen
+                  ? "0 4px 8px rgba(0, 0, 0, 0.2)"
+                  : "none",
+              }}
+            />
+            <MUI.Menu
+              disablePortal
+              anchorEl={avatarRef.current}
+              open={menuOpen}
+              onClose={handleMouseLeave}
+              MenuListProps={{
+                onMouseEnter: handleMouseEnter,
+                onMouseLeave: handleMouseLeave,
+              }}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'center',
+              }}
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'center',
+              }}
+              sx={{
+                alignItems: "center",
+                '& .MuiPaper-root': {
+                  width: '200px', // Fixed width
+                },
+              }}
+            >
+              <MUI.Stack marginTop="15px" alignItems="center">
+                <MUI.Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                  {user.username}
+                </MUI.Typography>
+              </MUI.Stack>
+              <MUI.MenuItem onClick={() => alert('Profile clicked')}>
+                Profile
+              </MUI.MenuItem>
+              <MUI.MenuItem component={Link} to="/add">
+                Add Interaction
+              </MUI.MenuItem>
+              <MUI.Divider />
+              <MUI.MenuItem onClick={logout}>
+                Logout
+              </MUI.MenuItem>
+            </MUI.Menu>
+          </div>
+          <MUI.Typography fontSize="15px" fontWeight="600" color="primary">
+            {user.username}
+          </MUI.Typography>
         </>
       ) : (
-        <MUI.Button variant="contained" color="primary" onClick={openDialog}>
-          SIGN IN
+        <MUI.Button variant="outlined" color="third" onClick={openDialog}>
+          <MUI.Typography fontSize="15px" fontWeight="600">
+            Login
+          </MUI.Typography>
         </MUI.Button>
       )}
-      <MUI.Button component={Link} to="/add" variant="contained" color="primary">
-        Add Interaction
-      </MUI.Button>
-      <MUI.Button
-        color="primary"
-        variant="contained"
-        component={Link}
-        to="/donation"
-        sx={{ cursor: "pointer", marginLeft: "20px" }}
-      >
-        Donate
-      </MUI.Button>
-      <SignInDialog dialogOpen={dialogOpen} onClose={closeDialog} handleSignIn={handleSignIn}></SignInDialog>
+      <SignInDialog
+        dialogOpen={dialogOpen}
+        onClose={closeDialog}
+        handleSignIn={handleSignIn}
+      />
     </MUI.Box>
-  )
-}
+  );
+};
 
-export default SignIn
+export default SignIn;

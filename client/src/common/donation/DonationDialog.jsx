@@ -1,5 +1,6 @@
 import React from 'react'
 import * as MUI from "@mui/material";
+import CloseIcon from '@mui/icons-material/Close';
 import AmountCard from './AmountCard';
 import axios from 'axios';
 
@@ -56,10 +57,15 @@ const DonationAmounts = [
 
 const DonationDialog = (props) => {
 
+  const donationCardId = props.donationCardId;
+  
   const handleDonate = async (amount) => {
     try {
       // Send a POST request to your backend
-      const response = await axios.post('http://localhost:5174/api/donations/create-checkout-session', { amount });
+      const response = await axios.post('http://localhost:5174/api/donations/create-checkout-session', {
+        amount,
+        donationCardId,
+      });
 
       // Redirect the user to the Stripe Checkout page
       window.location.href = response.data.url;
@@ -69,9 +75,31 @@ const DonationDialog = (props) => {
   };
 
   return (
-    <MUI.Dialog open={props.dialogOpen} onClose={props.onClose}>
+    <MUI.Dialog
+      open={props.dialogOpen}
+      onClose={props.onClose}
+      sx={{
+        '& .MuiPaper-root': {
+          backgroundColor: "black",
+          opacity: 1
+        },
+      }}
+    >
+      <CloseIcon
+        onClick={props.onClose}
+        sx={{
+          color: "white",
+          position: "absolute",
+          right: 15,
+          top: 13,
+          cursor: "pointer",
+          "&:hover": {
+            color: "red", // Change color on hover
+          },
+        }}
+      />
       <MUI.DialogTitle>
-        <MUI.Typography display="flex" alignItems="center" justifyContent="center">Select Amount</MUI.Typography>
+        <MUI.Typography display="flex" alignItems="center" justifyContent="center" color="primary">Select Amount</MUI.Typography>
       </MUI.DialogTitle>
       <MUI.DialogActions>
         <MUI.Grid2 container spacing={2} marginX="50px">
@@ -82,6 +110,16 @@ const DonationDialog = (props) => {
           ))}
         </MUI.Grid2>
       </MUI.DialogActions>
+      <MUI.Typography
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        color="primary"
+        fontSize="12px"
+        marginY="15px"
+      >
+        Thank you for your donation!
+      </MUI.Typography>
     </MUI.Dialog>
   )
 }

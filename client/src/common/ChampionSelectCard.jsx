@@ -1,24 +1,22 @@
 import React from 'react'
 import * as MUI from "@mui/material";
-import axios from "axios";
-import { ClassNames } from '@emotion/react';
 import { AbilityMap } from '../pages/AddInteractions';
 
 const ChampionSelectCard = (props) => {
 
   return (
     <MUI.Stack
-      border="solid 2px"
-      borderRadius="5px"
+      border="solid 3px"
+      borderColor="#785A28"
+      borderRadius="10px"
       spacing="5px"
       height="100%"
-      paddingX="20px"
-      paddingY="50px"
+      boxShadow="5"
       sx={{
         position: 'relative',
-        padding: 4,
         aspectRatio: 2 / 5,
         zIndex: 1, // Ensure content is above the background
+        backgroundColor: "white",
         '&::before': {
           content: '""',
           position: 'absolute',
@@ -31,53 +29,68 @@ const ChampionSelectCard = (props) => {
             : 'none',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          opacity: 0.3, // Adjust opacity here
-          zIndex: -1, // Ensure the background is behind the content
+          opacity: 0.4,
+          zIndex: -1
         },
       }}
     >
-      <MUI.FormControl>
-        <MUI.InputLabel id="champion-select-label">{`Select ${props.order} Champion`}</MUI.InputLabel>
-        <MUI.Select
-          labelId="champion-select-label"
-          value={props.champion?.id || ""}
-          label={`Select ${props.order} Champion`}
-          onChange={props.handleChampionSelect}
+      <MUI.Stack gap="20px">
+        <MUI.FormControl sx={{ marginX: "10px", marginTop: "20px" }}>
+          <MUI.InputLabel id="champion-select-label">{`Select ${props.order} Champion`}</MUI.InputLabel>
+          <MUI.Select
+            labelId="champion-select-label"
+            value={props.champion?.id || ""}
+            label={`Select ${props.order} Champion`}
+            onChange={props.handleChampionSelect}
+          >
+            {props.championNames.map((name, index) => (
+              <MUI.MenuItem key={index} value={name}>
+                {name}
+              </MUI.MenuItem>
+            ))}
+          </MUI.Select>
+        </MUI.FormControl>
+        <MUI.Stack
+          alignItems="center"
+          spacing="10px"
         >
-          {props.championNames.map((name, index) => (
-            <MUI.MenuItem key={index} value={name}>
-              {name}
-            </MUI.MenuItem>
-          ))}
-        </MUI.Select>
-      </MUI.FormControl>
-      <MUI.Stack
-        alignItems="center"
-      >
-        {props.abilities?.map((ability, index) => {
-          const imageUrl =
-            index === 0
-              ? `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/passive/${props.abilities[index]?.image})`
-              : `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/spell/${props.abilities[index]?.image})`;
+          {props.abilities?.map((ability, index) => {
+            const imageUrl =
+              index === 0
+                ? `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/passive/${props.abilities[index]?.image})`
+                : `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/spell/${props.abilities[index]?.image})`;
 
-          return (
-            <MUI.Box
-              key={index}
-              width="64px"
-              height="64px"
-              onClick={() => props.handleAbilitySelect(ability.name)}
-              sx={{
-                backgroundImage: props.abilities ? imageUrl : 'none',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                opacity: ability.name === props.selectedAbility ? 1 : 0.3,
-                cursor: "pointer"
-              }}
-            >
-              {AbilityMap[index]}
-            </MUI.Box>
-          );
-        })}
+            return (
+              <MUI.Stack
+                alignItems="center"
+                sx={{
+                  opacity: ability.name === props.selectedAbility ? 1 : 0.5,
+                  transition: "transform 0.5s ease", // Slows down the transition to 0.5 seconds
+                  "&:hover":{
+                    transform: ability.name === props.selectedAbility ? "none" : "scale(1.1)"
+                  }
+                }}
+              >
+                <MUI.Box
+                  key={index}
+                  width="64px"
+                  height="64px"
+                  onClick={() => props.handleAbilitySelect(ability.name)}
+                  sx={{
+                    backgroundImage: props.abilities ? imageUrl : 'none',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    cursor: "pointer",
+                  }}
+                >
+                </MUI.Box>
+                <MUI.Typography>
+                  {ability.name}
+                </MUI.Typography>
+              </MUI.Stack>
+            );
+          })}
+        </MUI.Stack>
       </MUI.Stack>
     </MUI.Stack>
   )

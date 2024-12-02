@@ -3,6 +3,7 @@ const router = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 const sgEmail = require("@sendgrid/mail");
+const Donation = require("../models/Donations");
 
 
 // Set up SendGrid API key
@@ -23,6 +24,7 @@ router.post('/', express.raw({ type: 'application/json' }), async (req, res) => 
     const session = event.data.object;
     const customerEmail = session.customer_details.email;
     const amountTotal = (session.amount_total / 100).toFixed(2);
+    const donationCardId = session.metadata.donation_card_id;
     console.log(`🎉 Checkout session completed! Customer email: ${customerEmail}`);
 
     // Retrieve customer details for the cardholder's name
@@ -30,13 +32,25 @@ router.post('/', express.raw({ type: 'application/json' }), async (req, res) => 
     const cardholderName = customer.name;
 
     console.log(`Cardholder Name: ${cardholderName}`);
+    // Save the donation to MongoDB
+    try {
+      const donation = new Donation({
+        donationCardId,
+        amount: amountTotal, // Store the amount in cents
+        createdAt: new Date(),
+      });
+      await donation.save();
+      console.log('Donation saved successfully.');
+    } catch (error) {
+      console.error('Error saving donation:', error);
+    }
 
-    // Call your email service here to send the thank-you email
-    sendThankYouEmail(customerEmail, cardholderName, amountTotal);
-  }
+      // Call your email service here to send the thank-you email
+      sendThankYouEmail(customerEmail, cardholderName, amountTotal);
+    }
 
-  res.status(200).end();
-});
+    res.status(200).end();
+  });
 
 const sendThankYouEmail = async (email, name, amount) => {
   const msg = {

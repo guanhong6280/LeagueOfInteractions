@@ -122,16 +122,6 @@ const ViewInteractions = () => {
   };
 
   return (
-    <MUI.Box
-      minHeight="700px"
-      height="95vh"
-      paddingTop="65px"
-      sx={{
-        backgroundImage: `url(https://cmsassets.rgpub.io/sanity/images/dsfx7636/universe/f81004a39c5502d766169beb4a342c46b0030d36-1920x946.jpg)`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
-    >
       <MUI.Box
         display="flex"
         minHeight="500px"
@@ -147,7 +137,7 @@ const ViewInteractions = () => {
           championNames={championNames}
           handleChampionSelect={handleFirstChampionSelect}
           handleAbilitySelect={selectFirstChampionAbility}
-        ></ChampionSelectCard>
+        />
         <MUI.Card
           sx={{
             width: '60vw',
@@ -168,7 +158,7 @@ const ViewInteractions = () => {
               <MUI.CardMedia
                 component="iframe"
                 height="100%"
-                src={`https://www.youtube.com/embed/${new URL(videoData.videoURL).searchParams.get('v')}`} // Use the embed format
+                src={`https://www.youtube.com/embed/${new URL(videoData.videoURL).searchParams.get('v')}`}
                 title={videoData.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
@@ -190,9 +180,8 @@ const ViewInteractions = () => {
           championNames={championNames}
           handleChampionSelect={handleSecondChampionSelect}
           handleAbilitySelect={selectSecondChampionAbility}
-        ></ChampionSelectCard>
+        />
       </MUI.Box >
-    </MUI.Box>
   )
 }
 

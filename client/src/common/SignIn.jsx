@@ -47,7 +47,15 @@ const SignIn = () => {
         variant="text"
         pageLocation="/donation"
         hoverColor="third.main"
-        buttonText="Donate" />
+        buttonText="Skin Rating"
+      />
+      <NavButton
+        buttonColor="primary"
+        variant="text"
+        pageLocation="/donation"
+        hoverColor="third.main"
+        buttonText="Donate"
+      />
       {loading ? (
         <MUI.CircularProgress />
       ) : user ? (

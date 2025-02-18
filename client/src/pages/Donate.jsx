@@ -51,7 +51,7 @@ const Donate = () => {
           )
         })}
       </MUI.Box>
-      <MUI.Button variant="outlined" onClick={openDialog}>test</MUI.Button>
+      {/* <MUI.Button variant="outlined" onClick={openDialog}>test</MUI.Button> */}
       <DonationDialog dialogOpen={dialogOpen} onClose={closeDialog} donationCardId={donationCardId}></DonationDialog>
     </MUI.Stack>
   );

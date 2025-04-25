@@ -14,10 +14,10 @@ const AccountManagement = () => {
         height="500px"
         width="500px"
         position="fixed"  // changed from fixed to absolute
-        top="85px"
-        left="20px"
+        top="100px"
+        left="60px"
+        bgcolor="transparent"
         sx={{
-          backgroundColor: 'red',
           color: 'white',
         }}
       >
@@ -27,8 +27,9 @@ const AccountManagement = () => {
           <span>Management</span>
         </MUI.Typography>
       </MUI.Stack>
-      <MUI.Stack marginLeft="40vw" spacing="20px" paddingY="50px">
-        {[...Array(10)].map((_, index) => (
+      <MUI.Stack marginLeft="40vw" spacing="20px" paddingY="10px">
+        <AccountSettingBox title="personal information" description="This information will be private and will not be shared" />
+        {[...Array(3)].map((_, index) => (
           <AccountSettingBox key={index} />
         ))}
       </MUI.Stack>

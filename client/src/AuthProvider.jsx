@@ -33,18 +33,18 @@ const AuthProvider = ({ children }) => {
   }, []);
 
 
-  const fetchUser = async () => {c
-    try {
-      setLoading(true);
-      const { data } = await axios.get('http://localhost:5174/api/auth/user', { withCredentials: true });
-      console.log("log data from authprovider")
-      console.log(data);
-    } catch (error) {
-      console.error('Failed to fetch user', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const fetchUser = async () => {c
+  //   try {
+  //     setLoading(true);
+  //     const { data } = await axios.get('http://localhost:5174/api/auth/user', { withCredentials: true });
+  //     console.log("log data from authprovider")
+  //     console.log(data);
+  //   } catch (error) {
+  //     console.error('Failed to fetch user', error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   // Mock login function
   const login = (userData) => {
 
@@ -62,7 +62,7 @@ const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, setLoading, login, logout, fetchUser }}>
+    <AuthContext.Provider value={{ user, loading, setLoading, login, logout}}>
       {children}
     </AuthContext.Provider>
   );

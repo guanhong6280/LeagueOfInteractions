@@ -137,10 +137,10 @@ const AddInteractions = () => {
       const ability2Index = secondChampionAbilities.findIndex(
         (ability) => ability.name === selectedSecondChampionAbility
       );
-  
+
       const ability1Key = AbilityMap[ability1Index];
       const ability2Key = AbilityMap[ability2Index];
-  
+
       const payload = {
         champion1: firstChampion?.id,
         ability1: ability1Key,
@@ -148,12 +148,12 @@ const AddInteractions = () => {
         ability2: ability2Key,
         videoURL: videoLink,
       };
-  
+
       // Send the POST request to your server endpoint
       const response = await axios.post('http://localhost:5174/api/videos/upload', payload, {
         withCredentials: true
       });
-  
+
       console.log('Video uploaded successfully:', response.data);
       alert('Video uploaded successfully!');
     } catch (error) {
@@ -161,7 +161,7 @@ const AddInteractions = () => {
       alert('Failed to upload video');
     }
   };
-  
+
 
   return (
     <MUI.Stack
@@ -227,7 +227,9 @@ const AddInteractions = () => {
             startIcon={<FileUploadIcon></FileUploadIcon>}
             variant="contained"
             onClick={uploadVideo}
-          >Upload</MUI.Button>
+          >
+            Upload
+          </MUI.Button>
         </MUI.Box>
       </MUI.Box>
     </MUI.Stack>

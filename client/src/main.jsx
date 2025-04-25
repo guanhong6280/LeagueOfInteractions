@@ -12,6 +12,7 @@ import AddInteractions from './pages/AddInteractions.jsx';
 import AuthProvider from './AuthProvider.jsx';
 import ChampionProvider from './contextProvider/ChampionProvider.jsx';
 import Donate from './pages/Donate.jsx';
+import AccountManagement from './pages/AccountManagement.jsx';
 
 const stripePromise = loadStripe("your-publishable-key-here");
 
@@ -27,6 +28,7 @@ createRoot(document.getElementById('root')).render(
                 <Route index element={<ViewInteractions />} />
                 <Route path="add" element={<AddInteractions />} />
                 <Route path="donation" element={<Donate/>}/>
+                <Route path="setting" element={<AccountManagement/>}/>
               </Route>
             </Routes>
           </BrowserRouter>

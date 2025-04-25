@@ -13,9 +13,7 @@ function App() {
       <MUI.ThemeProvider theme={theme}>
         <Navigation></Navigation>
         <MUI.Box
-          minHeight="700px"
-          height="95vh"
-          paddingTop="65px"
+          minHeight="95vh"
           sx={{
             backgroundImage: `url(https://cmsassets.rgpub.io/sanity/images/dsfx7636/universe/f81004a39c5502d766169beb4a342c46b0030d36-1920x946.jpg)`,
             backgroundSize: 'cover',

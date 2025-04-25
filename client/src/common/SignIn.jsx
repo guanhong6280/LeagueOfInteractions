@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import * as MUI from "@mui/material";
 import { useAuth } from "../AuthProvider";
 import SignInDialog from "./SignInDialog";
@@ -115,6 +115,9 @@ const SignIn = () => {
               </MUI.Stack>
               <MUI.MenuItem onClick={() => alert('Profile clicked')}>
                 Profile
+              </MUI.MenuItem>
+              <MUI.MenuItem component={Link} to="/setting">
+                Setting
               </MUI.MenuItem>
               <MUI.MenuItem component={Link} to="/add">
                 Add Interaction

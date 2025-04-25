@@ -1,6 +1,6 @@
 // seedDonationCards.js
 const mongoose = require('mongoose');
-const DonationCard = require("./models/DonationCards");
+const DonationCard = require("../models/DonationCards");
 require('dotenv').config();
 
 // Replace with your actual MongoDB connection string

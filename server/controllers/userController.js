@@ -56,3 +56,30 @@ exports.updateFavoriteChampions = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// Update user information
+exports.updateUserInfo = async (req, res) => {
+  try {
+    const { username, age, rank, sex, timeJoinedTheGame } = req.body;
+    console.log(req.body);
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update fields only if provided
+    if (username !== undefined) user.username = username;
+    if (age !== undefined) user.age = age;
+    if (rank !== undefined) user.rank = rank;
+    if (sex !== undefined && sex !== "") user.sex = sex;
+    if (timeJoinedTheGame !== undefined) user.timeJoinedTheGame = timeJoinedTheGame;
+
+    await user.save();
+
+    res.status(200).json({ message: 'User information updated successfully', user });
+  } catch (error) {
+    console.error('Error updating user information:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

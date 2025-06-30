@@ -8,5 +8,6 @@ const { ensureAuthenticated } = require("../middleware/auth");
 router.post('/register', userController.registerUser);
 router.get('/:id', userController.getUser);
 router.put("/favorite-champions", ensureAuthenticated, userController.updateFavoriteChampions);
+router.put("/updateUserInformation", ensureAuthenticated, userController.updateUserInfo);
 
 module.exports = router;

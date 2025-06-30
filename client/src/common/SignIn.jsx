@@ -45,7 +45,7 @@ const SignIn = () => {
       <NavButton
         buttonColor="primary"
         variant="text"
-        pageLocation="/donation"
+        pageLocation="/skin_rating"
         hoverColor="third.main"
         buttonText="Skin Rating"
       />

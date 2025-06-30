@@ -12,13 +12,11 @@ const UserSchema = new mongoose.Schema({
   profilePictureURL: String,
   dateRegistered: { type: Date, default: Date.now },
   lastActiveDate: Date,
-  googleId: String, 
-  isProfileComplete: {type: Boolean, default: false},
+  googleId: String,
+  isProfileComplete: { type: Boolean, default: false },
   timeJoinedTheGame: { type: Number, min: 2009, max: new Date().getFullYear() }, // Year value (LoL released in 2009)
   riotAccounts: { type: [String] } // Array of Riot account names
 });
 
-// Create an index on username and email for uniqueness
-UserSchema.index({ username: 1, email: 1 }, { unique: true });
 
 module.exports = mongoose.model('User', UserSchema);

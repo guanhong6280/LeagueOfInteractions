@@ -5,7 +5,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 
 
-import App from './App.jsx';
+import MainLayout from './mainLayout.jsx';
 import './index.css';
 import ViewInteractions from './pages/ViewInteractions.jsx';
 import AddInteractions from './pages/AddInteractions.jsx';
@@ -13,6 +13,7 @@ import AuthProvider from './AuthProvider.jsx';
 import ChampionProvider from './contextProvider/ChampionProvider.jsx';
 import Donate from './pages/Donate.jsx';
 import AccountManagement from './pages/AccountManagement.jsx';
+import SkinRating from './pages/SkinRating.jsx';
 
 const stripePromise = loadStripe("your-publishable-key-here");
 
@@ -23,12 +24,13 @@ createRoot(document.getElementById('root')).render(
         <Elements stripe={stripePromise}>
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<App />}>
+              <Route path="/" element={<MainLayout />}>
                 {/* The default route that shows creators */}
                 <Route index element={<ViewInteractions />} />
                 <Route path="add" element={<AddInteractions />} />
-                <Route path="donation" element={<Donate/>}/>
-                <Route path="setting" element={<AccountManagement/>}/>
+                <Route path="skin_rating" element={<SkinRating />} />
+                <Route path="donation" element={<Donate />} />
+                <Route path="setting" element={<AccountManagement />} />
               </Route>
             </Routes>
           </BrowserRouter>

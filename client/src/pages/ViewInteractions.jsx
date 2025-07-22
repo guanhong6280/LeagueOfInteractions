@@ -1,29 +1,28 @@
-import React from 'react'
-import * as MUI from "@mui/material";
+import React from 'react';
+import * as MUI from '@mui/material';
 
 import { useChampion } from '../contextProvider/ChampionProvider';
 import ChampionSelectCard from '../common/ChampionSelectCard';
 import { AbilityMap } from './AddInteractions';
-import { fetchChampionDetails, fetchVideoData } from "../championApi/viewInteractionsApi";
+import { fetchChampionDetails, fetchVideoData } from '../championApi/viewInteractionsApi';
 import VideoPlayer from '../common/ViewInteractionPage/VideoDisplay';
 
 const ViewInteractions = () => {
-
   const { championNames } = useChampion();
 
   const [firstChampion, setFirstChampion] = React.useState(null);
   const [secondChampion, setSecondChampion] = React.useState(null);
   const [firstChampionAbilities, setFirstChampionAbilities] = React.useState([]);
   const [secondChampionAbilities, setSecondChampionAbilities] = React.useState([]);
-  const [selectedFirstChampionAbility, setSelectedFirstChampionAbility] = React.useState("");
-  const [selectedSecondChampionAbility, setSelectedSecondChampionAbility] = React.useState("");
+  const [selectedFirstChampionAbility, setSelectedFirstChampionAbility] = React.useState('');
+  const [selectedSecondChampionAbility, setSelectedSecondChampionAbility] = React.useState('');
   const [videoData, setVideoData] = React.useState(null);
 
   const filteredChampionNamesForFirstCard = championNames.filter(
-    (name) => name !== secondChampion?.id
+    (name) => name !== secondChampion?.id,
   );
   const filteredChampionNamesForSecondCard = championNames.filter(
-    (name) => name !== firstChampion?.id
+    (name) => name !== firstChampion?.id,
   );
 
   const saveToSession = (k, v) => {
@@ -33,10 +32,10 @@ const ViewInteractions = () => {
   const getFromSession = (k) => sessionStorage.getItem(k);
 
   const restoreSelections = async () => {
-    const savedFirstChampion = getFromSession("firstChampion");
-    const savedSecondChampion = getFromSession("secondChampion");
-    const savedFirstAbility = getFromSession("selectedFirstChampionAbility");
-    const savedSecondAbility = getFromSession("selectedSecondChampionAbility");
+    const savedFirstChampion = getFromSession('firstChampion');
+    const savedSecondChampion = getFromSession('secondChampion');
+    const savedFirstAbility = getFromSession('selectedFirstChampionAbility');
+    const savedSecondAbility = getFromSession('selectedSecondChampionAbility');
 
     if (savedFirstChampion) {
       const championData = await fetchChampionDetails(savedFirstChampion);
@@ -53,10 +52,10 @@ const ViewInteractions = () => {
   };
 
   React.useEffect(() => {
-    saveToSession("firstChampion", firstChampion?.id);
-    saveToSession("secondChampion", secondChampion?.id);
-    saveToSession("selectedFirstChampionAbility", selectedFirstChampionAbility);
-    saveToSession("selectedSecondChampionAbility", selectedSecondChampionAbility);
+    saveToSession('firstChampion', firstChampion?.id);
+    saveToSession('secondChampion', secondChampion?.id);
+    saveToSession('selectedFirstChampionAbility', selectedFirstChampionAbility);
+    saveToSession('selectedSecondChampionAbility', selectedSecondChampionAbility);
   }, [firstChampion, secondChampion, selectedFirstChampionAbility, selectedSecondChampionAbility]);
 
   React.useEffect(() => {
@@ -80,7 +79,7 @@ const ViewInteractions = () => {
           description: championData.passive.description,
           image: championData.passive.image.full,
         },
-        ...championData.spells.map(spell => ({
+        ...championData.spells.map((spell) => ({
           name: spell.name,
           description: spell.description,
           image: spell.image.full,
@@ -153,7 +152,7 @@ const ViewInteractions = () => {
         handleAbilitySelect={selectSecondChampionAbility}
       />
     </MUI.Box >
-  )
-}
+  );
+};
 
 export default ViewInteractions;

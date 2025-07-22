@@ -1,10 +1,10 @@
-import React from "react";
-import * as MUI from "@mui/material";
-import { useAuth } from "../AuthProvider";
-import SignInDialog from "./SignInDialog";
-import { Link } from "react-router-dom";
-import ProfileDropDown from "./ProfileDropDown";
-import NavButton from "./button/NavButton";
+import React from 'react';
+import * as MUI from '@mui/material';
+import { useAuth } from '../AuthProvider';
+import SignInDialog from './SignInDialog';
+import { Link } from 'react-router-dom';
+import ProfileDropDown from './ProfileDropDown';
+import NavButton from './button/NavButton';
 
 const SignIn = () => {
   const [dialogOpen, setDialogOpen] = React.useState(false);
@@ -22,7 +22,7 @@ const SignIn = () => {
 
   const handleSignIn = () => {
     setLoading(true);
-    window.open("http://localhost:5174/api/auth/google", "_self");
+    window.open('http://localhost:5174/api/auth/google', '_self');
   };
 
   const openDialog = () => {
@@ -71,17 +71,17 @@ const SignIn = () => {
               src={user.profilePictureURL}
               variant="circular"
               sx={{
-                border: "2px solid #0AC8B9", // Add a white border of 2px
-                cursor: "pointer",
-                position: "relative",
+                border: '2px solid #0AC8B9', // Add a white border of 2px
+                cursor: 'pointer',
+                position: 'relative',
                 zIndex: 2000,
-                transition: "transform 0.3s ease, box-shadow 0.3s ease",
-                transform: menuOpen
-                  ? "translateY(15px) scale(1.5)" // Move down and scale when menu is open
-                  : "translateY(0) scale(1)", // Reset position and scale when menu is closed
-                boxShadow: menuOpen
-                  ? "0 4px 8px rgba(0, 0, 0, 0.2)"
-                  : "none",
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                transform: menuOpen ?
+                  'translateY(15px) scale(1.5)' : // Move down and scale when menu is open
+                  'translateY(0) scale(1)', // Reset position and scale when menu is closed
+                boxShadow: menuOpen ?
+                  '0 4px 8px rgba(0, 0, 0, 0.2)' :
+                  'none',
               }}
             />
             <MUI.Menu
@@ -102,7 +102,7 @@ const SignIn = () => {
                 horizontal: 'center',
               }}
               sx={{
-                alignItems: "center",
+                'alignItems': 'center',
                 '& .MuiPaper-root': {
                   width: '200px', // Fixed width
                 },

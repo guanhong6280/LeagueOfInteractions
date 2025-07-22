@@ -1,5 +1,5 @@
-import React from 'react'
-import * as MUI from "@mui/material";
+import React from 'react';
+import * as MUI from '@mui/material';
 import SignIn from './SignIn';
 import Logo from './Logo';
 
@@ -21,7 +21,7 @@ const Navigation = () => {
       <Logo/>
       <SignIn />
     </MUI.Box>
-  )
-}
+  );
+};
 
-export default Navigation
+export default Navigation;

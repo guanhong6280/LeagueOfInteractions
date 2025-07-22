@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = "http://localhost:5174/api";
+const API_BASE_URL = 'http://localhost:5174/api';
 
 export const fetchChampionDetails = async (championName) => {
   try {
@@ -18,7 +18,7 @@ export const fetchVideoData = async (params) => {
     const response = await axios.get(`${API_BASE_URL}/videos`, { params, withCredentials: true });
     return response.data;
   } catch (error) {
-    console.error("Error fetching video data:", error);
+    console.error('Error fetching video data:', error);
     return null;
   }
 };

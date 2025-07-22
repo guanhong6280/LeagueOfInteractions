@@ -20,6 +20,6 @@ const VideoSchema = new mongoose.Schema({
 });
 
 // Create indexes for faster querying
-VideoSchema.index({ champion1: 1, ability1: 1, champion2: 1, ability2: 1 }, { unique: true});
+VideoSchema.index({ champion1: 1, ability1: 1, champion2: 1, ability2: 1 }, { unique: true });
 
 module.exports = mongoose.model('Video', VideoSchema);

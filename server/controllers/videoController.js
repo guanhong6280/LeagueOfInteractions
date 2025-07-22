@@ -1,5 +1,5 @@
 // server/controllers/videoController.js
-const Video = require("../models/Video");
+const Video = require('../models/Video');
 
 exports.uploadVideo = async (req, res) => {
   try {
@@ -59,7 +59,7 @@ exports.getVideoByInteraction = async (req, res) => {
   if (!champion1 || !ability1 || !champion2 || !ability2) {
     return res.status(400).json({ message: 'Missing query parameters' });
   }
-  
+
   champion1 = champion1.toLowerCase();
   champion2 = champion2.toLowerCase();
   // Standardize the order

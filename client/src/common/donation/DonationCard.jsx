@@ -1,9 +1,8 @@
-import React from 'react'
-import * as MUI from "@mui/material";
+import React from 'react';
+import * as MUI from '@mui/material';
 import axios from 'axios';
 
 const DonationCard = (props) => {
-
   const [progress, setProgress] = React.useState(0);
   const donationCardId = props.donationCardId;
 
@@ -24,7 +23,7 @@ const DonationCard = (props) => {
   const progressPercentage = (progress / props.price) * 100; // Adjust if price is in dollars
 
   return (
-    <MUI.Card sx={{ maxWidth: 345, display: "flex", flexDirection: "column" }}>
+    <MUI.Card sx={{ maxWidth: 345, display: 'flex', flexDirection: 'column' }}>
       <MUI.CardMedia
         component="img"
         height="150"
@@ -44,7 +43,7 @@ const DonationCard = (props) => {
           variant="determinate"
           color="third"
           value={progressPercentage}
-          sx={{ height: 10, borderRadius: 5, width: "100%" }}
+          sx={{ height: 10, borderRadius: 5, width: '100%' }}
         />
         <MUI.Typography variant="body2" color="textSecondary">
           ${(progress).toFixed(2)} raised out of ${props.price}
@@ -58,6 +57,6 @@ const DonationCard = (props) => {
       </MUI.Stack>
     </MUI.Card>
   );
-}
+};
 
-export default DonationCard
+export default DonationCard;

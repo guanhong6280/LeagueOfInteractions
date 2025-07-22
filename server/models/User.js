@@ -16,25 +16,36 @@ const UserSchema = new mongoose.Schema({
   isProfileComplete: { type: Boolean, default: false },
   timeJoinedTheGame: { type: Number, min: 2009, max: new Date().getFullYear() }, // Year value (LoL released in 2009)
   riotAccounts: { type: [String] }, // Array of Riot account names
-  
+
   // NEW FIELDS FOR SKIN RATING FEATURES
-  skinRatingStats: {
-    totalRatings: { type: Number, default: 0 },
-    totalComments: { type: Number, default: 0 },
-    averageRatingGiven: { type: Number, default: 0 }
+  recentSkinRatings: {
+    type: [{
+      skinId: { type: String, required: true },
+      dateUpdated: { type: Date, required: true },
+      splashArtRating: { type: Number, required: true },
+      inGameModelRating: { type: Number, required: true },
+    }],
+    validate: {
+      validator: function(arr) {
+        return arr.length <= 10;
+      },
+      message: 'Recent skin ratings cannot exceed 10 items',
+    },
+  },
+  recentSkinComments: {
+    type: [{
+      skinId: { type: String, required: true },
+      dateUpdated: { type: Date, required: true },
+      comment: { type: String, required: true },
+    }],
+    validate: {
+      validator: function(arr) {
+        return arr.length <= 10;
+      },
+      message: 'Recent skin comments cannot exceed 10 items',
+    },
   },
   favoriteSkins: [{ type: Number }], // Array of skin IDs
-  skinRatingHistory: [{ // Recent rating activity
-    skinId: { type: Number },
-    dateRated: { type: Date, default: Date.now },
-    splashRating: { type: Number, min: 1, max: 5 },
-    modelRating: { type: Number, min: 1, max: 5 }
-  }],
-  skinCommentHistory: [{ // Recent comment activity
-    skinId: { type: Number },
-    dateCommented: { type: Date, default: Date.now },
-    commentPreview: { type: String, maxlength: 100 }
-  }]
 });
 
 module.exports = mongoose.model('User', UserSchema);

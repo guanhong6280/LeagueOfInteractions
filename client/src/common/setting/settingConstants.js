@@ -1,8 +1,8 @@
 export const sexOptions = [
   { value: 'male', label: 'Male' },
   { value: 'female', label: 'Female' },
-  { value: "other", label: "Other" },
-  { value: "prefer not to say", label: "Prefer not to disclose" }
+  { value: 'other', label: 'Other' },
+  { value: 'prefer not to say', label: 'Prefer not to disclose' },
 ];
 
 
@@ -17,7 +17,7 @@ export const rankOptions = [
   { value: 'master', label: 'Master' },
   { value: 'grandmaster', label: 'Grandmaster' },
   { value: 'challenger', label: 'Challenger' },
-]
+];
 
 
 export const yearJoinedOptions = [
@@ -38,4 +38,4 @@ export const yearJoinedOptions = [
   { value: 2023, label: 2023 },
   { value: 2024, label: 2024 },
   { value: 2025, label: 2025 },
-]
+];

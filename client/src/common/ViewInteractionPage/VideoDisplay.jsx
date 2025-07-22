@@ -6,11 +6,11 @@ const VideoPlayer = ({ videoData }) => {
     <Card
       sx={{
         width: '60vw',
-        height: "100%",
+        height: '100%',
         borderRadius: '5px',
         boxShadow: 10,
         border: '3px solid',
-        borderColor: '#785A28'
+        borderColor: '#785A28',
       }}
     >
       {videoData ? (
@@ -21,7 +21,7 @@ const VideoPlayer = ({ videoData }) => {
               {videoData.description}
             </Typography>
           </Stack>
-          <Box marginBottom="" sx={{ position: 'relative', aspectRatio: "16/9" }}>
+          <Box marginBottom="" sx={{ position: 'relative', aspectRatio: '16/9' }}>
             <CardMedia
               component="iframe"
               src={`https://www.youtube.com/embed/${new URL(videoData.videoURL).searchParams.get('v')}`}
@@ -31,10 +31,10 @@ const VideoPlayer = ({ videoData }) => {
               sx={{
                 position: 'absolute',
                 top: 0,
-                left: "1%",
+                left: '1%',
                 width: '98%',
                 height: '100%',
-                borderRadius: "10px"
+                borderRadius: '10px',
               }}
             />
           </Box>

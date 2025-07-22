@@ -1,34 +1,18 @@
-import React, { Children } from 'react';
-import axios from 'axios';
+import React from 'react';
+import { useChampionData } from '../hooks/useChampionData';
 
 const ChampionContext = React.createContext();
 
 export const useChampion = () => React.useContext(ChampionContext);
 
-const ChampionProvider = ({children}) => {
-
-  const [championNames, setChampionNames] = React.useState([]);
-
-  React.useEffect(() => {
-    const fetchChampionNames = async () => {
-      try {
-        const data = await axios.get("http://localhost:5174/api/championData/champion_names", {withCredentials: true});
-        const names = Object.keys(data.data.data);
-        setChampionNames(names);
-        console.log(names);
-      } catch (error) {
-        console.error('Error fetching champion names:', error);
-      }
-    };
-
-    fetchChampionNames();
-  }, []);
+const ChampionProvider = ({ children }) => {
+  const championData = useChampionData();
 
   return (
-    <ChampionContext.Provider value={{championNames}}>
+    <ChampionContext.Provider value={championData}>
       {children}
     </ChampionContext.Provider>
-  )
-}
+  );
+};
 
 export default ChampionProvider;

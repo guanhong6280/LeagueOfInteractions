@@ -1,10 +1,9 @@
-import React from 'react'
-import * as MUI from "@mui/material";
+import React from 'react';
+import * as MUI from '@mui/material';
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import { AbilityMap } from '../pages/AddInteractions';
 
 const AbilitySelectCard = (props) => {
-  
   return (
     <MUI.Box
       display="flex"
@@ -19,9 +18,9 @@ const AbilitySelectCard = (props) => {
         borderRadius="10px"
         marginLeft="50px"
         sx={{
-          backgroundImage: props.champion
-            ? `url(https://ddragon.leagueoflegends.com/cdn/14.19.1/img/champion/${props.champion?.id}.png)`
-            : 'none',
+          backgroundImage: props.champion ?
+            `url(https://ddragon.leagueoflegends.com/cdn/14.19.1/img/champion/${props.champion?.id}.png)` :
+            'none',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
@@ -30,9 +29,9 @@ const AbilitySelectCard = (props) => {
       <MUI.Box flex="1" display="flex" gap="20px">
         {props.abilities?.map((ability, index) => {
           const imageUrl =
-            index === 0
-              ? `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/passive/${props.abilities[index]?.image})`
-              : `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/spell/${props.abilities[index]?.image})`;
+            index === 0 ?
+              `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/passive/${props.abilities[index]?.image})` :
+              `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/spell/${props.abilities[index]?.image})`;
 
           return (
             <MUI.Box
@@ -52,11 +51,11 @@ const AbilitySelectCard = (props) => {
         })}
       </MUI.Box>
       <MUI.Stack marginRight="50px" spacing="20px">
-        <MUI.FormControl sx={{ width: "200px" }}>
+        <MUI.FormControl sx={{ width: '200px' }}>
           <MUI.InputLabel id="champion-select-label">{`Select ${props.order} Champion`}</MUI.InputLabel>
           <MUI.Select
             labelId="champion-select-label"
-            value={props.champion?.id || ""}
+            value={props.champion?.id || ''}
             label={`Select ${props.order} Champion`}
             onChange={props.handleChampionSelect}
           >
@@ -67,11 +66,11 @@ const AbilitySelectCard = (props) => {
             ))}
           </MUI.Select>
         </MUI.FormControl>
-        <MUI.FormControl sx={{ width: "200px" }}>
+        <MUI.FormControl sx={{ width: '200px' }}>
           <MUI.InputLabel id="champion-ability-select-label">{`${props.order} Champion Ability`}</MUI.InputLabel>
           <MUI.Select
             labelId="champion-ability-select-label"
-            value={props.selectedAbility || ""}
+            value={props.selectedAbility || ''}
             label={`${props.order} Champion Ability`}
             onChange={props.handleAbilitySelect}
           >
@@ -84,7 +83,7 @@ const AbilitySelectCard = (props) => {
         </MUI.FormControl>
       </MUI.Stack>
     </MUI.Box>
-  )
-}
+  );
+};
 
-export default AbilitySelectCard
+export default AbilitySelectCard;

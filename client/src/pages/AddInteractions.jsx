@@ -1,5 +1,5 @@
-import React from 'react'
-import * as MUI from "@mui/material";
+import React from 'react';
+import * as MUI from '@mui/material';
 import axios from 'axios';
 import { useChampion } from '../contextProvider/ChampionProvider';
 import AbilitySelectCard from '../common/AbilitySelectCard';
@@ -7,45 +7,44 @@ import FileUploadIcon from '@mui/icons-material/FileUpload';
 import AddIcon from '@mui/icons-material/Add';
 
 export const AbilityMap = {
-  0: "P",
-  1: "Q",
-  2: "W",
-  3: "E",
-  4: "R"
+  0: 'P',
+  1: 'Q',
+  2: 'W',
+  3: 'E',
+  4: 'R',
 };
 
 const AddInteractions = () => {
-
   const { championNames } = useChampion();
 
   const [firstChampion, setFirstChampion] = React.useState(null);
   const [secondChampion, setSecondChampion] = React.useState(null);
   const [firstChampionAbilities, setFirstChampionAbilities] = React.useState([]);
   const [secondChampionAbilities, setSecondChampionAbilities] = React.useState([]);
-  const [selectedFirstChampionAbility, setSelectedFirstChampionAbility] = React.useState("");
-  const [selectedSecondChampionAbility, setSelectedSecondChampionAbility] = React.useState("");
-  const [videoLink, setVideoLink] = React.useState("");
+  const [selectedFirstChampionAbility, setSelectedFirstChampionAbility] = React.useState('');
+  const [selectedSecondChampionAbility, setSelectedSecondChampionAbility] = React.useState('');
+  const [videoLink, setVideoLink] = React.useState('');
 
   // Find the selected ability in the abilities array
   const selectedFirstAbilityObject = firstChampionAbilities.find(
-    (ability) => ability.name === selectedFirstChampionAbility
+    (ability) => ability.name === selectedFirstChampionAbility,
   );
 
   const selectedSecondAbilityObject = secondChampionAbilities.find(
-    (ability) => ability.name === selectedSecondChampionAbility
+    (ability) => ability.name === selectedSecondChampionAbility,
   );
   // Construct the URL based on whether it's the passive or active ability
-  const firstAbilityImgUrl = selectedFirstAbilityObject
-    ? selectedFirstAbilityObject.name === firstChampionAbilities[0]?.name
-      ? `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/passive/${selectedFirstAbilityObject.image})`
-      : `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/spell/${selectedFirstAbilityObject.image})`
-    : 'none';
+  const firstAbilityImgUrl = selectedFirstAbilityObject ?
+    selectedFirstAbilityObject.name === firstChampionAbilities[0]?.name ?
+      `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/passive/${selectedFirstAbilityObject.image})` :
+      `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/spell/${selectedFirstAbilityObject.image})` :
+    'none';
 
-  const secondAbilityImgUrl = selectedSecondAbilityObject
-    ? selectedSecondAbilityObject.name === secondChampionAbilities[0]?.name
-      ? `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/passive/${selectedSecondAbilityObject.image})`
-      : `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/spell/${selectedSecondAbilityObject.image})`
-    : 'none';
+  const secondAbilityImgUrl = selectedSecondAbilityObject ?
+    selectedSecondAbilityObject.name === secondChampionAbilities[0]?.name ?
+      `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/passive/${selectedSecondAbilityObject.image})` :
+      `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/spell/${selectedSecondAbilityObject.image})` :
+    'none';
 
 
   React.useEffect(() => {
@@ -54,13 +53,13 @@ const AddInteractions = () => {
         {
           name: firstChampion.passive.name,
           description: firstChampion.passive.description,
-          image: firstChampion.passive.image.full
+          image: firstChampion.passive.image.full,
         },
-        ...firstChampion.spells.map(spell => ({
+        ...firstChampion.spells.map((spell) => ({
           name: spell.name,
           description: spell.description,
           image: spell.image.full,
-        }))
+        })),
       ];
       setFirstChampionAbilities(abilities);
     }
@@ -72,13 +71,13 @@ const AddInteractions = () => {
         {
           name: secondChampion.passive.name,
           description: secondChampion.passive.description,
-          image: secondChampion.passive.image.full
+          image: secondChampion.passive.image.full,
         },
-        ...secondChampion.spells.map(spell => ({
+        ...secondChampion.spells.map((spell) => ({
           name: spell.name,
           description: spell.description,
           image: spell.image.full,
-        }))
+        })),
       ];
       setSecondChampionAbilities(abilities);
     }
@@ -98,30 +97,29 @@ const AddInteractions = () => {
     } catch (error) {
       console.error('Error fetching champion details:', error);
     }
-
   };
 
   const handleFirstChampionSelect = async (event) => {
     const selectedFirstChampion = event.target.value;
     const firstChampionInfo = await fetchChampionDetails(selectedFirstChampion);
     setFirstChampion(firstChampionInfo);
-    setSelectedFirstChampionAbility("");
+    setSelectedFirstChampionAbility('');
   };
 
   const handleSecondChampionSelect = async (event) => {
     const selectedSecondChampion = event.target.value;
     const secondChampionInfo = await fetchChampionDetails(selectedSecondChampion);
     setSecondChampion(secondChampionInfo);
-    setSelectedSecondChampionAbility("");
+    setSelectedSecondChampionAbility('');
   };
 
   const selectFirstChampionAbility = (event) => {
-    const abilityName = event.target.value
+    const abilityName = event.target.value;
     setSelectedFirstChampionAbility(abilityName);
   };
 
   const selectSecondChampionAbility = (event) => {
-    const abilityName = event.target.value
+    const abilityName = event.target.value;
     setSelectedSecondChampionAbility(abilityName);
   };
 
@@ -132,10 +130,10 @@ const AddInteractions = () => {
   const uploadVideo = async () => {
     try {
       const ability1Index = firstChampionAbilities.findIndex(
-        (ability) => ability.name === selectedFirstChampionAbility
+        (ability) => ability.name === selectedFirstChampionAbility,
       );
       const ability2Index = secondChampionAbilities.findIndex(
-        (ability) => ability.name === selectedSecondChampionAbility
+        (ability) => ability.name === selectedSecondChampionAbility,
       );
 
       const ability1Key = AbilityMap[ability1Index];
@@ -151,7 +149,7 @@ const AddInteractions = () => {
 
       // Send the POST request to your server endpoint
       const response = await axios.post('http://localhost:5174/api/videos/upload', payload, {
-        withCredentials: true
+        withCredentials: true,
       });
 
       console.log('Video uploaded successfully:', response.data);
@@ -203,7 +201,7 @@ const AddInteractions = () => {
             backgroundPosition: 'center',
           }}
         />
-        <AddIcon sx={{ fontSize: "80px" }} />
+        <AddIcon sx={{ fontSize: '80px' }} />
         <MUI.Box
           width="64px"
           height="64px"
@@ -219,7 +217,7 @@ const AddInteractions = () => {
           <MUI.TextField
             label="Video Link"
             type="text"
-            value={videoLink || ""}
+            value={videoLink || ''}
             onChange={handleVideoLink}
             variant="outlined"
           />
@@ -234,7 +232,7 @@ const AddInteractions = () => {
       </MUI.Box>
     </MUI.Stack>
 
-  )
-}
+  );
+};
 
-export default AddInteractions
+export default AddInteractions;

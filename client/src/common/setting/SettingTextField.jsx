@@ -1,7 +1,7 @@
-import React from 'react'
-import * as MUI from "@mui/material";
+import React from 'react';
+import * as MUI from '@mui/material';
 
-const SettingTextField = ({label, value, onChange, required, id, type}) => {
+const SettingTextField = ({ label, value, onChange, required, id, type }) => {
   return (
     <MUI.TextField
       required={required}
@@ -22,7 +22,7 @@ const SettingTextField = ({label, value, onChange, required, id, type}) => {
           '&.Mui-focused fieldset': {
             borderColor: 'white',
           },
-          color: "white",
+          'color': 'white',
         },
         '& .MuiInputLabel-root': {
           color: 'white',
@@ -33,6 +33,6 @@ const SettingTextField = ({label, value, onChange, required, id, type}) => {
       }}
     />
   );
-}
+};
 
-export default SettingTextField
+export default SettingTextField;

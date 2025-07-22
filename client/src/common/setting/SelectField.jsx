@@ -1,13 +1,13 @@
 // SelectField.jsx
 import React from 'react';
-import * as MUI from "@mui/material";
+import * as MUI from '@mui/material';
 
 const SelectField = ({ label, value, options, onChange }) => {
   return (
     <MUI.FormControl fullWidth>
       <MUI.InputLabel
         sx={{
-          color: 'white',
+          'color': 'white',
           '&.Mui-focused': {
             color: 'white',
           },
@@ -29,7 +29,7 @@ const SelectField = ({ label, value, options, onChange }) => {
           '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
             borderColor: 'white',
           },
-          color: 'white', // text color inside select
+          'color': 'white', // text color inside select
         }}
       >
         {options.map((option) => (

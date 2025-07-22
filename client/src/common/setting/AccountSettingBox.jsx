@@ -1,5 +1,5 @@
 import React from 'react';
-import * as MUI from "@mui/material";
+import * as MUI from '@mui/material';
 
 const AccountSettingBox = ({ title, description, children }) => {
   return (
@@ -16,7 +16,7 @@ const AccountSettingBox = ({ title, description, children }) => {
         {children}
       </MUI.Stack>
     </MUI.Box>
-  )
-}
+  );
+};
 
-export default AccountSettingBox
+export default AccountSettingBox;

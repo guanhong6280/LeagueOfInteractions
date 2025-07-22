@@ -1,6 +1,6 @@
-import React from 'react'
-import * as MUI from "@mui/material";
-import googleIcon from "../assets/google_icon.svg"
+import React from 'react';
+import * as MUI from '@mui/material';
+import googleIcon from '../assets/google_icon.svg';
 
 const SignInDialog = (props) => {
   return (
@@ -21,7 +21,7 @@ const SignInDialog = (props) => {
         </MUI.Stack>
       </MUI.DialogActions>
     </MUI.Dialog>
-  )
-}
+  );
+};
 
-export default SignInDialog
+export default SignInDialog;

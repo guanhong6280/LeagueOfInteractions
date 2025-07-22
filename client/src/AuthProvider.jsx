@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import axios from "axios";
+import axios from 'axios';
 
 // Create AuthContext
 const AuthContext = createContext();
@@ -15,9 +15,9 @@ const AuthProvider = ({ children }) => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const { data } = await axios.get('http://localhost:5174/api/auth/user', {withCredentials: true});
+        const { data } = await axios.get('http://localhost:5174/api/auth/user', { withCredentials: true });
         setUser(data);
-        console.log("log data from authprovider")
+        console.log('log data from authprovider');
         console.log(data);
       } catch (error) {
         console.error('Failed to fetch user', error);
@@ -27,7 +27,7 @@ const AuthProvider = ({ children }) => {
     };
     // const delayFetch = setTimeout(fetchUser, 500);
 
-    if (!user){
+    if (!user) {
       fetchUser();
     }
   }, []);
@@ -41,15 +41,15 @@ const AuthProvider = ({ children }) => {
     try {
       const response = await axios.get('http://localhost:5174/api/auth/logout', { withCredentials: true });
       if (response.status === 200) {
-        window.location.href = "/";
+        window.location.href = '/';
       }
     } catch (error) {
-      console.error("Error logging out:", error);
+      console.error('Error logging out:', error);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, setLoading, login, logout}}>
+    <AuthContext.Provider value={{ user, loading, setLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

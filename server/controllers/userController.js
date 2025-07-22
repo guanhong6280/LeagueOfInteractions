@@ -1,5 +1,5 @@
 // server/controllers/userController.js
-const User = require("../models/User");
+const User = require('../models/User');
 
 // Register a new user
 exports.registerUser = async (req, res) => {
@@ -25,7 +25,7 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-//Get the currently logged in user
+// Get the currently logged in user
 exports.getUser = (req, res) => {
   console.log('Session data:', req.session);
   console.log('Authenticated user:', req.user);
@@ -72,7 +72,7 @@ exports.updateUserInfo = async (req, res) => {
     if (username !== undefined) user.username = username;
     if (age !== undefined) user.age = age;
     if (rank !== undefined) user.rank = rank;
-    if (sex !== undefined && sex !== "") user.sex = sex;
+    if (sex !== undefined && sex !== '') user.sex = sex;
     if (timeJoinedTheGame !== undefined) user.timeJoinedTheGame = timeJoinedTheGame;
 
     await user.save();

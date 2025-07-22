@@ -1,5 +1,5 @@
-import React from 'react'
-import * as MUI from "@mui/material";
+import React from 'react';
+import * as MUI from '@mui/material';
 import { Link } from 'react-router-dom';
 
 const NavButton = (props) => {
@@ -10,16 +10,16 @@ const NavButton = (props) => {
       component={props.pageLocation ? Link : 'button'}
       to={props.pageLocation || undefined}
       sx={{
-        marginY: "10px",
-        cursor: "pointer",
+        'marginY': '10px',
+        'cursor': 'pointer',
         '&:hover': {
-          color: props.hoverColor
-        }
+          color: props.hoverColor,
+        },
       }}
     >
       <MUI.Typography fontSize="15px" fontWeight="600">{props.buttonText}</MUI.Typography>
     </MUI.Button>
-  )
-}
+  );
+};
 
-export default NavButton
+export default NavButton;

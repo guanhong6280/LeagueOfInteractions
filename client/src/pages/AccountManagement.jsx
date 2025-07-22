@@ -1,5 +1,5 @@
 import React from 'react';
-import * as MUI from "@mui/material";
+import * as MUI from '@mui/material';
 import axios from 'axios';
 
 import AccountSettingBox from '../common/setting/AccountSettingBox';
@@ -9,13 +9,12 @@ import { useAuth } from '../AuthProvider';
 import { sexOptions, rankOptions, yearJoinedOptions } from '../common/setting/settingConstants';
 
 const AccountManagement = () => {
-
-  const [username, setUsername] = React.useState("");
+  const [username, setUsername] = React.useState('');
   const { user } = useAuth();
-  const [rank, setRank] = React.useState("");
-  const [age, setAge] = React.useState("");
-  const [sex, setSex] = React.useState("");
-  const [yearJoined, setYearJoined] = React.useState("");
+  const [rank, setRank] = React.useState('');
+  const [age, setAge] = React.useState('');
+  const [sex, setSex] = React.useState('');
+  const [yearJoined, setYearJoined] = React.useState('');
 
   const [initialData, setInitialData] = React.useState(null);
 
@@ -39,7 +38,7 @@ const AccountManagement = () => {
 
   const handleUsernameChange = (event) => {
     setUsername(event.target.value);
-  }
+  };
   const handleSexChange = (event) => {
     setSex(event.target.value);
   };
@@ -164,7 +163,7 @@ const AccountManagement = () => {
             onClick={handleSave}
             disabled={!isFormChanged()}
             sx={{
-              cursor: "pointer"
+              cursor: 'pointer',
             }}
           >
             Save Changes

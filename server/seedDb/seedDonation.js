@@ -1,6 +1,6 @@
 // seedDonationCards.js
 const mongoose = require('mongoose');
-const DonationCard = require("../models/DonationCards");
+const DonationCard = require('../models/DonationCards');
 require('dotenv').config();
 
 // Replace with your actual MongoDB connection string
@@ -12,21 +12,21 @@ mongoose.connect(process.env.MONGODB_URI, {
 
   const donationCards = [
     {
-      name: "Coursera",
-      imageURL: "https://www.langoly.com/wp-content/uploads/2021/09/coursera-logo.png",
-      description: "I want to become a better frontend developer by obtaining the frontend developer certificate from meta",
+      name: 'Coursera',
+      imageURL: 'https://www.langoly.com/wp-content/uploads/2021/09/coursera-logo.png',
+      description: 'I want to become a better frontend developer by obtaining the frontend developer certificate from meta',
       price: 20,
     },
     {
-      name: "Leetcode",
-      imageURL: "https://assets.leetcode.com/static_assets/public/images/LeetCode_logo_rvs.png",
-      description: "I use leetcode to strengthen my knowledge in data structures and algorithms.",
+      name: 'Leetcode',
+      imageURL: 'https://assets.leetcode.com/static_assets/public/images/LeetCode_logo_rvs.png',
+      description: 'I use leetcode to strengthen my knowledge in data structures and algorithms.',
       price: 10,
     },
     {
-      name: "FrontendMasters",
-      imageURL: "https://static.frontendmasters.com/assets/fm/js/images/frontendmasters_3bcb5619.svg",
-      description: "I use frontendmasters to hone my skill in frontend development",
+      name: 'FrontendMasters',
+      imageURL: 'https://static.frontendmasters.com/assets/fm/js/images/frontendmasters_3bcb5619.svg',
+      description: 'I use frontendmasters to hone my skill in frontend development',
       price: 39,
     },
   ];
@@ -41,6 +41,6 @@ mongoose.connect(process.env.MONGODB_URI, {
     console.error('Error inserting donation cards:', err);
     mongoose.disconnect();
   }
-}).catch(err => {
+}).catch((err) => {
   console.error('MongoDB connection error:', err);
 });

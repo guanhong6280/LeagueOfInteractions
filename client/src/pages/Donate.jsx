@@ -1,11 +1,10 @@
 import React from 'react';
-import * as MUI from "@mui/material";
+import * as MUI from '@mui/material';
 import DonationCard from '../common/donation/DonationCard';
 import DonationDialog from '../common/donation/DonationDialog';
 import axios from 'axios';
 
 const Donate = () => {
-
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [donationCardId, setDonationCardId] = React.useState(null);
 
@@ -48,10 +47,9 @@ const Donate = () => {
               donationCardId={item._id} // Use the actual ObjectId
               openDialog={openDialog}
             />
-          )
+          );
         })}
       </MUI.Box>
-      {/* <MUI.Button variant="outlined" onClick={openDialog}>test</MUI.Button> */}
       <DonationDialog dialogOpen={dialogOpen} onClose={closeDialog} donationCardId={donationCardId}></DonationDialog>
     </MUI.Stack>
   );

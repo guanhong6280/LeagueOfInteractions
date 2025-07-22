@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-const sgEmail = require("@sendgrid/mail");
-const Donation = require("../models/Donations");
+const sgEmail = require('@sendgrid/mail');
+const Donation = require('../models/Donations');
 
 
 // Set up SendGrid API key
@@ -45,23 +45,23 @@ router.post('/', express.raw({ type: 'application/json' }), async (req, res) => 
       console.error('Error saving donation:', error);
     }
 
-      // Call your email service here to send the thank-you email
-      sendThankYouEmail(customerEmail, cardholderName, amountTotal);
-    }
+    // Call your email service here to send the thank-you email
+    sendThankYouEmail(customerEmail, cardholderName, amountTotal);
+  }
 
-    res.status(200).end();
-  });
+  res.status(200).end();
+});
 
 const sendThankYouEmail = async (email, name, amount) => {
   const msg = {
     to: email,
-    from: "guanhong.jiang6280@gmail.com",
-    subject: "Thank you for your Donation!",
-    template_id: "d-0903407bc24a4320a31a36fcf95f855d",
+    from: 'guanhong.jiang6280@gmail.com',
+    subject: 'Thank you for your Donation!',
+    template_id: 'd-0903407bc24a4320a31a36fcf95f855d',
     dynamic_template_data: {
       name: name,
-      amount: amount
-    }
+      amount: amount,
+    },
   };
   // Implementation for sending the thank-you email
   try {

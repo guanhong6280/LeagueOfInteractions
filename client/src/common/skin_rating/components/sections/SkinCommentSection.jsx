@@ -36,6 +36,7 @@ const SkinCommentSection = memo(({ currentSkinId, championName }) => {
       borderColor='divider'
       borderRadius='10px'
       paddingY='10px'
+      marginBottom='80px'
       sx={{ width: '100%', maxWidth: 1000, mx: 'auto' }}
     >
 

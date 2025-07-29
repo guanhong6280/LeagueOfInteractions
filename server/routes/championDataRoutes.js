@@ -3,8 +3,8 @@ const express = require('express');
 const router = express.Router();
 const versionManager = require('../utils/versionManager');
 
-// GET /champion_names - Get all champion data
-router.get('/champion_names', async (req, res) => {
+// GET /champion_data - Get all champion data
+router.get('/champion_data', async (req, res) => {
   try {
     const language = req.query.language || 'en_US';
     const championData = await versionManager.getChampionData(language);
@@ -20,7 +20,7 @@ router.get('/champion_names', async (req, res) => {
 });
 
 // GET /champion_names/list - Get simplified champion list (just names and keys)
-router.get('/champion_names/list', async (req, res) => {
+router.get('/simplified_champion_data', async (req, res) => {
   try {
     const language = req.query.language || 'en_US';
     const championData = await versionManager.getChampionData(language);
@@ -49,25 +49,45 @@ router.get('/champion_names/list', async (req, res) => {
   }
 });
 
+// GET /version/current - Get current League version
+router.get('/version/current', async (req, res) => {
+  try {
+    const version = await versionManager.getLatestVersion();
+    res.json({ 
+      version, 
+      timestamp: Date.now(),
+      source: 'Data Dragon API'
+    });
+  } catch (error) {
+    console.error('Error fetching current version:', error.message);
+    res.status(500).json({ 
+      error: 'Failed to get current version',
+      message: error.message 
+    });
+  }
+});
+
 // GET /champion/:championId - Get specific champion data
 router.get('/champion/:championId', async (req, res) => {
   try {
     const { championId } = req.params;
     const language = req.query.language || 'en_US';
-    const championData = await versionManager.getChampionData(language);
     
-    const champion = championData.data[championId];
+    // Use the new specific champion data function
+    const champion = await versionManager.getChampionSpecificData(championId, language);
     
-    if (!champion) {
+    res.json(champion);
+  } catch (error) {
+    console.error('Error fetching champion:', error.message);
+    
+    // Check if it's a "not found" error
+    if (error.message.includes('not found')) {
       return res.status(404).json({ 
         error: 'Champion not found',
         championId: championId 
       });
     }
     
-    res.json(champion);
-  } catch (error) {
-    console.error('Error fetching champion:', error.message);
     res.status(500).json({ 
       error: 'Failed to fetch champion',
       message: error.message 

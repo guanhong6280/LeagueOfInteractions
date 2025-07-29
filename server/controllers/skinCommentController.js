@@ -1,7 +1,6 @@
 const SkinComment = require('../models/SkinComment');
 const Skin = require('../models/Skin');
 const User = require('../models/User');
-const { moderateComment } = require('../config/moderation');
 /**
  * Submit or update a comment for a specific skin.
  * @param {Object} req - Express request object

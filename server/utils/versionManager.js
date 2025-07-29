@@ -52,26 +52,25 @@ class VersionManager {
   }
 
   /**
-   * Get cached data or fetch from API
-   * @param {string} dataType - Type of data (e.g., 'champion', 'item')
+   * Get champion data specifically
    * @param {string} language - Language code (default: 'en_US')
-   * @returns {Promise<Object>} Data from Riot API
+   * @returns {Promise<Object>} Champion data
    */
-  async getRiotData(dataType, language = 'en_US') {
-    const cacheKey = `${dataType}_${language}`;
+  async getChampionData(language = 'en_US') {
+    const cacheKey = `champion_${language}`;
     const cached = this.cache.get(cacheKey);
     
     // Check cache first
     if (cached && Date.now() - cached.timestamp < this.cacheExpiry) {
-      console.log(`Returning cached ${dataType} data`);
+      console.log(`Returning cached champion data for ${language}`);
       return cached.data;
     }
 
     try {
       const version = await this.getLatestVersion();
-      const url = `https://ddragon.leagueoflegends.com/cdn/${version}/data/${language}/${dataType}.json`;
+      const url = `https://ddragon.leagueoflegends.com/cdn/${version}/data/${language}/champion.json`;
       
-      console.log(`Fetching ${dataType} data from: ${url}`);
+      console.log(`Fetching champion data from: ${url}`);
       const response = await axios.get(url, {
         timeout: 10000, // 10 second timeout
       });
@@ -82,39 +81,58 @@ class VersionManager {
         timestamp: Date.now(),
       });
       
-      console.log(`Successfully fetched and cached ${dataType} data`);
+      console.log(`Successfully fetched and cached champion data for ${language}`);
       return response.data;
     } catch (error) {
-      console.error(`Failed to fetch ${dataType} data:`, error.message);
-      throw new Error(`Failed to fetch ${dataType} data: ${error.message}`);
+      console.error(`Failed to fetch champion data:`, error.message);
+      throw new Error(`Failed to fetch champion data: ${error.message}`);
     }
   }
 
   /**
-   * Get champion data specifically
+   * Get specific champion data with full details
+   * @param {string} championName - Champion name (e.g., 'Ahri', 'Yasuo')
    * @param {string} language - Language code (default: 'en_US')
-   * @returns {Promise<Object>} Champion data
+   * @returns {Promise<Object>} Specific champion data with full details
    */
-  async getChampionData(language = 'en_US') {
-    return this.getRiotData('champion', language);
-  }
+  async getChampionSpecificData(championName, language = 'en_US') {
+    const cacheKey = `champion_specific_${championName}_${language}`;
+    const cached = this.cache.get(cacheKey);
+    
+    // Check cache first
+    if (cached && Date.now() - cached.timestamp < this.cacheExpiry) {
+      console.log(`Returning cached specific champion data for ${championName}`);
+      return cached.data;
+    }
 
-  /**
-   * Get item data specifically
-   * @param {string} language - Language code (default: 'en_US')
-   * @returns {Promise<Object>} Item data
-   */
-  async getItemData(language = 'en_US') {
-    return this.getRiotData('item', language);
-  }
-
-  /**
-   * Get summoner spell data specifically
-   * @param {string} language - Language code (default: 'en_US')
-   * @returns {Promise<Object>} Summoner spell data
-   */
-  async getSummonerSpellData(language = 'en_US') {
-    return this.getRiotData('summoner', language);
+    try {
+      const version = await this.getLatestVersion();
+      const url = `https://ddragon.leagueoflegends.com/cdn/${version}/data/${language}/champion/${championName}.json`;
+      
+      console.log(`Fetching specific champion data for ${championName} from: ${url}`);
+      const response = await axios.get(url, {
+        timeout: 10000, // 10 second timeout
+      });
+      
+      // Extract the specific champion data
+      const championData = response.data.data[championName];
+      
+      if (!championData) {
+        throw new Error(`Champion ${championName} not found in response`);
+      }
+      
+      // Cache the result
+      this.cache.set(cacheKey, {
+        data: championData,
+        timestamp: Date.now(),
+      });
+      
+      console.log(`Successfully fetched and cached specific champion data for ${championName}`);
+      return championData;
+    } catch (error) {
+      console.error(`Failed to fetch specific champion data for ${championName}:`, error.message);
+      throw new Error(`Failed to fetch specific champion data for ${championName}: ${error.message}`);
+    }
   }
 
   /**

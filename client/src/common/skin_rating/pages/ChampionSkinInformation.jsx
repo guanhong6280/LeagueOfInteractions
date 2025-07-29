@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import * as MUI from '@mui/material';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { SkinCarousel } from '../components/carousel';
 import { ChampionStatsCard } from '../components/stats';
 import { SkinRatingSection, SkinCommentSection } from '../components/sections';
 import { fetchChampionSpecificStats, fetchChampionList } from '../../../api/championApi';
 import { getChampionSquareAssetUrl } from '../../../utils/championNameUtils';
+import { useVersion } from '../../../contextProvider/VersionProvider';
 import { ReturnButton } from '../components/common';
 
 // Custom hook for unified data management
@@ -27,37 +28,37 @@ const useChampionData = (championName) => {
 
       try {
         setState(prev => ({ ...prev, isLoading: true, error: null }));
-        
+
         // Load both stats and champion details in parallel
         const [statsResponse, championListResponse] = await Promise.all([
           fetchChampionSpecificStats(championName),
           fetchChampionList()
         ]);
-        
+
         if (statsResponse.success) {
           // Find the specific champion details from the list
           const championDetails = championListResponse.champions?.find(
             champion => champion.name.toLowerCase() === championName.toLowerCase()
           );
-          
-          setState(prev => ({ 
-            ...prev, 
+
+          setState(prev => ({
+            ...prev,
             stats: statsResponse.data,
             championDetails: championDetails || null,
-            isLoading: false 
+            isLoading: false
           }));
         } else {
-          setState(prev => ({ 
-            ...prev, 
-            error: 'Failed to load champion data', 
-            isLoading: false 
+          setState(prev => ({
+            ...prev,
+            error: 'Failed to load champion data',
+            isLoading: false
           }));
         }
       } catch (err) {
-        setState(prev => ({ 
-          ...prev, 
-          error: 'Failed to load champion data', 
-          isLoading: false 
+        setState(prev => ({
+          ...prev,
+          error: 'Failed to load champion data',
+          isLoading: false
         }));
       }
     };
@@ -74,8 +75,8 @@ const useChampionData = (championName) => {
 
 const ChampionSkinInformation = () => {
   const { championName } = useParams();
-  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('rating');
+  const { version } = useVersion();
 
   // Unified data management
   const { stats, championDetails, currentSkin, isLoading, error, updateCurrentSkin } = useChampionData(championName);
@@ -87,13 +88,13 @@ const ChampionSkinInformation = () => {
     >
       {/* Return Button - Fixed Position */}
       <ReturnButton />
-      
+
       {/* Page Header - could add breadcrumbs here later */}
 
       {/* Champion Stats Section */}
       <MUI.Box sx={{ mb: 4 }}>
         <ChampionStatsCard
-          championImageUrl={getChampionSquareAssetUrl(championName)}
+          championImageUrl={getChampionSquareAssetUrl(championName, version)}
           championName={championDetails?.name || championName}
           championTitle={championDetails?.title || ''}
           stats={stats}

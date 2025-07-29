@@ -54,8 +54,14 @@ export const getChampionLoadingUrl = (championName) => {
   return `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${cleanedName}_0.jpg`;
 }; 
 
-export const getChampionSquareAssetUrl = (championName) => {
-    const cleanedName = cleanChampionNameForCDN(championName);
-    return `https://ddragon.leagueoflegends.com/cdn/15.13.1/img/champion/${cleanedName}.png`;
-  }; 
+/**
+ * Get champion square asset URL with latest version
+ * @param {string} championName - The champion name
+ * @param {string} version - League version (optional, will use fallback if not provided)
+ * @returns {string} - Data Dragon CDN URL
+ */
+export const getChampionSquareAssetUrl = (championName, version = '14.19.1') => {
+  const cleanedName = cleanChampionNameForCDN(championName);
+  return `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${cleanedName}.png`;
+}; 
   

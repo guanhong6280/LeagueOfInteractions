@@ -4,7 +4,6 @@ import { createRoot } from 'react-dom/client';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 
-
 import MainLayout from './mainLayout.jsx';
 import './index.css';
 import ViewInteractions from './pages/ViewInteractions.jsx';
@@ -12,35 +11,65 @@ import AddInteractions from './pages/AddInteractions.jsx';
 import AuthProvider from './AuthProvider.jsx';
 import ChampionProvider from './contextProvider/ChampionProvider.jsx';
 import { ChampionStatsProvider } from './contextProvider/ChampionStatsProvider.jsx';
+import { VersionProvider } from './contextProvider/VersionProvider.jsx';
 import Donate from './pages/Donate.jsx';
 import AccountManagement from './pages/AccountManagement.jsx';
 import SkinRating from './pages/SkinRating.jsx';
 import { ChampionSkinDetail } from './common/skin_rating';
+
+// Admin imports
+import AdminGuard from './admin/components/guards/AdminGuard.jsx';
+import AdminLayout from './admin/layout/AdminLayout.jsx';
+
+// Temporary admin dashboard component
+const AdminDashboard = () => (
+  <div>
+    <h1>Admin Dashboard</h1>
+    <p>Welcome to the admin panel!</p>
+  </div>
+);
 
 const stripePromise = loadStripe('your-publishable-key-here');
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AuthProvider>
-      <ChampionProvider>
-        <ChampionStatsProvider>
-          <Elements stripe={stripePromise}>
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<MainLayout />}>
-                  {/* The default route that shows creators */}
-                  <Route index element={<ViewInteractions />} />
-                  <Route path="add" element={<AddInteractions />} />
-                  <Route path="skin_rating" element={<SkinRating />} />
-                  <Route path="donation" element={<Donate />} />
-                  <Route path="setting" element={<AccountManagement />} />
-                  <Route path="/champion-skin-details/:championName" element={<ChampionSkinDetail />} />
-                </Route>
-              </Routes>
-            </BrowserRouter>
-          </Elements>
-        </ChampionStatsProvider>
-      </ChampionProvider>
+      <VersionProvider>
+        <ChampionProvider>
+          <ChampionStatsProvider>
+            <Elements stripe={stripePromise}>
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<MainLayout />}>
+                    {/* The default route that shows creators */}
+                    <Route index element={<ViewInteractions />} />
+                    <Route path="add" element={<AddInteractions />} />
+                    <Route path="skin_rating" element={<SkinRating />} />
+                    <Route path="donation" element={<Donate />} />
+                    <Route path="setting" element={<AccountManagement />} />
+                    <Route path="/champion-skin-details/:championName" element={<ChampionSkinDetail />} />
+                  </Route>
+                  
+                  {/* Admin Routes - Protected by AdminGuard */}
+                  <Route path="admin/*"
+                    element={
+                      <AdminGuard>
+                        <AdminLayout />
+                      </AdminGuard>
+                    }
+                  >
+                    <Route index element={<AdminDashboard />} />
+                    {/* Future admin routes will go here */}
+                    {/* <Route path="users" element={<UserManagement />} /> */}
+                    {/* <Route path="comments" element={<CommentModeration />} /> */}
+                    {/* <Route path="analytics" element={<Analytics />} /> */}
+                  </Route>
+                </Routes>
+              </BrowserRouter>
+            </Elements>
+          </ChampionStatsProvider>
+        </ChampionProvider>
+      </VersionProvider>
     </AuthProvider>
   </StrictMode>,
 );

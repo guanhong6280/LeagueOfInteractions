@@ -10,7 +10,7 @@ export const useAuth = () => useContext(AuthContext);
 // Create AuthProvider component
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start with loading true
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -21,17 +21,14 @@ const AuthProvider = ({ children }) => {
         console.log(data);
       } catch (error) {
         console.error('Failed to fetch user', error);
+        setUser(null); // Explicitly set user to null on error
       } finally {
-        setLoading(false);
+        setLoading(false); // Always set loading to false when done
       }
     };
-    // const delayFetch = setTimeout(fetchUser, 500);
 
-    if (!user) {
-      fetchUser();
-    }
+    fetchUser(); // Always fetch user on mount
   }, []);
-
 
   const login = (userData) => {
 

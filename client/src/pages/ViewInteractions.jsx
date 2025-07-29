@@ -4,7 +4,7 @@ import * as MUI from '@mui/material';
 import { useChampion } from '../contextProvider/ChampionProvider';
 import ChampionSelectCard from '../common/ChampionSelectCard';
 import { AbilityMap } from './AddInteractions';
-import { fetchChampionDetails, fetchVideoData } from '../championApi/viewInteractionsApi';
+import { fetchChampionDetails, fetchVideoData } from '../api/championApi';
 import VideoPlayer from '../common/ViewInteractionPage/VideoDisplay';
 
 const ViewInteractions = () => {

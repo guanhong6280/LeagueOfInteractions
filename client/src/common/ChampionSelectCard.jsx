@@ -1,8 +1,25 @@
 import React from 'react';
 import * as MUI from '@mui/material';
 import { AbilityMap } from '../pages/AddInteractions';
+import { useVersion } from '../contextProvider/VersionProvider';
+import { constructImageUrl, constructChampionLoadingUrl } from '../utils/imageUtils';
 
 const ChampionSelectCard = (props) => {
+  const { version, loading: versionLoading } = useVersion();
+
+  // Construct image URLs with proper versioning
+  const getAbilityImageUrl = (ability, index) => {
+    if (!version || !ability?.image) return null;
+    
+    const imageType = index === 0 ? 'passive' : 'spell';
+    return constructImageUrl(version, imageType, ability.image);
+  };
+
+  const getChampionLoadingUrl = () => {
+    if (!props.champion?.id) return null;
+    return constructChampionLoadingUrl(props.champion.id);
+  };
+
   return (
     <MUI.Stack
       border="solid 3px"
@@ -23,9 +40,7 @@ const ChampionSelectCard = (props) => {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundImage: props.champion ?
-            `url(https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${props.champion?.id}_0.jpg)` :
-            'none',
+          backgroundImage: getChampionLoadingUrl() ? `url(${getChampionLoadingUrl()})` : 'none',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           opacity: 0.4,
@@ -54,13 +69,11 @@ const ChampionSelectCard = (props) => {
           spacing="10px"
         >
           {props.abilities?.map((ability, index) => {
-            const imageUrl =
-              index === 0 ?
-                `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/passive/${props.abilities[index]?.image})` :
-                `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/spell/${props.abilities[index]?.image})`;
+            const imageUrl = getAbilityImageUrl(ability, index);
 
             return (
               <MUI.Stack
+                key={index}
                 alignItems="center"
                 sx={{
                   'opacity': ability.name === props.selectedAbility ? 1 : 0.5,
@@ -71,17 +84,30 @@ const ChampionSelectCard = (props) => {
                 }}
               >
                 <MUI.Box
-                  key={index}
                   width="64px"
                   height="64px"
                   onClick={() => props.handleAbilitySelect(ability.name)}
                   sx={{
-                    backgroundImage: props.abilities ? imageUrl : 'none',
+                    backgroundImage: imageUrl ? `url(${imageUrl})` : 'none',
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     cursor: 'pointer',
+                    // Add fallback styling if image fails to load
+                    backgroundColor: 'rgba(0,0,0,0.1)',
+                    border: '1px solid rgba(0,0,0,0.2)',
                   }}
                 >
+                  {/* Show loading indicator if version is still loading */}
+                  {versionLoading && (
+                    <MUI.Box
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      height="100%"
+                    >
+                      <MUI.CircularProgress size={20} />
+                    </MUI.Box>
+                  )}
                 </MUI.Box>
                 <MUI.Typography>
                   {ability.name}

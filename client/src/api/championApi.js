@@ -27,13 +27,34 @@ api.interceptors.response.use(
 
 // Champion API functions
 export const fetchChampionNames = async () => {
-  const response = await api.get('/api/championData/champion_names');
+  const response = await api.get('/api/championData/champion_data');
   return response.data;
 };
 
+export const fetchCurrentVersion = async () => {
+  try {
+    const response = await api.get('/api/championData/version/current');
+    return response.data.version;
+  } catch (error) {
+    console.error('Error fetching current version:', error);
+    return '14.19.1'; // Fallback version
+  }
+};
+
 export const fetchChampionList = async () => {
-  const response = await api.get('/api/championData/champion_names/list');
+  const response = await api.get('/api/championData/simplified_champion_data');
   return response.data;
+};
+
+export const fetchChampionDetails = async (championName) => {
+  try {
+    const response = await api.get(`/api/championData/champion/${championName}`);
+    console.log('Champion details from server:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching champion details:', error);
+    return null;
+  }
 };
 
 export const fetchChampionSkins = async (championName) => {
@@ -49,6 +70,17 @@ export const fetchSkinDetails = async (skinId) => {
 export const fetchChampionSkinsFromAPI = async (championName) => {
   const response = await api.get(`/api/skins?championId=${encodeURIComponent(championName)}`);
   return response.data;
+};
+
+// Video API functions
+export const fetchVideoData = async (params) => {
+  try {
+    const response = await api.get('/api/videos', { params });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching video data:', error);
+    return null;
+  }
 };
 
 // Skin Rating APIs

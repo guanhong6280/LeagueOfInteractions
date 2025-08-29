@@ -1,6 +1,7 @@
 const SkinComment = require('../models/SkinComment');
 const Skin = require('../models/Skin');
 const User = require('../models/User');
+const { enqueueSummaryCheck } = require('../config/summaryQueue');
 /**
  * Submit or update a comment for a specific skin.
  * @param {Object} req - Express request object
@@ -74,6 +75,11 @@ exports.commentOnSkin = async (req, res) => {
 
     // Update user's recent comment history
     await updateUserRecentComments(userId, !!existingComment, commentData);
+
+    // Enqueue summary check for new comments (Week 1 addition)
+    if (!existingComment && commentData.status === 'approved') {
+      await enqueueSummaryCheck(numericSkinId, 'NEW_COMMENT');
+    }
 
     // Determine message based on status
     let message;
@@ -424,6 +430,10 @@ exports.addReply = async (req, res) => {
 
     parentComment.replies.push(newReply);
     await parentComment.save();
+
+    if(!existingReply && newReply.status === 'approved'){
+      await enqueueSummaryCheck(skinId, 'NEW_REPLY');
+    }
 
     // Determine message based on status
     let message;

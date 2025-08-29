@@ -65,3 +65,70 @@ exports.getSkinById = async (req, res) => {
     });
   }
 };
+
+/**
+ * Get AI-generated summary for a specific skin.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getSkinSummary = async (req, res) => {
+  try {
+    const { skinId } = req.params;
+    
+    // Validate skinId
+    const numericSkinId = Number(skinId);
+    if (isNaN(numericSkinId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid skin ID. Must be a valid number.',
+      });
+    }
+
+    // Get skin with summary data
+    const skin = await Skin.findOne({ skinId: numericSkinId })
+      .select('skinId name skinSummary summaryGeneratedAt totalNumberOfComments');
+
+    if (!skin) {
+      return res.status(404).json({
+        success: false,
+        error: 'Skin not found.',
+      });
+    }
+
+    // Check if summary exists
+    if (!skin.skinSummary || skin.skinSummary.trim() === '') {
+      return res.json({
+        success: true,
+        data: {
+          skinId: skin.skinId,
+          name: skin.name,
+          hasSummary: false,
+          summary: null,
+          generatedAt: null,
+          commentCount: skin.totalNumberOfComments,
+          message: 'No summary available yet. Summary will be generated when enough comments are collected.'
+        }
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        skinId: skin.skinId,
+        name: skin.name,
+        hasSummary: true,
+        summary: skin.skinSummary,
+        generatedAt: skin.summaryGeneratedAt,
+        totalComments: skin.totalNumberOfComments
+      }
+    });
+
+  } catch (err) {
+    console.error('Error fetching skin summary:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch skin summary.',
+      message: err.message,
+    });
+  }
+};

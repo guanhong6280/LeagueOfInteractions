@@ -1,71 +1,121 @@
 // summaryGeneration.js
 const { BedrockRuntimeClient, ConverseCommand } = require("@aws-sdk/client-bedrock-runtime");
+const { NodeHttpHandler } = require("@smithy/node-http-handler");
 
-const client = new BedrockRuntimeClient({ region: "us-east-1" });
+// ---- Config (single place) ----
+const DEFAULT_REGION = "us-east-1";
+const DEFAULT_MODEL_ID = "amazon.titan-tg1-large";
+const MAX_PREV_SUMMARY_CHARS = 2000;
+const MAX_NEW_COMMENTS_CHARS = 8000;
 
+// Singleton client (can be overridden in tests)
+const defaultClient = new BedrockRuntimeClient({
+  region: DEFAULT_REGION,
+  requestHandler: new NodeHttpHandler({
+    connectionTimeout: 5_000,
+    requestTimeout:   120_000,
+  }),
+});
+
+// ---- Small utilities ----
+function normalizeComments(comments) {
+  if (!Array.isArray(comments)) return [];
+  return comments
+    .map(t => (t ?? "").trim())
+    .filter(Boolean);
+}
+
+function joinAndTrimTail(texts, maxChars, sep = "\n\n") {
+  let joined = texts.join(sep);
+  if (joined.length > maxChars) {
+    // keep the tail (most recent chunk if texts are chronological)
+    joined = joined.slice(-maxChars);
+  }
+  return joined;
+}
+
+function trimTail(str, maxChars) {
+  if (!str) return "";
+  return str.length > maxChars ? str.slice(-maxChars) : str;
+}
+
+function buildPrompt(prevSummary, newBlock) {
+  return [
+`You are an expert assistant that analyzes League of Legends skin feedback.
+Summarize the user comments about the skin’s design, visual effects, and overall quality.
+Focus on visual appeal and design elements, in-game model quality, splash art quality, value for money, and unique features or animations.
+Write your response as full sentences (no bullet points) and keep it to no more than seven sentences.
+
+You are updating an existing summary using ONLY the NEW feedback below.
+- Keep prior takeaways that still hold.
+- Adjust, refine, or replace points when the new feedback indicates a shift or contradiction.
+- Collapse duplicates and avoid repetition.
+- Be concise and user-facing.
+
+Existing summary (may be truncated):
+\`\`\`
+${prevSummary || "(none)"}
+\`\`\`
+
+New approved comments & replies (may be truncated):
+\`\`\`
+${newBlock}
+\`\`\``
+  ].join("\n");
+}
+
+// ---- Core function ----
 /**
- * Summarize skin rating comments into bulleted pros & cons.
- * @param {string} text - Concatenated user comments about a skin
- * @returns {Promise<string>} - The LLM's summary in pros/cons format
+ * Update an existing summary using ONLY the new approved comments/replies.
+ * @param {string} prevSummary
+ * @param {string[]} newComments
+ * @param {{ client?: BedrockRuntimeClient, modelId?: string }} [opts]
+ * @returns {Promise<string>}
  */
-async function summarizeComments(text) {
-  if (!text || text.trim().length === 0) {
-    throw new Error('No text provided for summarization');
+async function summarizeComments(prevSummary, newComments, opts = {}) {
+  const client = opts.client ?? defaultClient;
+  const modelId = opts.modelId ?? DEFAULT_MODEL_ID;
+
+  const prev = trimTail((prevSummary ?? "").trim(), MAX_PREV_SUMMARY_CHARS);
+  const comments = normalizeComments(newComments);
+
+  if (comments.length === 0) {
+    // Nothing new; keep previous summary unchanged
+    return prev;
   }
 
-  // Combine your instructions and the comments into one "user" message
-  const prompt = `
-You are an expert assistant that analyzes League of Legends skin feedback. 
-Summarize the user comments about the skin’s design, visual effects, and overall quality. 
-Focus on visual appeal and design elements, in-game model quality, splash art quality, value for money, and unique features or animations. 
-Write your response as full sentences (no bullet points) and keep it to no more than seven sentences. 
+  const newBlock = joinAndTrimTail(comments, MAX_NEW_COMMENTS_CHARS);
+  const prompt = buildPrompt(prev, newBlock);
 
-Here are the user comments:
-${text}
-`.trim();
+  // Optional: log after normalization/truncation
+  console.log(`🤖 Summarizing ${comments.length} comments (${newBlock.length} chars); prev=${prev.length} chars`);
 
   try {
-    console.log('🤖 Calling Bedrock with model: amazon.titan-text-express-v1');
-    console.log('📝 Input prompt length:', prompt.length, 'characters');
+    const response = await client.send(new ConverseCommand({
+      modelId,
+      messages: [{ role: "user", content: [{ type: "text", text: prompt }] }],
+    }));
 
-    const response = await client.send(
-      new ConverseCommand({
-        modelId: "amazon.titan-tg1-large",
-        messages: [
-          {
-            role: "user",
-            content: [
-              { type: "text", text: prompt }
-            ]
-          }
-        ]
-      })
-    );
+    const updated = response.output?.message?.content?.[0]?.text?.trim();
+    if (!updated) throw new Error("Provider returned empty summary");
+    console.log(`✅ Summary generated: ${updated.length} chars`);
+    return updated;
 
-    console.log('✅ Bedrock API call successful');
+  } catch (err) {
+    // Normalize common provider errors into cleaner messages
+    const name = err?.name || "Error";
+    const msg  = err?.message || String(err);
 
-    const summary = response.output.message.content[0].text;
-    if (!summary || !summary.trim()) {
-      throw new Error('No summary generated from the model');
+    if (name === "ValidationException" && msg.includes("messages")) {
+      throw new Error("Bedrock rejected message roles/content. Ensure only 'user'/'assistant' roles and valid text payloads.");
     }
-
-    console.log('📝 Generated summary length:', summary.length, 'characters');
-    return summary;
-
-  } catch (error) {
-    console.error('❌ Error in summarizeComments:', error);
-
-    if (error.name === 'ValidationException' && error.message.includes('messages')) {
-      throw new Error(`Invalid message roles – Bedrock only accepts 'user' or 'assistant'. Original: ${error.message}`);
+    if (name === "AccessDeniedException") {
+      throw new Error("Access denied to AWS Bedrock (check IAM permissions and model access).");
     }
-    if (error.name === 'AccessDeniedException') {
-      throw new Error(`Access denied to AWS Bedrock. Check your IAM permissions. ${error.message}`);
+    if (name === "ThrottlingException") {
+      throw new Error("Rate limit exceeded by AWS Bedrock. Please retry with backoff.");
     }
-    if (error.name === 'ThrottlingException') {
-      throw new Error(`Rate limit exceeded. Try again later. ${error.message}`);
-    }
-
-    throw new Error(`Failed to summarize comments: ${error.message}`);
+    throw new Error(`Failed to summarize comments: ${msg}`);
   }
 }
 

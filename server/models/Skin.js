@@ -16,6 +16,10 @@ const SkinSchema = new mongoose.Schema({
   totalNumberOfRatings: { type: Number, default: 0 },
   totalNumberOfComments: { type: Number, default: 0 },
 
+  // Summary pipeline fields (Week 1 addition)
+  skinSummary: { type: String, default: '' },
+  summaryGeneratedAt: { type: Date, default: null },
+
   // Metadata
   dateCreated: { type: Date, default: Date.now },
   lastUpdated: { type: Date, default: Date.now },
@@ -25,5 +29,8 @@ const SkinSchema = new mongoose.Schema({
 SkinSchema.index({ championId: 1, skinId: 1 });
 SkinSchema.index({ skinId: 1 }, { unique: true });
 SkinSchema.index({ skinLineId: 1 }); // For skin line analytics
+
+// Summary workflow index (Week 1 addition)
+SkinSchema.index({ summaryGeneratedAt: 1 });
 
 module.exports = mongoose.model('Skin', SkinSchema);

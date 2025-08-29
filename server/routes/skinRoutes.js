@@ -48,4 +48,7 @@ router.post('/:skinId/comments/:commentId/unlike', ensureApiAuthenticated, skinC
 router.post('/:skinId/comments/:commentId/replies/:replyId/like', ensureApiAuthenticated, skinCommentController.likeReply);
 router.post('/:skinId/comments/:commentId/replies/:replyId/unlike', ensureApiAuthenticated, skinCommentController.unlikeReply);
 
+// GET /api/skins/:skinId/summary - Get AI-generated summary for a skin (Week 1 addition)
+router.get('/:skinId/summary', skinController.getSkinSummary);
+
 module.exports = router;

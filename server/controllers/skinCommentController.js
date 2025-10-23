@@ -77,9 +77,9 @@ exports.commentOnSkin = async (req, res) => {
     await updateUserRecentComments(userId, !!existingComment, commentData);
 
     // Enqueue summary check for new comments (Week 1 addition)
-    if (!existingComment && commentData.status === 'approved') {
-      await enqueueSummaryCheck(numericSkinId, 'NEW_COMMENT');
-    }
+    // if (!existingComment && commentData.status === 'approved') {
+    //   await enqueueSummaryCheck(numericSkinId, 'NEW_COMMENT');
+    // }
 
     // Determine message based on status
     let message;
@@ -143,6 +143,7 @@ exports.getCommentsForSkin = async (req, res) => {
     // Get comments with replies to calculate counts, then exclude replies content
     const commentsWithReplies = await SkinComment.find({ skinId: numericSkinId })
       .sort({ dateCreated: -1 });
+    console.log(commentsWithReplies);
     
     // Transform to include replyCount but exclude actual replies content
     const commentsWithCounts = commentsWithReplies.map(comment => {
@@ -152,6 +153,7 @@ exports.getCommentsForSkin = async (req, res) => {
       delete commentObj.replies;
       return commentObj;
     });
+    console.log(commentsWithCounts);
     
     // Populate user data if requested using Mongoose virtuals
     let processedComments = commentsWithCounts;
@@ -431,9 +433,9 @@ exports.addReply = async (req, res) => {
     parentComment.replies.push(newReply);
     await parentComment.save();
 
-    if(!existingReply && newReply.status === 'approved'){
-      await enqueueSummaryCheck(skinId, 'NEW_REPLY');
-    }
+    // if(!existingReply && newReply.status === 'approved'){
+    //   await enqueueSummaryCheck(skinId, 'NEW_REPLY');
+    // }
 
     // Determine message based on status
     let message;

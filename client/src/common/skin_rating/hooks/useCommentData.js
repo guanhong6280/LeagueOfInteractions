@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   getSkinComments, 
   getUserSkinComment, 
@@ -14,235 +15,285 @@ import { useAuth } from '../../../AuthProvider';
 
 const useCommentData = (currentSkinId) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   
-  // Core state
-  const [comments, setComments] = useState([]);
-  const [userComment, setUserComment] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState(null);
-  
-  // UI state
+  // UI state (still local state)
   const [expandedReplies, setExpandedReplies] = useState(new Set());
   const [replyingTo, setReplyingTo] = useState(null);
   const [loadingReplies, setLoadingReplies] = useState(new Set());
 
-  // Load comments and user's comment
-  const loadCommentData = useCallback(async () => {
-    if (!currentSkinId) {
-      setIsLoading(false);
-      return;
+  // 1. FETCH COMMENTS with React Query
+  const { 
+    data: rawComments = [], 
+    isLoading, 
+    error: commentsError,
+    refetch: refreshComments 
+  } = useQuery({
+    queryKey: ['comments', currentSkinId],
+    queryFn: () => getSkinComments(currentSkinId, true),
+    enabled: !!currentSkinId,
+    select: (response) => {
+      if (!response.success) return [];
+      console.log(`commentsResponse.data`, response.data);
+      return response.data;
     }
+  });
 
-    try {
-      setIsLoading(true);
-      setError(null);
+  // Get comments directly from cache to ensure we always have the latest data
+  const cacheData = queryClient.getQueryData(['comments', currentSkinId]);
+  const cacheComments = Array.isArray(cacheData) ? cacheData : (cacheData?.data || []);
+  
+  // Transform comments with useMemo
+  const comments = useMemo(() => {
+    console.log('🔄 useMemo re-running for comments transformation. Cache comments:', cacheComments);
+    return cacheComments.map(comment => ({
+      ...comment,
+      displayText: comment.status === 'needsReview' 
+        ? "This comment is under review" 
+        : comment.status === 'rejected'
+        ? "I love league of legend, I love Riot Games!!!"
+        : comment.comment,
+      isInteractionDisabled: comment.status === 'needsReview' || comment.status === 'rejected'
+    }));
+  }, [cacheComments]);
 
-      // Load all comments and user's comment in parallel
-      const [commentsResponse, userCommentResponse] = await Promise.all([
-        getSkinComments(currentSkinId, true), // Include user details
-        user ? getUserSkinComment(currentSkinId) : Promise.resolve({ data: null })
-      ]);
+  // 2. FETCH USER'S COMMENT with React Query
+  const { data: userComment } = useQuery({
+    queryKey: ['userComment', currentSkinId, user?._id],
+    queryFn: () => getUserSkinComment(currentSkinId),
+    enabled: !!currentSkinId && !!user,
+    select: (response) => response.success ? response.data : null
+  });
 
-      if (commentsResponse.success) {
-        // Transform comments to include display text based on moderation status
-        const transformedComments = commentsResponse.data.map(comment => ({
-          ...comment,
-          displayText: comment.status === 'needsReview' 
-            ? "This comment is under review" 
-            : comment.status === 'rejected'
-            ? "I love league of legend, I love Riot Games!!!"
-            : comment.comment,
-          isInteractionDisabled: comment.status === 'needsReview' || comment.status === 'rejected'
-        }));
-        setComments(transformedComments);
+  // 3. SUBMIT COMMENT with React Query mutation
+  const submitCommentMutation = useMutation({
+    mutationFn: (commentText) => submitSkinComment(currentSkinId, { comment: commentText.trim() }),
+    
+    onMutate: async (commentText) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries(['comments', currentSkinId]);
+      
+      // Snapshot previous value
+      const previousComments = queryClient.getQueryData(['comments', currentSkinId]);
+      
+      // Create optimistic comment
+      const optimisticComment = {
+        _id: `temp-${Date.now()}`,
+        comment: commentText.trim(),
+        userId: user._id,
+        username: user.username,
+        user: {
+          _id: user._id,
+          username: user.username,
+          profilePictureURL: user.profilePictureURL
+        },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        likedBy: [],
+        isEdited: false,
+        status: 'approved',
+        displayText: commentText.trim(),
+        isInteractionDisabled: false,
+        skinId: currentSkinId
+      };
+      
+      // Optimistically update
+      queryClient.setQueryData(['comments', currentSkinId], oldData => {
+        const existingComments = Array.isArray(oldData) ? oldData : [];
+        return [optimisticComment, ...existingComments];
+      });
+      
+      return { previousComments };
+    },
+    
+    onSuccess: (response) => {
+      console.log('🎉 Mutation onSuccess called with response:', response);
+      console.log('🎉 Response structure:', {
+        hasData: !!response.data,
+        dataType: typeof response.data,
+        dataValue: response.data,
+        hasSuccess: 'success' in response,
+        successValue: response.success
+      });
+      
+      // response is the full API response from submitSkinComment
+      // Check if response has the expected structure
+      if (!response.success || !response.data) {
+        console.error('❌ Invalid response structure:', response);
+        return;
       }
-
-      if (userCommentResponse.success && userCommentResponse.data) {
-        setUserComment(userCommentResponse.data);
+      
+      const submittedComment = response.data;
+      console.log('📝 Submitted comment:', submittedComment);
+      
+      // Handle different moderation statuses
+      if (submittedComment.status === 'rejected') {
+        console.log('🚫 Comment rejected, removing optimistic comment');
+        // Remove optimistic comment
+        queryClient.setQueryData(['comments', currentSkinId], oldData => {
+          const existingComments = Array.isArray(oldData) ? oldData : [];
+          return existingComments.filter(comment => !comment._id.startsWith('temp-'));
+        });
+        return;
       }
-
-    } catch (err) {
-      setError('Failed to load comments');
-      console.error('Error loading comment data:', err);
-    } finally {
-      setIsLoading(false);
+      
+      // Update with real data
+      const commentForList = {
+        ...submittedComment,
+        displayText: submittedComment.status === 'needsReview' 
+          ? "This comment is under review" 
+          : submittedComment.status === 'rejected'
+          ? "I love league of legend, I love Riot Games!!!"
+          : submittedComment.comment,
+        isInteractionDisabled: submittedComment.status === 'rejected' || submittedComment.status === 'needsReview',
+        user: {
+          _id: user._id,
+          username: user.username,
+          profilePictureURL: user.profilePictureURL
+        }
+      };
+      
+      console.log('🔄 Replacing optimistic comment with real data:', commentForList);
+      const currentComments = queryClient.getQueryData(['comments', currentSkinId]);
+      console.log('🔄 Current comments before update:', currentComments);
+      console.log('🔄 Current comments details:', currentComments?.map(c => ({ id: c._id, text: c.comment, isTemp: c._id.startsWith('temp-') })));
+      
+      // Replace optimistic comment with real data
+      queryClient.setQueryData(['comments', currentSkinId], oldData => {
+        const existingComments = Array.isArray(oldData) ? oldData : [];
+        const updatedComments = existingComments.map(comment => 
+          comment._id.startsWith('temp-') ? commentForList : comment
+        );
+        console.log('🔄 Updated comments after replacement:', updatedComments);
+        console.log('🔄 Updated comments details:', updatedComments.map(c => ({ id: c._id, text: c.comment, isTemp: c._id.startsWith('temp-') })));
+        return updatedComments;
+      });
+      
+      const finalComments = queryClient.getQueryData(['comments', currentSkinId]);
+      console.log('🔄 Final comments after setQueryData:', finalComments);
+      console.log('🔄 Final comments details:', finalComments?.map(c => ({ id: c._id, text: c.comment, isTemp: c._id.startsWith('temp-') })));
+    },
+    
+    onError: (err, commentText, context) => {
+      console.error('💥 Mutation onError called:', err);
+      // Revert optimistic update on error
+      if (context && context.previousComments) {
+        queryClient.setQueryData(['comments', currentSkinId], context.previousComments);
+      } else {
+        // If no context, just refetch the data
+        queryClient.invalidateQueries(['comments', currentSkinId]);
+      }
     }
-  }, [currentSkinId, user]);
+  });
 
-  // Submit or update comment
+  // Wrapper function to maintain the same interface
   const submitComment = useCallback(async (commentText) => {
     if (!user) {
-      setError('Please sign in to comment');
-      return { success: false, message: 'Authentication required' };
+      return { success: false, message: 'Please sign in to comment' };
     }
 
     if (!commentText.trim()) {
-      setError('Comment cannot be empty');
       return { success: false, message: 'Comment cannot be empty' };
     }
 
     if (commentText.length > 1000) {
-      setError('Comment cannot exceed 1000 characters');
-      return { success: false, message: 'Comment too long' };
+      return { success: false, message: 'Comment cannot exceed 1000 characters' };
     }
 
     try {
-      setIsSubmitting(true);
-      setError(null);
-
-      const response = await submitSkinComment(currentSkinId, { comment: commentText.trim() });
-
-      if (response.success) {
-        const submittedComment = response.data;
-        console.log(submittedComment);
-        // Handle different moderation statuses
-        if (submittedComment.status === 'rejected') {
-          setError('Your comment was rejected due to inappropriate content. Please revise and try again.');
-          return { success: false, message: 'Comment rejected', status: 'rejected' };
-        }
-
-        // Update user's comment state
-        setUserComment(submittedComment);
-
-        // Add/update comment in the list
-        const commentForList = {
-          ...submittedComment,
-          displayText: submittedComment.status === 'needsReview' 
-            ? "This comment is under review" 
-            : submittedComment.status === 'rejected'
-            ? "I love league of legend, I love Riot Games!!!"
-            : submittedComment.comment,
-          isInteractionDisabled: submittedComment.status === 'rejected' || submittedComment.status === 'needsReview',
-          user: { // Mock user object for display
-            username: user.username,
-            profilePictureURL: user.profilePictureURL
-          }
-        };
-        console.log(commentForList);
-        setComments(prevComments => {
-          // Check if user already has a comment (update case)
-          const existingIndex = prevComments.findIndex(c => c.user._id === user._id);
-          if (existingIndex !== -1) {
-            const updated = [...prevComments];
-            updated[existingIndex] = commentForList;
-            return updated;
-          } else {
-            // New comment - add to the beginning
-            return [commentForList, ...prevComments];
-          }
-        });
-
-        const successMessage = submittedComment.status === 'needsReview'
-          ? 'Your comment will be reviewed before being displayed.'
-          : userComment ? 'Comment updated successfully.' : 'Comment submitted successfully.';
-
-        return { 
-          success: true, 
-          message: successMessage,
-          status: submittedComment.status 
-        };
+      console.log('🚀 Submitting comment:', commentText);
+      const result = await submitCommentMutation.mutateAsync(commentText);
+      console.log('✅ Comment submission result:', result);
+      
+      // result is the full API response from submitSkinComment
+      if (!result.success) {
+        console.log('❌ Comment submission failed:', result);
+        return { success: false, message: result.message || 'Failed to submit comment' };
       }
+      
+      const submittedComment = result.data;
+      console.log('📝 Submitted comment data:', submittedComment);
+      
+      if (submittedComment.status === 'rejected') {
+        return { success: false, message: 'Your comment was rejected due to inappropriate content. Please revise and try again.', status: 'rejected' };
+      }
+      
+      const successMessage = submittedComment.status === 'needsReview'
+        ? 'Your comment will be reviewed before being displayed.'
+        : userComment ? 'Comment updated successfully.' : 'Comment submitted successfully.';
 
-      setError('Failed to submit comment');
-      return { success: false, message: 'Failed to submit comment' };
-
+      return { 
+        success: true, 
+        message: successMessage,
+        status: submittedComment.status 
+      };
     } catch (err) {
+      console.error('💥 Comment submission error:', err);
       const errorMessage = err.response?.data?.error || 'Failed to submit comment';
-      setError(errorMessage);
       return { success: false, message: errorMessage };
-    } finally {
-      setIsSubmitting(false);
     }
-  }, [currentSkinId, user, userComment]);
+  }, [user, submitCommentMutation, userComment]);
 
-  // Like/unlike comment with optimistic updates
+  // 4. LIKE/UNLIKE COMMENT with React Query mutation
+  const toggleCommentLikeMutation = useMutation({
+    mutationFn: ({ commentId, isCurrentlyLiked }) => 
+      isCurrentlyLiked 
+        ? unlikeComment(currentSkinId, commentId)
+        : likeComment(currentSkinId, commentId),
+    
+    onMutate: async ({ commentId, isCurrentlyLiked }) => {
+      await queryClient.cancelQueries(['comments', currentSkinId]);
+      const previousComments = queryClient.getQueryData(['comments', currentSkinId]);
+      
+      // Optimistic update
+      queryClient.setQueryData(['comments', currentSkinId], oldData =>
+        oldData.map(comment => 
+          comment._id === commentId 
+            ? { 
+                ...comment, 
+                likedBy: isCurrentlyLiked 
+                  ? comment.likedBy.filter(id => id !== user._id)
+                  : [...comment.likedBy, user._id]
+              }
+            : comment
+        )
+      );
+      
+      return { previousComments };
+    },
+    
+    onError: (err, variables, context) => {
+      // Revert on error
+      queryClient.setQueryData(['comments', currentSkinId], context.previousComments);
+    }
+  });
+
+  // Wrapper function to maintain the same interface
   const toggleCommentLike = useCallback(async (commentId, isCurrentlyLiked) => {
     if (!user) {
-      setError('Please sign in to like comments');
       return;
     }
 
-    // Optimistic update
-    setComments(prevComments => 
-      prevComments.map(comment => {
-        if (comment._id === commentId) {
-          const newLikedBy = isCurrentlyLiked
-            ? comment.likedBy.filter(id => id !== user._id)
-            : [...comment.likedBy, user._id];
-          
-          return {
-            ...comment,
-            likedBy: newLikedBy
-          };
-        }
-        return comment;
-      })
-    );
-
     try {
-      const response = isCurrentlyLiked 
-        ? await unlikeComment(currentSkinId, commentId)
-        : await likeComment(currentSkinId, commentId);
-
-      if (!response.success) {
-        // Revert optimistic update on failure
-        setComments(prevComments => 
-          prevComments.map(comment => {
-            if (comment._id === commentId) {
-              const revertedLikedBy = isCurrentlyLiked
-                ? [...comment.likedBy, user._id]
-                : comment.likedBy.filter(id => id !== user._id);
-              
-              return {
-                ...comment,
-                likedBy: revertedLikedBy
-              };
-            }
-            return comment;
-          })
-        );
-        setError('Failed to update like');
-      }
+      await toggleCommentLikeMutation.mutateAsync({ commentId, isCurrentlyLiked });
     } catch (err) {
-      // Revert on error
-      setComments(prevComments => 
-        prevComments.map(comment => {
-          if (comment._id === commentId) {
-            const revertedLikedBy = isCurrentlyLiked
-              ? [...comment.likedBy, user._id]
-              : comment.likedBy.filter(id => id !== user._id);
-            
-            return {
-              ...comment,
-              likedBy: revertedLikedBy
-            };
-          }
-          return comment;
-        })
-      );
-      setError('Failed to update like');
+      console.error('Failed to update like:', err);
     }
-  }, [currentSkinId, user]);
+  }, [user, toggleCommentLikeMutation]);
 
   // Load replies for a comment (lazy loading)
   const loadReplies = useCallback(async (commentId) => {
-    // Don't reload if already loading or already have replies
     const comment = comments.find(c => c._id === commentId);
-    console.log("before loadReplies");
-    console.log(comment);
     
     if (loadingReplies.has(commentId) || (comment?.replies && comment.replies.length > 0)) {
       return;
     }
 
     setLoadingReplies(prev => new Set([...prev, commentId]));
-    setError(null);
 
     try {
       const response = await getRepliesForComment(currentSkinId, commentId, true);
       if (response.success) {
-        // Transform replies to include display text based on moderation status
         const transformedReplies = response.data.map(reply => ({
           ...reply,
           displayText: reply.status === 'needsReview' 
@@ -253,19 +304,17 @@ const useCommentData = (currentSkinId) => {
           isInteractionDisabled: reply.status === 'needsReview'
         }));
 
-        // Update the comment with loaded replies
-        setComments(prevComments => 
-          prevComments.map(comment => 
+        // Update the comment with loaded replies using React Query cache
+        queryClient.setQueryData(['comments', currentSkinId], oldData =>
+          oldData.map(comment => 
             comment._id === commentId 
               ? { ...comment, replies: transformedReplies }
               : comment
           )
         );
       }
-
     } catch (err) {
       console.error('Error loading replies:', err);
-      setError('Failed to load replies');
     } finally {
       setLoadingReplies(prev => {
         const newSet = new Set(prev);
@@ -273,7 +322,7 @@ const useCommentData = (currentSkinId) => {
         return newSet;
       });
     }
-  }, [currentSkinId, comments, loadingReplies]);
+  }, [currentSkinId, comments, loadingReplies, queryClient]);
 
   // Toggle reply expansion
   const toggleReplies = useCallback(async (commentId) => {
@@ -309,29 +358,44 @@ const useCommentData = (currentSkinId) => {
     setReplyingTo(null);
   }, []);
 
-  // Submit reply
-  const submitReply = useCallback(async (commentId, replyText) => {
-    if (!user) {
-      setError('Please sign in to reply');
-      return { success: false };
-    }
-
-    if (!replyText.trim()) {
-      setError('Reply cannot be empty');
-      return { success: false };
-    }
-
-    if (replyText.length > 500) {
-      setError('Reply cannot exceed 500 characters');
-      return { success: false };
-    }
-
-    try {
-      setIsSubmitting(true);
-      setError(null);
-
-      const response = await addReply(currentSkinId, commentId, { comment: replyText.trim() });
-
+  // 5. SUBMIT REPLY with React Query mutation
+  const submitReplyMutation = useMutation({
+    mutationFn: ({ commentId, replyText }) => addReply(currentSkinId, commentId, { comment: replyText.trim() }),
+    
+    onMutate: async ({ commentId, replyText }) => {
+      await queryClient.cancelQueries(['comments', currentSkinId]);
+      const previousComments = queryClient.getQueryData(['comments', currentSkinId]);
+      
+      // Create optimistic reply
+      const optimisticReply = {
+        _id: `temp-reply-${Date.now()}`,
+        userId: user._id,
+        username: user.username,
+        comment: replyText.trim(),
+        createdAt: new Date().toISOString(),
+        likedBy: [],
+        isEdited: false,
+        status: 'approved',
+        displayText: replyText.trim(),
+        isInteractionDisabled: false
+      };
+      
+      // Add optimistic reply
+      queryClient.setQueryData(['comments', currentSkinId], oldData =>
+        oldData.map(comment => 
+          comment._id === commentId 
+            ? { 
+                ...comment, 
+                replies: [...(comment.replies || []), optimisticReply]
+              }
+            : comment
+        )
+      );
+      
+      return { previousComments };
+    },
+    
+    onSuccess: (response, { commentId }) => {
       if (response.success) {
         const newReply = {
           ...response.data,
@@ -341,61 +405,73 @@ const useCommentData = (currentSkinId) => {
             ? "I love league of legend, I love Riot Games!!!"
             : response.data.comment,
           isInteractionDisabled: response.data.status === 'needsReview',
-          // Transform user data to match expected format
-          userId: {
+          user: {
             _id: user._id,
             username: user.username,
             profilePictureURL: user.profilePictureURL
           }
         };
-
-        // Add reply to the comment
-        setComments(prevComments => 
-          prevComments.map(comment => {
-            if (comment._id === commentId) {
-              return {
-                ...comment,
-                replies: [...(comment.replies || []), newReply]
-              };
-            }
-            return comment;
-          })
+        
+        // Replace optimistic reply with real data
+        queryClient.setQueryData(['comments', currentSkinId], oldData =>
+          oldData.map(comment => 
+            comment._id === commentId 
+              ? { 
+                  ...comment, 
+                  replies: comment.replies.map(reply => 
+                    reply._id.startsWith('temp-reply-') ? newReply : reply
+                  )
+                }
+              : comment
+          )
         );
-
+        
         // Expand replies and cancel reply mode
         setExpandedReplies(prev => new Set([...prev, commentId]));
         setReplyingTo(null);
-
-        const successMessage = response.data.status === 'needsReview'
-          ? 'Your reply will be reviewed before being displayed.'
-          : 'Reply submitted successfully.';
-
-        return { success: true, message: successMessage };
       }
+    },
+    
+    onError: (err, variables, context) => {
+      // Revert on error
+      queryClient.setQueryData(['comments', currentSkinId], context.previousComments);
+    }
+  });
 
-      setError('Failed to submit reply');
+  // Wrapper function to maintain the same interface
+  const submitReply = useCallback(async (commentId, replyText) => {
+    if (!user) {
       return { success: false };
+    }
 
+    if (!replyText.trim()) {
+      return { success: false };
+    }
+
+    if (replyText.length > 500) {
+      return { success: false };
+    }
+
+    try {
+      const result = await submitReplyMutation.mutateAsync({ commentId, replyText });
+      
+      const successMessage = result.status === 'needsReview'
+        ? 'Your reply will be reviewed before being displayed.'
+        : 'Reply submitted successfully.';
+
+      return { success: true, message: successMessage };
     } catch (err) {
       const errorMessage = err.response?.data?.error || 'Failed to submit reply';
-      setError(errorMessage);
-      return { success: false };
-    } finally {
-      setIsSubmitting(false);
+      return { success: false, message: errorMessage };
     }
-  }, [currentSkinId, user]);
+  }, [user, submitReplyMutation]);
 
 
 
-  // Clear error
+  // Clear error (React Query handles errors automatically)
   const clearError = useCallback(() => {
-    setError(null);
+    // React Query handles errors automatically
   }, []);
-
-  // Load data when skinId changes
-  useEffect(() => {
-    loadCommentData();
-  }, [loadCommentData]);
 
   return {
     // Data
@@ -404,8 +480,8 @@ const useCommentData = (currentSkinId) => {
     
     // Loading states
     isLoading,
-    isSubmitting,
-    error,
+    isSubmitting: submitCommentMutation.isPending || submitReplyMutation.isPending,
+    error: commentsError?.message || null,
     
     // UI state
     expandedReplies,
@@ -419,8 +495,8 @@ const useCommentData = (currentSkinId) => {
     startReply,
     cancelReply,
     submitReply,
-    clearError,
-    refreshComments: loadCommentData,
+    clearError: () => {}, // React Query handles errors automatically
+    refreshComments,
   };
 };
 

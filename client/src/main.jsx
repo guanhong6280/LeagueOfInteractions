@@ -12,6 +12,7 @@ import AuthProvider from './AuthProvider.jsx';
 import ChampionProvider from './contextProvider/ChampionProvider.jsx';
 import { ChampionStatsProvider } from './contextProvider/ChampionStatsProvider.jsx';
 import { VersionProvider } from './contextProvider/VersionProvider.jsx';
+import { QueryProvider } from './contextProvider/QueryProvider.jsx';
 import Donate from './pages/Donate.jsx';
 import AccountManagement from './pages/AccountManagement.jsx';
 import SkinRating from './pages/SkinRating.jsx';
@@ -33,12 +34,13 @@ const stripePromise = loadStripe('your-publishable-key-here');
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <AuthProvider>
-      <VersionProvider>
-        <ChampionProvider>
-          <ChampionStatsProvider>
-            <Elements stripe={stripePromise}>
-              <BrowserRouter>
+    <QueryProvider>
+      <AuthProvider>
+        <VersionProvider>
+          <ChampionProvider>
+            <ChampionStatsProvider>
+              <Elements stripe={stripePromise}>
+                <BrowserRouter>
                 <Routes>
                   <Route path="/" element={<MainLayout />}>
                     {/* The default route that shows creators */}
@@ -65,11 +67,12 @@ createRoot(document.getElementById('root')).render(
                     {/* <Route path="analytics" element={<Analytics />} /> */}
                   </Route>
                 </Routes>
-              </BrowserRouter>
-            </Elements>
-          </ChampionStatsProvider>
-        </ChampionProvider>
-      </VersionProvider>
-    </AuthProvider>
+                </BrowserRouter>
+              </Elements>
+            </ChampionStatsProvider>
+          </ChampionProvider>
+        </VersionProvider>
+      </AuthProvider>
+    </QueryProvider>
   </StrictMode>,
 );

@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 
-import MainLayout from './mainLayout.jsx';
+import MainLayout from './layout/mainLayout.jsx';
 import './index.css';
 import ViewInteractions from './pages/ViewInteractions.jsx';
 import AddInteractions from './pages/AddInteractions.jsx';
@@ -20,15 +20,7 @@ import { ChampionSkinDetail } from './common/skin_rating';
 
 // Admin imports
 import AdminGuard from './admin/components/guards/AdminGuard.jsx';
-import AdminLayout from './admin/layout/AdminLayout.jsx';
-
-// Temporary admin dashboard component
-const AdminDashboard = () => (
-  <div>
-    <h1>Admin Dashboard</h1>
-    <p>Welcome to the admin panel!</p>
-  </div>
-);
+import AdminLayout from './layout/index.jsx';
 
 const stripePromise = loadStripe('your-publishable-key-here');
 
@@ -60,7 +52,7 @@ createRoot(document.getElementById('root')).render(
                       </AdminGuard>
                     }
                   >
-                    <Route index element={<AdminDashboard />} />
+                    {/* <Route index element={<AdminDashboard />} /> */}
                     {/* Future admin routes will go here */}
                     {/* <Route path="users" element={<UserManagement />} /> */}
                     {/* <Route path="comments" element={<CommentModeration />} /> */}

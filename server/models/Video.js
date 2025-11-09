@@ -7,7 +7,16 @@ const VideoSchema = new mongoose.Schema({
   ability1: { type: String, required: true },
   champion2: { type: String, required: true },
   ability2: { type: String, required: true },
-  videoURL: { type: String, required: true },
+  interactionKey: { type: String, index: true },
+  // For YouTube provider; optional for Mux
+  videoURL: { type: String },
+  provider: { type: String, enum: ['youtube', 'mux'], default: 'youtube' },
+  // Mux specific fields
+  status: { type: String, enum: ['uploading', 'processing', 'ready', 'failed'], default: 'uploading' },
+  assetId: { type: String },
+  playbackId: { type: String },
+  playbackUrl: { type: String },
+  directUploadId: { type: String },
   contributor: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   title: String,
   description: String,
@@ -17,9 +26,16 @@ const VideoSchema = new mongoose.Schema({
   likes: { type: Number, default: 0 },
   commentsCount: { type: Number, default: 0 },
   isApproved: { type: Boolean, default: false },
-});
+}, { timestamps: true });
 
 // Create indexes for faster querying
-VideoSchema.index({ champion1: 1, ability1: 1, champion2: 1, ability2: 1 }, { unique: true });
+// NOTE: If an existing unique compound index exists in MongoDB, drop it manually/migration
+VideoSchema.index({ directUploadId: 1 });
+VideoSchema.index({ assetId: 1 });
+// Only one approved per interaction
+VideoSchema.index(
+  { interactionKey: 1 },
+  { unique: true, partialFilterExpression: { isApproved: true } },
+);
 
 module.exports = mongoose.model('Video', VideoSchema);

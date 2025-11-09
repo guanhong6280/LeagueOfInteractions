@@ -12,10 +12,16 @@ const webHookRoutes = require('./routes/webHookRoutes');
 const skipMiddleware = require('./middleware/skipMiddleware');
 const skinRoutes = require('./routes/skinRoutes');
 const championStatsRoutes = require('./routes/championStatsRoutes');
+const { startReconciler } = require('./utils/reconciler');
 require('dotenv').config();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
+
+const RAW_WEBHOOK_PATHS = [
+  '/api/stripe/webhook',
+  '/api/videos/webhook/mux',
+];
 
 app.options('*', cors({ origin: 'http://localhost:5173', credentials: true }));
 
@@ -31,7 +37,8 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(skipMiddleware(express.json(), '/api/webhook'));
+// Keep Stripe webhook at /api/webhook raw body; also ensure Mux webhook at /api/videos/webhook/mux uses its own raw body
+app.use(skipMiddleware(express.json(), RAW_WEBHOOK_PATHS));
 
 app.use(
   session({
@@ -75,7 +82,9 @@ app.use('/api/skins', skinRoutes);
 app.use('/api/champions', championStatsRoutes);
 
 
-connectDB();
+connectDB().then(() => {
+  try { startReconciler(); } catch (e) { console.warn('Reconciler failed to start:', e?.message); }
+});
 
 const PORT = process.env.PORT || 5174;
 

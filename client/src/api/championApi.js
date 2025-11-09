@@ -83,6 +83,16 @@ export const fetchVideoData = async (params) => {
   }
 };
 
+export const initMuxUpload = async (payload) => {
+  try {
+    const response = await api.post('/api/videos/upload/init', payload);
+    return response.data; // { uploadUrl, videoId }
+  } catch (error) {
+    console.error('Error initializing Mux upload:', error);
+    throw error;
+  }
+};
+
 // Skin Rating APIs
 export const submitSkinRating = async (skinId, ratingData) => {
   const response = await api.post(`/api/skins/${skinId}/rate`, ratingData);

@@ -1,9 +1,10 @@
-function skipMiddleware(middleware, pathToSkip) {
+function skipMiddleware(middleware, pathsToSkip) {
+  const skipList = Array.isArray(pathsToSkip) ? pathsToSkip : [pathsToSkip];
   return (req, res, next) => {
-    if (req.path === pathToSkip) {
-      return next(); // Skip the middleware for the specified path
+    if (skipList.includes(req.path)) {
+      return next();
     }
-    middleware(req, res, next); // Otherwise, apply the middleware
+    middleware(req, res, next);
   };
 }
 

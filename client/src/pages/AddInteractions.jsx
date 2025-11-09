@@ -1,6 +1,9 @@
 import React from 'react';
 import * as MUI from '@mui/material';
 import axios from 'axios';
+import { UpChunk } from '@mux/upchunk';
+import { initMuxUpload } from '../api/championApi';
+import { useVideoEvents } from '../hooks/useVideoEvents';
 import { useChampion } from '../contextProvider/ChampionProvider';
 import AbilitySelectCard from '../common/AbilitySelectCard';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
@@ -24,6 +27,16 @@ const AddInteractions = () => {
   const [selectedFirstChampionAbility, setSelectedFirstChampionAbility] = React.useState('');
   const [selectedSecondChampionAbility, setSelectedSecondChampionAbility] = React.useState('');
   const [videoLink, setVideoLink] = React.useState('');
+  const [selectedFile, setSelectedFile] = React.useState(null);
+  const [uploadProgress, setUploadProgress] = React.useState(0);
+  const [isUploading, setIsUploading] = React.useState(false);
+  const [currentVideoId, setCurrentVideoId] = React.useState(null);
+  const { snapshot: sseSnapshot, lastEvent } = useVideoEvents(currentVideoId);
+
+  const hasFile = Boolean(selectedFile);
+  const hasLink = Boolean(videoLink && videoLink.trim());
+  const isUploadDisabled = !selectedFirstChampionAbility || !selectedSecondChampionAbility || isUploading || (!hasFile && !hasLink);
+
 
   // Find the selected ability in the abilities array
   const selectedFirstAbilityObject = firstChampionAbilities.find(
@@ -127,8 +140,36 @@ const AddInteractions = () => {
     setVideoLink(event.target.value);
   };
 
+  const handleFileSelect = (event) => {
+    const file = event.target.files?.[0] || null;
+    setSelectedFile(file);
+    console.log(file);
+  };
+
+  const uploadWithTus = (file, endpoint, onProgress) => {
+    return new Promise((resolve, reject) => {
+      const upload = UpChunk.createUpload({
+        endpoint,
+        file,
+        chunkSize: 5120, // in KB
+      });
+
+      upload.on('progress', (evt) => {
+        const percent = Math.floor(evt.detail);
+        if (typeof onProgress === 'function') onProgress(percent, 100);
+      });
+
+      upload.on('success', () => resolve());
+      upload.on('error', (err) => reject(err?.detail || err));
+    });
+  };
+
   const uploadVideo = async () => {
     try {
+      if (!selectedFirstChampionAbility || !selectedSecondChampionAbility) {
+        alert('Please select both champion abilities before uploading.');
+        return;
+      }
       const ability1Index = firstChampionAbilities.findIndex(
         (ability) => ability.name === selectedFirstChampionAbility,
       );
@@ -136,27 +177,67 @@ const AddInteractions = () => {
         (ability) => ability.name === selectedSecondChampionAbility,
       );
 
+      if (ability1Index === -1 || ability2Index === -1) {
+        alert('Please select valid abilities for both champions.');
+        return;
+      }
+
       const ability1Key = AbilityMap[ability1Index];
       const ability2Key = AbilityMap[ability2Index];
 
-      const payload = {
-        champion1: firstChampion?.id,
-        ability1: ability1Key,
-        champion2: secondChampion?.id,
-        ability2: ability2Key,
-        videoURL: videoLink,
-      };
+      // If a local file is selected, use Mux direct upload (tus)
+      if (selectedFile) {
+        setIsUploading(true);
+        setUploadProgress(0);
 
-      // Send the POST request to your server endpoint
-      const response = await axios.post('http://localhost:5174/api/videos/upload', payload, {
-        withCredentials: true,
-      });
+        const initPayload = {
+          champion1: firstChampion?.id,
+          ability1: ability1Key,
+          champion2: secondChampion?.id,
+          ability2: ability2Key,
+          corsOrigin: window.location.origin,
+        };
 
-      console.log('Video uploaded successfully:', response.data);
-      alert('Video uploaded successfully!');
+        const { uploadUrl, videoId } = await initMuxUpload(initPayload);
+        setCurrentVideoId(videoId);
+
+        await uploadWithTus(
+          selectedFile,
+          uploadUrl,
+          (bytesSent, bytesTotal) => {
+            const percentage = Math.floor((bytesSent / bytesTotal) * 100);
+            setUploadProgress(percentage);
+          },
+        );
+
+        alert('Upload complete! The video will appear after processing and approval.');
+      } else {
+        if (!hasLink) {
+          alert('Please provide a video link or select a file to upload.');
+          return;
+        }
+        // Fallback: YouTube URL flow
+        const payload = {
+          champion1: firstChampion?.id,
+          ability1: ability1Key,
+          champion2: secondChampion?.id,
+          ability2: ability2Key,
+          videoURL: videoLink,
+        };
+
+        const response = await axios.post('http://localhost:5174/api/videos/upload', payload, {
+          withCredentials: true,
+        });
+
+        console.log('Video uploaded successfully:', response.data);
+        alert('Video uploaded successfully!');
+      }
     } catch (error) {
       console.error('Error uploading video:', error);
       alert('Failed to upload video');
+    }
+    finally {
+      setIsUploading(false);
     }
   };
 
@@ -214,6 +295,24 @@ const AddInteractions = () => {
           }}
         />
         <MUI.Box display="flex" gap="10px">
+          {hasFile ? (
+            <>
+              <MUI.Typography variant="body2">
+                {selectedFile.name}
+              </MUI.Typography>
+              <MUI.Button variant="outlined" onClick={() => setSelectedFile(null)}>
+                Remove File
+              </MUI.Button>
+            </>
+          ) : (
+            <MUI.Button
+              variant="outlined"
+              component="label"
+            >
+              Select Video File
+              <input type="file" accept="video/*" hidden onChange={handleFileSelect} />
+            </MUI.Button>
+          )}
           <MUI.TextField
             label="Video Link"
             type="text"
@@ -225,10 +324,26 @@ const AddInteractions = () => {
             startIcon={<FileUploadIcon></FileUploadIcon>}
             variant="contained"
             onClick={uploadVideo}
+            disabled={isUploadDisabled}
           >
             Upload
           </MUI.Button>
         </MUI.Box>
+        {(isUploading || sseSnapshot) && (
+          <MUI.Box flex={1}>
+            {isUploading ? (
+              <>
+                <MUI.CircularProgress value={uploadProgress} />
+              </>
+            ) : (
+              <MUI.Typography variant="body2">
+                {sseSnapshot?.status === 'processing' && 'Processing on Mux...'}
+                {sseSnapshot?.status === 'ready' && 'Ready!'}
+                {sseSnapshot?.status === 'failed' && 'Processing failed. Please try another video.'}
+              </MUI.Typography>
+            )}
+          </MUI.Box>
+        )}
       </MUI.Box>
     </MUI.Stack>
 

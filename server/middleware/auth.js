@@ -25,3 +25,15 @@ exports.optionalAuth = (req, res, next) => {
   // req.user will be undefined if not authenticated, but that's okay
   next();
 };
+
+// Admin guard for API routes
+exports.ensureApiAdmin = (req, res, next) => {
+  if (req.isAuthenticated() && req.user && req.user.isAdministrator) {
+    return next();
+  }
+  res.status(403).json({
+    success: false,
+    error: 'Admin privileges required.',
+    message: 'You do not have permission to perform this action.'
+  });
+};

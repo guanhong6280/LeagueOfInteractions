@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Card, CardContent, Typography, CardMedia, Stack } from '@mui/material';
+import { Box, Card, Typography, CardMedia, Stack } from '@mui/material';
+import MuxPlayer from '@mux/mux-player-react';
 
 const VideoPlayer = ({ videoData }) => {
   return (
@@ -22,21 +23,33 @@ const VideoPlayer = ({ videoData }) => {
             </Typography>
           </Stack>
           <Box marginBottom="" sx={{ position: 'relative', aspectRatio: '16/9' }}>
-            <CardMedia
-              component="iframe"
-              src={`https://www.youtube.com/embed/${new URL(videoData.videoURL).searchParams.get('v')}`}
-              title={videoData.title}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              sx={{
-                position: 'absolute',
-                top: 0,
-                left: '1%',
-                width: '98%',
-                height: '100%',
-                borderRadius: '10px',
-              }}
-            />
+            {videoData.provider === 'mux' && videoData.playbackUrl ? (
+              <Box sx={{ position: 'absolute', top: 0, left: '1%', width: '98%', height: '100%' }}>
+                <MuxPlayer
+                  streamType="on-demand"
+                  src={videoData.playbackUrl}
+                  playsInline
+                  preload="metadata"
+                  style={{ width: '100%', height: '100%', borderRadius: '10px', backgroundColor: 'black' }}
+                />
+              </Box>
+            ) : (
+              <CardMedia
+                component="iframe"
+                src={`https://www.youtube.com/embed/${new URL(videoData.videoURL).searchParams.get('v')}`}
+                title={videoData.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: '1%',
+                  width: '98%',
+                  height: '100%',
+                  borderRadius: '10px',
+                }}
+              />
+            )}
           </Box>
         </Box>
       ) : (

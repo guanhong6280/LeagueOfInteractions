@@ -12,6 +12,8 @@ const webHookRoutes = require('./routes/webHookRoutes');
 const skipMiddleware = require('./middleware/skipMiddleware');
 const skinRoutes = require('./routes/skinRoutes');
 const championStatsRoutes = require('./routes/championStatsRoutes');
+const championCommentRoutes = require('./routes/championCommentRoutes');
+const moderationRoutes = require('./routes/moderationRoutes');
 const { startReconciler } = require('./utils/reconciler');
 require('dotenv').config();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
@@ -79,7 +81,9 @@ app.use('/api/championData', championDataRoutes);
 app.use('/api/donations', donationRoutes);
 app.use('/api/webhook', webHookRoutes);
 app.use('/api/skins', skinRoutes);
+app.use('/api/champions', championCommentRoutes);
 app.use('/api/champions', championStatsRoutes);
+app.use('/api/moderation', moderationRoutes);
 
 
 connectDB().then(() => {

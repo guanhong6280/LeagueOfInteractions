@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import * as MUI from '@mui/material';
 import { ChevronLeft, ChevronRight, Fullscreen, FullscreenExit } from '@mui/icons-material';
 import useSkinData from '../../hooks/useSkinData';
+import { getSkinImageUrl } from '../../utils/getSkinImageUrl';
 import { getRarityColor, formatRarityName, getRarityChipStyles, getRarityGradientStyles } from '../../constants/rarityColors';
 
 const SkinCarousel = ({ championName, onSkinChange }) => {
@@ -88,20 +89,6 @@ const SkinCarousel = ({ championName, onSkinChange }) => {
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
-
-  // Function for generating Community Dragon CDN URL
-  const getSkinImageUrl = (skin) => {
-    if (!skin?.splashPath) return null;
-    
-    // Community Dragon URL format
-    // Remove the '/lol-game-data/assets/' prefix and convert to lowercase
-    let cleanedPath = skin.splashPath.replace('/lol-game-data/assets/', '').toLowerCase();
-    
-    // Community Dragon base URL
-    const baseUrl = 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default';
-    
-    return `${baseUrl}/${cleanedPath}`;
-  };
 
   // Check if current image is loaded
   const isCurrentImageLoaded = () => {

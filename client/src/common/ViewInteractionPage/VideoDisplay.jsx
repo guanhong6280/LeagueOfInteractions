@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Card, Typography, CardMedia, Stack } from '@mui/material';
 import MuxPlayer from '@mux/mux-player-react';
 
-const VideoPlayer = ({ videoData }) => {
+const VideoPlayer = ({ videoData, autoplay = false }) => {
   return (
     <Card
       sx={{
@@ -28,6 +28,7 @@ const VideoPlayer = ({ videoData }) => {
                 <MuxPlayer
                   streamType="on-demand"
                   src={videoData.playbackUrl}
+                  autoplay={autoplay}
                   playsInline
                   preload="metadata"
                   style={{ width: '100%', height: '100%', borderRadius: '10px', backgroundColor: 'black' }}

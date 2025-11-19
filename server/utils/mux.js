@@ -62,10 +62,29 @@ async function deleteAsset(assetId) {
   await mux.video.assets.delete(assetId);
 }
 
+async function fetchAssetMetadata(assetId) {
+  if (!assetId) throw new Error('Asset ID is required');
+  const mux = getMuxClient();
+
+  const asset = await mux.video.assets.retrieve(assetId);
+
+  const duration = typeof asset?.duration === 'number' ? asset.duration : null;
+  const aspectRatio = asset?.aspect_ratio || null;
+
+  const maxResolution = asset?.max_stored_resolution || asset?.resolution_tier || null;
+
+  return {
+    duration,
+    aspectRatio,
+    maxResolution,
+  };
+}
+
 module.exports = {
   createDirectUpload,
   verifyWebhookSignature,
   deleteAsset,
+  fetchAssetMetadata,
 };
 
 

@@ -17,6 +17,9 @@ const VideoSchema = new mongoose.Schema({
   playbackId: { type: String },
   playbackUrl: { type: String },
   directUploadId: { type: String },
+  duration: { type: Number }, // seconds
+  aspectRatio: { type: String },
+  maxResolution: { type: String },
   contributor: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   title: String,
   description: String,
@@ -26,12 +29,21 @@ const VideoSchema = new mongoose.Schema({
   likes: { type: Number, default: 0 },
   commentsCount: { type: Number, default: 0 },
   isApproved: { type: Boolean, default: false },
+  moderationStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending',
+  },
+  moderatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  moderatedAt: { type: Date, default: null },
+  moderatorNotes: { type: String, default: '' },
 }, { timestamps: true });
 
 // Create indexes for faster querying
 // NOTE: If an existing unique compound index exists in MongoDB, drop it manually/migration
 VideoSchema.index({ directUploadId: 1 });
 VideoSchema.index({ assetId: 1 });
+VideoSchema.index({ moderationStatus: 1, createdAt: -1 });
 // Only one approved per interaction
 VideoSchema.index(
   { interactionKey: 1 },

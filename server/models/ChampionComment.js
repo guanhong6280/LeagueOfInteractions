@@ -3,34 +3,33 @@ const mongoose = require('mongoose');
 // Sub-schema for replies
 const ReplySchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  username: { type: String, required: true }, // Store username for performance
-  comment: { 
-    type: String, 
-    required: true, 
+  username: { type: String, required: true },
+  comment: {
+    type: String,
+    required: true,
     maxlength: 500,
     minlength: 1,
     trim: true,
   },
   isEdited: { type: Boolean, default: false },
   toxicityScore: { type: Number, min: 0, max: 1, default: 0 },
-  spamScore:     { type: Number, min: 0, max: 1, default: 0 },
+  spamScore: { type: Number, min: 0, max: 1, default: 0 },
   status: {
     type: String,
     enum: ['approved', 'needsReview', 'rejected'],
     default: 'approved',
   },
-  likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // Track who liked the reply
+  likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 }, {
   timestamps: true,
   optimisticConcurrency: true,
 });
 
-const SkinCommentSchema = new mongoose.Schema({
-  skinId: { type: Number, required: true },
+const ChampionCommentSchema = new mongoose.Schema({
+  championId: { type: String, required: true },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  username: { type: String, required: true }, // Store username for performance
+  username: { type: String, required: true },
 
-  // Comment content
   comment: {
     type: String,
     required: true,
@@ -39,15 +38,13 @@ const SkinCommentSchema = new mongoose.Schema({
     trim: true,
   },
 
-  // Engagement metrics
-  likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // Track who liked
+  likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 
-  // Replies system
   replies: [ReplySchema],
 
   isEdited: { type: Boolean, default: false },
   toxicityScore: { type: Number, min: 0, max: 1, default: 0 },
-  spamScore:     { type: Number, min: 0, max: 1, default: 0 },
+  spamScore: { type: Number, min: 0, max: 1, default: 0 },
   status: {
     type: String,
     enum: ['approved', 'needsReview', 'rejected'],
@@ -61,41 +58,35 @@ const SkinCommentSchema = new mongoose.Schema({
   optimisticConcurrency: true,
 });
 
-// Virtual field for comment user
-SkinCommentSchema.virtual('user', {
+ChampionCommentSchema.virtual('user', {
   ref: 'User',
   localField: 'userId',
   foreignField: '_id',
   justOne: true,
-  options: { select: 'username profilePictureURL' }
+  options: { select: 'username profilePictureURL' },
 });
 
-// Virtual field for reply count
-SkinCommentSchema.virtual('replyCount').get(function() {
+ChampionCommentSchema.virtual('replyCount').get(function replyCountGetter() {
   return this.replies ? this.replies.length : 0;
 });
 
-// Virtual field for reply users (in subdocuments)
 ReplySchema.virtual('user', {
   ref: 'User',
   localField: 'userId',
   foreignField: '_id',
   justOne: true,
-  options: { select: 'username profilePictureURL' }
+  options: { select: 'username profilePictureURL' },
 });
 
-// Ensure virtuals are included when converting to JSON
-SkinCommentSchema.set('toJSON', { virtuals: true });
-SkinCommentSchema.set('toObject', { virtuals: true });
+ChampionCommentSchema.set('toJSON', { virtuals: true });
+ChampionCommentSchema.set('toObject', { virtuals: true });
 ReplySchema.set('toJSON', { virtuals: true });
 ReplySchema.set('toObject', { virtuals: true });
 
-// Create indexes for faster querying
-SkinCommentSchema.index({ skinId: 1, dateCreated: -1 }); // Get comments by skin, newest first
-SkinCommentSchema.index({ userId: 1 });
-SkinCommentSchema.index({ 'likedBy': 1 });
+ChampionCommentSchema.index({ championId: 1, createdAt: -1 });
+ChampionCommentSchema.index({ userId: 1 });
+ChampionCommentSchema.index({ likedBy: 1 });
+ChampionCommentSchema.index({ championId: 1, userId: 1 }, { unique: true });
 
-// Unique constraint: One comment per user per skin
-SkinCommentSchema.index({ skinId: 1, userId: 1 }, { unique: true });
+module.exports = mongoose.model('ChampionComment', ChampionCommentSchema);
 
-module.exports = mongoose.model('SkinComment', SkinCommentSchema);

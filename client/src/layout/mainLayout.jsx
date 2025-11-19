@@ -2,7 +2,7 @@ import * as MUI from '@mui/material';
 import { Outlet, useLocation } from 'react-router-dom';
 
 import "../App.css"
-import theme from '../theme';
+import theme from '../theme/theme';
 import Navigation from '../common/Navigation';
 import Footer from '../common/footer/Footer';
 

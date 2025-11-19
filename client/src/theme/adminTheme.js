@@ -7,42 +7,37 @@ export const adminTheme = createTheme({
     mode: 'dark',
 
     // Core background + paper (MUI defaults)
-    background: { 
+    background: {
       default: '#ffffff',   // page bg (outside frame)
-      paper:   '#111111',   // generic dark surfaces
+      paper: '#000000',   // generic dark surfaces
+      progress: '#1a1a1a',
+      card: '#000000',
+      description: '#111111',
     },
 
     // Semantic rails / surfaces unique to your admin
     surface: {
-      frame:    '#0d0d0d',  // the rounded outer container
-      main:     '#ffffff',  // main content surface (inside AdminMain)
-      aside:    '#f6f8fb',  // right rail surface
-      nav:      '#0d0d0d',  // left nav background (same as frame)
-      inset:    '#111111',  // inner dark surface (between nav and main)
+      frame: '#0d0d0d',  // the rounded outer container
+      main: '#ffffff',  // main content surface (inside AdminMain)
+      aside: '#f6f8fb',  // right rail surface
+      nav: '#0d0d0d',  // left nav background (same as frame)
+      inset: '#111111',  // inner dark surface (between nav and main)
       // helpful “ink”/hairline colors:
-      hairlineDark:  '#1a1a1a',
-      hairlineDarker:'#1f1f1f',
+      hairlineDark: '#1a1a1a',
+      hairlineDarker: '#1f1f1f',
       hairlineLight: '#eef0f3',
     },
 
     // Brand + status
     primary: { main: '#0070f3' },
     success: { main: '#22c55e' },
-    error:   { main: '#ef4444' },
+    error: { main: '#ef4444' },
 
     // Text
     text: { primary: '#f5f5f5', secondary: '#a1a1aa' },
 
     // Dividers & strokes
     divider: '#232323',
-
-    // Optional neutrals you’ll reuse
-    neutral: {
-      50:  '#f6f8fb',
-      100: '#eef0f3',
-      800: '#1a1a1a',
-      900: '#0d0d0d',
-    },
 
     // Action states (you can tune these later)
     action: {
@@ -58,9 +53,12 @@ export const adminTheme = createTheme({
   typography: {
     fontFamily: 'Inter, system-ui, sans-serif',
     fontSize: 16,
-    admin_name:{ fontSize: "28px", fontWeight: 600 },
-    admin_email:{ fontSize: "16px", colors:alpha('#ffffff', 0.5) },
-    navigation_text:{ fontSize: "22px", colors:alpha('#ffffff', 0.5) },
+    admin_name: { fontSize: "28px", fontWeight: 600 },
+    admin_email: { fontSize: "16px", colors: alpha('#ffffff', 0.5) },
+    title_text: { fontSize: "32px", fontWeight: 600, color: "#010101" },
+    navigation_text: { fontSize: "22px", colors: alpha('#ffffff', 0.5) },
+    date_text: { fontSize: "10px", color: '#808080' },
+    chip_text: { fontSize: "12px" },
     h6: { fontWeight: 600, letterSpacing: '-0.01em' },
   },
 

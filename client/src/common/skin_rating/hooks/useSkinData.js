@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { fetchChampionSkinsFromAPI } from '../../../api/championApi';
+import { getSkinImageUrl as buildSkinImageUrl } from '../utils/getSkinImageUrl';
 
 const useSkinData = (championName) => {
   const [skins, setSkins] = useState([]);
@@ -10,23 +11,13 @@ const useSkinData = (championName) => {
   const [preloadedImages, setPreloadedImages] = useState(new Set());
 
   // Function for generating Community Dragon CDN URL
-  const getSkinImageUrl = useCallback((skin) => {
-    if (!skin?.splashPath) return null;
-    
-    // Community Dragon URL format
-    // Remove the '/lol-game-data/assets/' prefix and convert to lowercase
-    let cleanedPath = skin.splashPath.replace('/lol-game-data/assets/', '').toLowerCase();
-    
-    // Community Dragon base URL
-    const baseUrl = 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default';
-    
-    return `${baseUrl}/${cleanedPath}`;
-  }, []);
+  const getSkinImageUrl = useCallback((skin) => buildSkinImageUrl(skin), []);
 
   // Legacy function for backward compatibility
-  const communityDragonUrl = useCallback((splashPath) => {
-    return getSkinImageUrl({ splashPath });
-  }, [getSkinImageUrl]);
+  const communityDragonUrl = useCallback(
+    (splashPath) => getSkinImageUrl({ splashPath }),
+    [getSkinImageUrl]
+  );
 
   // Preload images for better performance
   const preloadImages = useCallback((skinsData) => {
@@ -71,7 +62,6 @@ const useSkinData = (championName) => {
         
         if (response.success && response.data) {
           setSkins(response.data);
-          console.log(response.data);
           // Preload images after skins are loaded
           preloadImages(response.data);
         } else {

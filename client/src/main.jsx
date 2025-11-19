@@ -21,6 +21,8 @@ import { ChampionSkinDetail } from './common/skin_rating';
 // Admin imports
 import AdminGuard from './admin/components/guards/AdminGuard.jsx';
 import AdminLayout from './layout/index.jsx';
+import CommentModeration from './admin/Pages/CommentModeration.jsx';
+import VideoModeration from './admin/Pages/VideoModeration.jsx';
 
 const stripePromise = loadStripe('your-publishable-key-here');
 
@@ -52,6 +54,8 @@ createRoot(document.getElementById('root')).render(
                       </AdminGuard>
                     }
                   >
+                    <Route path="comments" element={<CommentModeration />} />
+                    <Route path="videos" element={<VideoModeration />} />
                     {/* <Route index element={<AdminDashboard />} /> */}
                     {/* Future admin routes will go here */}
                     {/* <Route path="users" element={<UserManagement />} /> */}

@@ -45,6 +45,19 @@ const UserSchema = new mongoose.Schema({
       message: 'Recent skin comments cannot exceed 10 items',
     },
   },
+  recentChampionComments: {
+    type: [{
+      championId: { type: String, required: true },
+      dateUpdated: { type: Date, required: true },
+      comment: { type: String, required: true },
+    }],
+    validate: {
+      validator: function(arr) {
+        return arr.length <= 10;
+      },
+      message: 'Recent champion comments cannot exceed 10 items',
+    },
+  },
   favoriteSkins: [{ type: Number }], // Array of skin IDs
 });
 

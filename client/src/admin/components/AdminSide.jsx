@@ -1,15 +1,21 @@
 import React from 'react';
 import * as MUI from '@mui/material';
+import MetricCard from './moderation/common/MetricCard';
 
 const AdminSide = () => {
   return (
     <MUI.Box
       display="flex"
       height="100%"
-      width="20vw"
+      padding="20px"
+      width="15vw"
+      overflow="hidden"
       bgcolor="blue"
     >
-      <MUI.Typography variant="h6">Admin Side</MUI.Typography>
+      <MUI.Stack>
+        <MUI.Typography variant="h6">Moderation Notifications</MUI.Typography>
+        <MetricCard />
+      </MUI.Stack>
     </MUI.Box>
   );
 };

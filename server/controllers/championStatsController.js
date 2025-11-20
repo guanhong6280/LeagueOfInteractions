@@ -1,6 +1,7 @@
 const Skin = require('../models/Skin');
 const SkinRating = require('../models/SkinRating');
 const SkinComment = require('../models/SkinComment');
+const ChampionStats = require('../models/ChampionStats');
 
 /**
  * Get aggregated statistics for all champions
@@ -138,6 +139,28 @@ const getChampionStats = async (req, res) => {
       championStats[result.championId] = result.stats;
     });
 
+    // Merge in the ChampionStats (new model) data
+    const allChampionStatsDocs = await ChampionStats.find({});
+    allChampionStatsDocs.forEach((doc) => {
+      if (championStats[doc.championId]) {
+        // Merge existing pipeline stats with new persistent stats
+        championStats[doc.championId] = {
+          ...championStats[doc.championId],
+          championRatingStats: {
+            avgFun: doc.averageFunRating,
+            avgSkill: doc.averageSkillRating,
+            avgSynergy: doc.averageSynergyRating,
+            avgLaning: doc.averageLaningRating,
+            avgTeamfight: doc.averageTeamfightRating,
+            avgOpponentFrustration: doc.averageOpponentFrustrationRating,
+            avgTeammateFrustration: doc.averageTeammateFrustrationRating,
+            totalRatings: doc.totalRatings,
+            totalComments: doc.totalComments,
+          },
+        };
+      }
+    });
+
     console.log(`Aggregation complete. Processed ${results.length} champions.`);
     res.json({
       success: true,
@@ -255,6 +278,9 @@ const getChampionSpecificStats = async (req, res) => {
         }
       });
     }
+
+    // Fetch ChampionStats for this specific champion
+    const championStatsDoc = await ChampionStats.findOne({ championId: championName });
     
     const stats = {
       totalSkins,
@@ -272,7 +298,19 @@ const getChampionSpecificStats = async (req, res) => {
         name: highestRatedSkin.name,
         skinId: highestRatedSkin.skinId,
         averageRating: Math.round(highestRating * 10) / 10
-      } : null
+      } : null,
+      championRatingStats: championStatsDoc ? {
+        avgFun: championStatsDoc.averageFunRating,
+        avgSkill: championStatsDoc.averageSkillRating,
+        avgSynergy: championStatsDoc.averageSynergyRating,
+        avgLaning: championStatsDoc.averageLaningRating,
+        avgTeamfight: championStatsDoc.averageTeamfightRating,
+        avgOpponentFrustration: championStatsDoc.averageOpponentFrustrationRating,
+        avgTeammateFrustration: championStatsDoc.averageTeammateFrustrationRating,
+        totalRatings: championStatsDoc.totalRatings,
+        totalComments: championStatsDoc.totalComments,
+        summary: championStatsDoc.championSummary,
+      } : null,
     };
     
     // console.log(`Champion specific stats for ${championName}:`, stats);

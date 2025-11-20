@@ -58,6 +58,25 @@ const UserSchema = new mongoose.Schema({
       message: 'Recent champion comments cannot exceed 10 items',
     },
   },
+  recentChampionRatings: {
+    type: [{
+      championId: { type: String, required: true },
+      dateUpdated: { type: Date, required: true },
+      funRating: { type: Number, required: true },
+      skillRating: { type: Number, required: true },
+      synergyRating: { type: Number, required: true },
+      laningRating: { type: Number, required: true },
+      teamfightRating: { type: Number, required: true },
+      opponentFrustrationRating: { type: Number, required: true },
+      teammateFrustrationRating: { type: Number, required: true },
+    }],
+    validate: {
+      validator: function(arr) {
+        return arr.length <= 10;
+      },
+      message: 'Recent champion ratings cannot exceed 10 items',
+    },
+  },
   favoriteSkins: [{ type: Number }], // Array of skin IDs
 });
 

@@ -163,8 +163,9 @@ export const fetchChampionStats = async () => {
   return response.data;
 };
 
-export const fetchChampionSpecificStats = async (championName) => {
-  const response = await api.get(`/api/champions/${encodeURIComponent(championName)}/stats`);
+export const fetchChampionSpecificStats = async (championName, include) => {
+  const queryParams = include ? `?include=${include}` : '';
+  const response = await api.get(`/api/champions/${encodeURIComponent(championName)}/stats${queryParams}`);
   return response.data;
 };
 

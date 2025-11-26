@@ -4,83 +4,31 @@ import { useParams } from 'react-router-dom';
 import { SkinCarousel } from '../components/carousel';
 import { ChampionStatsCard } from '../components/stats';
 import { SkinRatingSection, SkinCommentSection } from '../components/sections';
-import { fetchChampionSpecificStats } from '../../../api/championApi'; // Removed unused fetchChampionList
 import { getChampionSquareAssetUrl } from '../../../utils/championNameUtils';
 import { useVersion } from '../../../contextProvider/VersionProvider';
 import { ReturnButton } from '../components/common';
-
-// Custom hook for unified data management
-const useChampionData = (championName) => {
-  const [state, setState] = useState({
-    stats: null,
-    championDetails: null,
-    currentSkin: null,
-    isLoading: true,
-    error: null,
-  });
-
-  useEffect(() => {
-    const loadData = async () => {
-      if (!championName) {
-        setState(prev => ({ ...prev, isLoading: false }));
-        return;
-      }
-
-      try {
-        setState(prev => ({ ...prev, isLoading: true, error: null }));
-
-        // Load only stats (now includes static data)
-        const statsResponse = await fetchChampionSpecificStats(championName);
-
-        if (statsResponse.success) {
-          const stats = statsResponse.data;
-          
-          // Construct details from stats response
-          const championDetails = {
-            name: championName,
-            title: stats.title,
-            tags: stats.roles || stats.tags,
-          };
-
-          setState(prev => ({
-            ...prev,
-            stats: stats,
-            championDetails: championDetails,
-            isLoading: false
-          }));
-        } else {
-          setState(prev => ({
-            ...prev,
-            error: 'Failed to load champion data',
-            isLoading: false
-          }));
-        }
-      } catch (err) {
-        setState(prev => ({
-          ...prev,
-          error: 'Failed to load champion data',
-          isLoading: false
-        }));
-      }
-    };
-
-    loadData();
-  }, [championName]);
-
-  const updateCurrentSkin = useCallback((skin) => {
-    setState(prev => ({ ...prev, currentSkin: skin }));
-  }, []);
-
-  return { ...state, updateCurrentSkin };
-};
+import { useChampionRatingSectionData } from '../../../hooks/useChampionRatingSectionData'; // Use reusable hook
 
 const ChampionSkinRatingPage = () => {
   const { championName } = useParams();
   const [activeSection, setActiveSection] = useState('rating');
   const { version } = useVersion();
 
-  // Unified data management
-  const { stats, championDetails, currentSkin, isLoading, error, updateCurrentSkin } = useChampionData(championName);
+  // Unified data management with query params for 'skins'
+  const { 
+    data: stats, 
+    loading: isLoading, 
+    error, 
+    currentSkin, 
+    updateCurrentSkin 
+  } = useChampionRatingSectionData(championName, { include: 'skins' });
+
+  // Construct details from stats if available
+  const championDetails = stats ? {
+      name: championName,
+      title: stats.title,
+      tags: stats.roles || stats.tags,
+  } : null;
 
   return (
     <MUI.Container

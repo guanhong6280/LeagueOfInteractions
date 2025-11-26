@@ -17,7 +17,7 @@ import {
 import { ReturnButton } from '../components/common';
 import { useVersion } from '../../../contextProvider/VersionProvider';
 import { getChampionSquareAssetUrl } from '../../../utils/championNameUtils';
-import { fetchChampionSpecificStats } from '../../../api/championApi'; // Removed unused fetchChampionList
+import { useChampionRatingSectionData } from '../../../hooks/useChampionRatingSectionData'; // Reusable Hook
 import PlaystyleRadarChart from '../components/stats/PlaystyleRadarChart';
 import AIChipsSection from '../components/stats/AIChipsSection';
 import ChampionCommentSection from '../components/sections/ChampionCommentSection';
@@ -262,8 +262,17 @@ const ChampionRatingPage = () => {
   const { championName } = useParams();
   const { version } = useVersion();
 
-  const [championData, setChampionData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Use the reusable hook, requesting only rating stats
+  const { data: statsData, loading } = useChampionRatingSectionData(championName, { include: 'champions' });
+
+  // Transform hook data to match existing component structure if needed
+  // or simply use statsData directly.
+  const championData = statsData ? {
+    name: championName,
+    title: statsData.title,
+    roles: statsData.roles,
+    stats: statsData
+  } : null;
 
   // User Rating State
   const [userRatings, setUserRatings] = useState({
@@ -274,34 +283,8 @@ const ChampionRatingPage = () => {
     opponentFrustration: 0,
     teammateFrustration: 0
   });
-  const [comment, setComment] = useState('');
-
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      try {
-        const statsResponse = await fetchChampionSpecificStats(championName);
-        console.log(statsResponse.data);
-
-        if (statsResponse.success && statsResponse.data) {
-          // Construct championData from stats response (now includes static data)
-          setChampionData({
-            name: championName,
-            title: statsResponse.data.title,
-            tags: statsResponse.data.roles || statsResponse.data.tags, // Handle both
-            stats: statsResponse.data
-          });
-        }
-
-      } catch (error) {
-        console.error("Failed to load champion data", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
-  }, [championName]);
-
+  // No manual useEffect fetch needed anymore!
+  
   if (loading) return (
     <MUI.Box display="flex" justifyContent="center" mt={10}>
       <MUI.CircularProgress sx={{ color: 'black' }} size={60} thickness={5} />
@@ -396,15 +379,15 @@ const ChampionRatingPage = () => {
                 {/* Role Card */}
                 <StatCard
                   label="Role"
-                  value={championData?.tags?.[0] || 'Unknown'}
+                  value={championData?.roles?.[0] || 'Unknown'}
                   color="primary"
-                  imageSrc={`/role${championData?.tags?.[0] || 'Fighter'}.svg`}
+                  imageSrc={`/role${championData?.roles?.[0] || 'Fighter'}.svg`}
                 />
 
                 {/* Damage Type Card */}
                 <StatCard
                   label="Damage Type"
-                  value={championData?.stats?.damageType?.replace('k', '') || 'Adaptive'}
+                  value={championData?.stats?.damageType?.replace('k', '') === 'Magic' ? 'AP' : 'AD' || 'Adaptive'}
                   color="warning"
                   imageSrc={championData?.stats?.damageType === 'kMagic' ? '/Ability_power_icon.png' : '/Attack_damage_icon.png'}
                 />

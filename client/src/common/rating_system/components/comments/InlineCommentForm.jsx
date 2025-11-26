@@ -78,15 +78,17 @@ const InlineCommentForm = memo(({
 
       {/* Inline Comment Form */}
       <MUI.Paper 
-        elevation={1} 
+        elevation={0} 
         sx={{ 
-          bgcolor: 'background.paper',
-          border: '1px solid',
-          borderColor: 'divider',
+          bgcolor: 'white',
+          border: '3px solid black',
+          boxShadow: '6px 6px 0px black',
+          p: 2,
+          borderRadius: 0,
         }}
       >
         <form onSubmit={handleSubmit}>
-          <MUI.Box display="flex" alignItems="center" gap={1}>
+          <MUI.Box display="flex" alignItems="stretch" gap={2}>
 
             {/* Input Field */}
             <MUI.Box sx={{ flex: 1 }}>
@@ -103,19 +105,23 @@ const InlineCommentForm = memo(({
                 size="small"
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    fontSize: '0.875rem',
-                    '&:hover': {
-                      bgcolor: 'background.paper',
-                    },
-                    '&.Mui-focused': {
-                      bgcolor: 'background.paper',
-                    },
-                    '& fieldset': {
-                      border: 'none',
+                    fontSize: '0.9rem',
+                    borderRadius: 0,
+                    bgcolor: '#f8f8f8',
+                    border: '2px solid black',
+                    height: '100%', // Ensure input root takes full height
+                    alignItems: 'flex-start', // Align text to top
+                    '& fieldset': { border: 'none' }, 
+                    '&:hover': { bgcolor: '#fff' },
+                    '&.Mui-focused': { 
+                        bgcolor: '#fff',
+                        boxShadow: 'inset 2px 2px 5px rgba(0,0,0,0.1)'
                     },
                   },
                   '& .MuiOutlinedInput-input': {
                     py: 1.5,
+                    px: 1,
+                    fontWeight: 500,
                   },
                 }}
               />
@@ -124,8 +130,9 @@ const InlineCommentForm = memo(({
               {(isOverLimit || characterCount > 800) && (
                 <MUI.Typography 
                   variant="caption" 
+                  fontWeight="bold"
                   color={isOverLimit ? 'error' : 'warning.main'}
-                  sx={{ display: 'block', mt: 0.5, ml: 1 }}
+                  sx={{ display: 'block', mt: 1, ml: 0.5, textTransform: 'uppercase' }}
                 >
                   {isOverLimit 
                     ? `${characterCount - 1000} characters over limit`
@@ -136,29 +143,43 @@ const InlineCommentForm = memo(({
             </MUI.Box>
 
             {/* Send Button */}
-            <MUI.IconButton
-              type="submit"
-              disabled={isSubmitting || !hasText || isOverLimit}
-              sx={{
-                marginRight: '10px',
-                bgcolor: hasText && !isOverLimit && !isSubmitting ? 'primary.main' : 'action.disabledBackground',
-                color: hasText && !isOverLimit && !isSubmitting ? 'primary.contrastText' : 'action.disabled',
-                '&:hover': {
-                  bgcolor: hasText && !isOverLimit && !isSubmitting ? 'primary.dark' : 'action.disabledBackground',
-                },
-                '&.Mui-disabled': {
-                  bgcolor: 'action.disabledBackground',
-                  color: 'action.disabled',
-                },
-                transition: 'all 0.2s ease-in-out',
-              }}
-            >
-              {isSubmitting ? (
-                <MUI.CircularProgress size={20} color="inherit" />
-              ) : (
-                <SendIcon fontSize="small" />
-              )}
-            </MUI.IconButton>
+            <MUI.Box display="flex" flexDirection="column">
+                <MUI.Button
+                type="submit"
+                disabled={isSubmitting || !hasText || isOverLimit}
+                variant="contained"
+                sx={{
+                    minWidth: 'auto',
+                    width: 60,
+                    height: 'auto', // Let flexbox stretch it
+                    minHeight: '100%', // Ensure it takes at least the full height available
+                    borderRadius: 0,
+                    border: '2px solid black',
+                    bgcolor: hasText && !isOverLimit && !isSubmitting ? '#FF4081' : '#e0e0e0',
+                    color: hasText && !isOverLimit && !isSubmitting ? 'white' : '#9e9e9e',
+                    boxShadow: hasText && !isOverLimit && !isSubmitting ? '4px 4px 0px black' : 'none',
+                    '&:hover': {
+                    bgcolor: hasText && !isOverLimit && !isSubmitting ? '#F50057' : '#e0e0e0',
+                    transform: hasText && !isOverLimit && !isSubmitting ? 'translate(-2px, -2px)' : 'none',
+                    boxShadow: hasText && !isOverLimit && !isSubmitting ? '6px 6px 0px black' : 'none',
+                    },
+                    '&:active': {
+                    transform: 'translate(0, 0)',
+                    boxShadow: 'none',
+                    },
+                    transition: 'all 0.1s ease-in-out',
+                    p: 0,
+                    flex: 1, // Allow it to fill the container if needed
+                }}
+                >
+                {isSubmitting ? (
+                    <MUI.CircularProgress size={24} color="inherit" thickness={5} />
+                ) : (
+                    <SendIcon />
+                )}
+                </MUI.Button>
+                {/* Spacer to match character count height if needed, or just let button stretch */}
+            </MUI.Box>
           </MUI.Box>
         </form>
       </MUI.Paper>

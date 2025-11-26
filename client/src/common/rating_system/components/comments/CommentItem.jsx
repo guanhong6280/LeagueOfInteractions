@@ -24,30 +24,39 @@ const CommentItem = memo(({
     <MUI.Box
       sx={{
         py: 2,
-        px: 1,
+        px: 2,
+        mb: 2,
+        bgcolor: 'white',
+        border: '3px solid black',
+        boxShadow: '6px 6px 0px black',
+        transition: 'transform 0.2s',
         '&:hover': {
-          bgcolor: 'action.hover',
-          transition: 'background-color 0.2s ease-in-out',
+          transform: 'translate(-2px, -2px)',
+          boxShadow: '8px 8px 0px black',
         },
-        '&:last-child': {
-          borderBottom: 'none',
-        }
       }}
     >
       {/* TikTok-style Comment Layout */}
-      <MUI.Box display="flex" alignItems="flex-start" gap={1.5}>
+      <MUI.Box display="flex" alignItems="flex-start" gap={2}>
         <MUI.Avatar
           src={comment.user?.profilePictureURL}
           alt={comment.user?.username}
-          sx={{ width: 28, height: 28 }}
+          sx={{ 
+            width: 40, 
+            height: 40,
+            border: '2px solid black',
+            bgcolor: '#E0E0E0',
+            color: 'black',
+            fontWeight: 'bold'
+          }}
         >
           {comment.user?.username?.charAt(0).toUpperCase() || 'U'}
         </MUI.Avatar>
 
         <MUI.Box sx={{ flex: 1, minWidth: 0 }}>
           {/* Username and Badges - Inline */}
-          <MUI.Box display="flex" alignItems="center" gap={0.25} sx={{ mb: -0.5 }}>
-            <MUI.Typography variant="body2" fontWeight="bold" sx={{ fontSize: '0.875rem', lineHeight: 1.2 }}>
+          <MUI.Box display="flex" alignItems="center" gap={1} sx={{ mb: 0.5 }}>
+            <MUI.Typography variant="subtitle2" fontWeight="900" sx={{ fontSize: '1rem', lineHeight: 1.2 }}>
               {comment.user?.username || 'Anonymous User'}
             </MUI.Typography>
 
@@ -56,9 +65,15 @@ const CommentItem = memo(({
               <MUI.Chip
                 label="Under Review"
                 size="small"
-                color="warning"
-                variant="outlined"
-                sx={{ height: 16, fontSize: '0.6rem', ml: 0.5 }}
+                sx={{ 
+                  height: 20, 
+                  fontSize: '0.65rem', 
+                  fontWeight: 'bold',
+                  borderRadius: 0,
+                  border: '1px solid black',
+                  bgcolor: '#FFF59D',
+                  color: 'black'
+                }}
               />
             )}
 
@@ -66,9 +81,15 @@ const CommentItem = memo(({
               <MUI.Chip
                 label="Rejected"
                 size="small"
-                color="error"
-                variant="outlined"
-                sx={{ height: 16, fontSize: '0.6rem', ml: 0.5 }}
+                sx={{ 
+                    height: 20, 
+                    fontSize: '0.65rem', 
+                    fontWeight: 'bold',
+                    borderRadius: 0,
+                    border: '1px solid black',
+                    bgcolor: '#EF9A9A',
+                    color: 'black'
+                }}
               />
             )}
 
@@ -76,32 +97,34 @@ const CommentItem = memo(({
               <MUI.Chip
                 label="Edited"
                 size="small"
-                variant="outlined"
                 sx={{
-                  height: 16,
-                  fontSize: '0.6rem',
-                  ml: 0.5,
-                  color: 'text.secondary',
-                  borderColor: 'text.secondary'
+                  height: 20,
+                  fontSize: '0.65rem',
+                  fontWeight: 'bold',
+                  borderRadius: 0,
+                  border: '1px solid black',
+                  bgcolor: '#E0E0E0',
+                  color: 'black'
                 }}
               />
             )}
+            
+            <MUI.Typography variant="caption" fontWeight="bold" sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>
+                • {getTimeAgo(comment.createdAt)}
+            </MUI.Typography>
           </MUI.Box>
-          {/* Time Ago - TikTok Style */}
-          <MUI.Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}>
-            {getTimeAgo(comment.createdAt)}
-          </MUI.Typography>
 
           {/* Comment Content */}
           <MUI.Typography
-            variant="body2"
-            marginTop={0.5}
+            variant="body1"
             sx={{
-              mb: 1,
-              lineHeight: 1.4,
+              mb: 1.5,
+              lineHeight: 1.5,
               wordBreak: 'break-word',
               whiteSpace: 'pre-wrap',
-              fontSize: '0.875rem'
+              fontSize: '0.95rem',
+              fontWeight: 500,
+              color: 'black'
             }}
           >
             {comment.displayText}
@@ -119,7 +142,8 @@ const CommentItem = memo(({
             isSubmittingReply={isSubmittingReply}
             isLoadingReplies={isLoadingReplies}
           />
-          <MUI.Divider sx={{ my: 1 }} />
+          
+          {(showReplies || isReplyingTo === comment._id) && <MUI.Divider sx={{ my: 2, borderColor: 'black', borderBottomWidth: 2 }} />}
         </MUI.Box>
       </MUI.Box>
 
@@ -137,7 +161,7 @@ const CommentItem = memo(({
       {/* Replies List - TikTok Style */}
       {showReplies && comment.replies && comment.replies.length > 0 && (
         <MUI.Collapse in={showReplies}>
-          <MUI.Box sx={{ mt: 2, pl: 4 }}>
+          <MUI.Box sx={{ mt: 1, pl: { xs: 0, sm: 7 } }}>
             {comment.replies.map((reply, index) => (
               <ReplyItem
                 key={reply._id || index}
@@ -146,7 +170,6 @@ const CommentItem = memo(({
                 isLast={index === comment.replies.length - 1}
               />
             ))}
-            <MUI.Divider sx={{ my: 1 }} />
           </MUI.Box>
         </MUI.Collapse>
       )}
@@ -157,20 +180,35 @@ const CommentItem = memo(({
 // TikTok-style ReplyItem component
 const ReplyItem = memo(({ reply, onToggleLike, isLast }) => {
   return (
-    <MUI.Box sx={{ mb: isLast ? 0 : 1.5, py: 1 }}>
-      <MUI.Box display="flex" alignItems="flex-start" gap={1}>
+    <MUI.Box 
+        sx={{ 
+            mb: 2, 
+            p: 2,
+            bgcolor: '#F5F5F5',
+            border: '2px solid black',
+            boxShadow: '4px 4px 0px black',
+        }}
+    >
+      <MUI.Box display="flex" alignItems="flex-start" gap={1.5}>
         <MUI.Avatar
           src={reply.user?.profilePictureURL}
           alt={reply.user?.username}
-          sx={{ width: 24, height: 24 }}
+          sx={{ 
+              width: 32, 
+              height: 32,
+              border: '2px solid black',
+              bgcolor: 'white',
+              color: 'black',
+              fontWeight: 'bold'
+          }}
         >
           {reply.user?.username?.charAt(0).toUpperCase() || 'U'}
         </MUI.Avatar>
 
         <MUI.Box sx={{ flex: 1 }}>
           {/* Reply Header - Inline */}
-          <MUI.Box display="flex" alignItems="center" gap={0.5} mb={0.5}>
-            <MUI.Typography variant="body2" fontWeight="bold" sx={{ fontSize: '0.8rem' }}>
+          <MUI.Box display="flex" alignItems="center" gap={1} mb={0.5}>
+            <MUI.Typography variant="subtitle2" fontWeight="900" sx={{ fontSize: '0.9rem' }}>
               {reply.user?.username || 'Anonymous User'}
             </MUI.Typography>
 
@@ -179,9 +217,15 @@ const ReplyItem = memo(({ reply, onToggleLike, isLast }) => {
               <MUI.Chip
                 label="Under Review"
                 size="small"
-                color="warning"
-                variant="outlined"
-                sx={{ height: 14, fontSize: '0.55rem', ml: 0.5 }}
+                sx={{ 
+                    height: 18, 
+                    fontSize: '0.6rem', 
+                    fontWeight: 'bold',
+                    borderRadius: 0,
+                    border: '1px solid black',
+                    bgcolor: '#FFF59D',
+                    color: 'black'
+                }}
               />
             )}
 
@@ -189,13 +233,14 @@ const ReplyItem = memo(({ reply, onToggleLike, isLast }) => {
               <MUI.Chip
                 label="Edited"
                 size="small"
-                variant="outlined"
                 sx={{
-                  height: 14,
-                  fontSize: '0.55rem',
-                  ml: 0.5,
-                  color: 'text.secondary',
-                  borderColor: 'text.secondary'
+                  height: 18,
+                  fontSize: '0.6rem',
+                  fontWeight: 'bold',
+                  borderRadius: 0,
+                  border: '1px solid black',
+                  bgcolor: '#E0E0E0',
+                  color: 'black'
                 }}
               />
             )}
@@ -205,11 +250,13 @@ const ReplyItem = memo(({ reply, onToggleLike, isLast }) => {
           <MUI.Typography
             variant="body2"
             sx={{
-              mb: 0.5,
-              lineHeight: 1.3,
+              mb: 1,
+              lineHeight: 1.4,
               wordBreak: 'break-word',
               whiteSpace: 'pre-wrap',
-              fontSize: '0.8rem'
+              fontSize: '0.9rem',
+              fontWeight: 500,
+              color: 'black'
             }}
           >
             {reply.displayText}
@@ -217,13 +264,12 @@ const ReplyItem = memo(({ reply, onToggleLike, isLast }) => {
 
           {/* Simple Reply Actions - TikTok style */}
           <MUI.Box display="flex" alignItems="center" gap={1}>
-            <MUI.Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+            <MUI.Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
               {new Date(reply.createdAt).toLocaleDateString()}
-              {reply.isEdited && ' • edited'}
             </MUI.Typography>
 
             {reply.likedBy && reply.likedBy.length > 0 && (
-              <MUI.Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+              <MUI.Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
                 • {reply.likedBy.length} {reply.likedBy.length === 1 ? 'like' : 'likes'}
               </MUI.Typography>
             )}

@@ -39,15 +39,25 @@ const ReturnButton = ({
         size={size}
         startIcon={showIcon ? <ArrowBackIcon /> : undefined}
         sx={{
-          borderRadius: '20px',
-          boxShadow: 2,
+          bgcolor: 'white',
+          color: 'black',
+          borderRadius: 0,
+          border: '3px solid black',
+          boxShadow: '4px 4px 0px black',
+          fontWeight: 900,
+          textTransform: 'uppercase',
           '&:hover': {
-            boxShadow: 4,
-            transform: 'translateY(-1px)',
+            bgcolor: '#f0f0f0',
+            boxShadow: '6px 6px 0px black',
+            transform: 'translate(-2px, -2px)',
           },
-          transition: 'all 0.2s ease-in-out',
+          '&:active': {
+            boxShadow: 'none',
+            transform: 'translate(0, 0)',
+          },
+          transition: 'all 0.1s ease-in-out',
           minWidth: 'auto',
-          px: 2,
+          px: 3,
           py: 1,
         }}
       >

@@ -3,7 +3,7 @@ import * as MUI from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import ToxicitySpamCard from './common/ToxicitySpamCard';
-import { getSkinImageUrl } from '../../../common/skin_rating/utils/getSkinImageUrl';
+import { getSkinImageUrl } from '../../../common/rating_system/utils/getSkinImageUrl';
 
 const formatDate = (value) => {
   try {

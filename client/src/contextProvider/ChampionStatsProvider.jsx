@@ -22,7 +22,7 @@ export const ChampionStatsProvider = ({ children }) => {
       try {
         const championStats = await fetchChampionStatsData();
         setStats(championStats);
-        // console.log(championStats);
+        console.log(championStats);
       } catch (error) {
         console.error('Failed to initialize champion stats:', error);
       } finally {

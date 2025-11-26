@@ -15,8 +15,8 @@ import { VersionProvider } from './contextProvider/VersionProvider.jsx';
 import { QueryProvider } from './contextProvider/QueryProvider.jsx';
 import Donate from './pages/Donate.jsx';
 import AccountManagement from './pages/AccountManagement.jsx';
-import SkinRating from './pages/SkinRating.jsx';
-import { ChampionSkinDetail } from './common/skin_rating';
+import RatingLanding from './pages/RatingLanding.jsx';
+import { ChampionRatingPage, ChampionSkinRatingPage } from './common/rating_system/index.js';
 
 // Admin imports
 import AdminGuard from './admin/components/guards/AdminGuard.jsx';
@@ -40,10 +40,11 @@ createRoot(document.getElementById('root')).render(
                     {/* The default route that shows creators */}
                     <Route index element={<ViewInteractions />} />
                     <Route path="add" element={<AddInteractions />} />
-                    <Route path="skin_rating" element={<SkinRating />} />
+                    <Route path="rating_landing" element={<RatingLanding />} />
                     <Route path="donation" element={<Donate />} />
                     <Route path="setting" element={<AccountManagement />} />
-                    <Route path="/champion-skin-details/:championName" element={<ChampionSkinDetail />} />
+                    <Route path="/champion-skin-details/:championName" element={<ChampionSkinRatingPage />} />
+                    <Route path="/champion-rating/:championName" element={<ChampionRatingPage />} />
                   </Route>
                   
                   {/* Admin Routes - Protected by AdminGuard */}

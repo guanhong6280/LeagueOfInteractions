@@ -166,4 +166,54 @@ export const fetchChampionStats = async () => {
 export const fetchChampionSpecificStats = async (championName) => {
   const response = await api.get(`/api/champions/${encodeURIComponent(championName)}/stats`);
   return response.data;
-}; 
+};
+
+// Champion Comment APIs
+export const submitChampionComment = async (championId, commentData) => {
+  const response = await api.post(`/api/champions/${championId}/comments`, commentData);
+  return response.data;
+};
+
+export const getChampionComments = async (championId, includeUserDetails = false) => {
+  const response = await api.get(`/api/champions/${championId}/comments?includeUserDetails=${includeUserDetails}`);
+  return response.data;
+};
+
+export const getUserChampionComment = async (championId) => {
+  const response = await api.get(`/api/champions/${championId}/comments/user`);
+  return response.data;
+};
+
+// Champion Comment Like/Unlike APIs
+export const likeChampionComment = async (championId, commentId) => {
+  const response = await api.post(`/api/champions/${championId}/comments/${commentId}/like`);
+  return response.data;
+};
+
+export const unlikeChampionComment = async (championId, commentId) => {
+  const response = await api.post(`/api/champions/${championId}/comments/${commentId}/unlike`);
+  return response.data;
+};
+
+// Champion Reply APIs
+export const addChampionReply = async (championId, commentId, replyData) => {
+  const response = await api.post(`/api/champions/${championId}/comments/${commentId}/replies`, replyData);
+  return response.data;
+};
+
+export const getChampionRepliesForComment = async (championId, commentId, includeUserDetails = false) => {
+  const response = await api.get(`/api/champions/${championId}/comments/${commentId}/replies?includeUserDetails=${includeUserDetails}`);
+  return response.data;
+};
+
+// Champion Reply Like/Unlike APIs
+export const likeChampionReply = async (championId, commentId, replyId) => {
+  const response = await api.post(`/api/champions/${championId}/comments/${commentId}/replies/${replyId}/like`);
+  return response.data;
+};
+
+export const unlikeChampionReply = async (championId, commentId, replyId) => {
+  const response = await api.post(`/api/champions/${championId}/comments/${commentId}/replies/${replyId}/unlike`);
+  return response.data;
+};
+ 

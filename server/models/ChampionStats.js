@@ -3,6 +3,18 @@ const mongoose = require('mongoose');
 const ChampionStatsSchema = new mongoose.Schema({
   championId: { type: String, required: true, unique: true },
 
+  // Metadata from Community Dragon
+  title: { type: String, default: '' },
+  roles: [{ type: String }], // e.g. ["marksman", "mage"]
+  damageType: { type: String, default: '' }, // e.g. "kPhysical", "kMagic"
+  playstyleInfo: {
+    damage: { type: Number, default: 0 },
+    durability: { type: Number, default: 0 },
+    crowdControl: { type: Number, default: 0 },
+    mobility: { type: Number, default: 0 },
+    utility: { type: Number, default: 0 },
+  },
+
   // Aggregated Rating Averages
   averageFunRating: { type: Number, default: 0 },
   averageSkillRating: { type: Number, default: 0 },
@@ -30,4 +42,3 @@ const ChampionStatsSchema = new mongoose.Schema({
 ChampionStatsSchema.index({ championId: 1 });
 
 module.exports = mongoose.model('ChampionStats', ChampionStatsSchema);
-

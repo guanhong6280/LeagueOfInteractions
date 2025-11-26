@@ -3,128 +3,59 @@ const SkinRating = require('../models/SkinRating');
 const SkinComment = require('../models/SkinComment');
 const ChampionStats = require('../models/ChampionStats');
 
+// Simple in-memory cache for landing page stats
+let statsCache = {
+  data: null,
+  timestamp: 0,
+  duration: 5 * 60 * 1000 // 5 minutes
+};
+
 /**
  * Get aggregated statistics for all champions
  * This uses MongoDB aggregation pipeline for efficient data processing
  */
 const getChampionStats = async (req, res) => {
   try {
+    // Check cache
+    if (statsCache.data && (Date.now() - statsCache.timestamp < statsCache.duration)) {
+      console.log('Serving champion stats from cache');
+      return res.json(statsCache.data);
+    }
+
     console.log('Starting champion stats aggregation...');
     
     // Optimized MongoDB Aggregation Pipeline
-    // Since users can only rate/comment on one skin per champion, we can simplify significantly
+    // Removed comments lookup and complex distribution calc since they aren't used on landing page
+    // FURTHER OPTIMIZATION: Removed ratings lookup by using pre-aggregated fields on Skin model
     const pipeline = [
-      // Stage 1: Group skins by champion and get basic counts
+      // Stage 1: Group skins by champion and calculate stats directly from Skin model
       {
         $group: {
           _id: '$championId',
           totalSkins: { $sum: 1 },
-          skinIds: { $push: '$skinId' }  // Just collect skin IDs for lookups
-        }
-      },
-      
-      // Stage 2: Lookup ratings (one per user per champion)
-      {
-        $lookup: {
-          from: 'skinratings',
-          localField: 'skinIds',
-          foreignField: 'skinId',
-          as: 'ratings'
-        }
-      },
-      
-      // Stage 3: Lookup comments (one per user per champion)
-      {
-        $lookup: {
-          from: 'skincomments',
-          localField: 'skinIds',
-          foreignField: 'skinId',
-          as: 'comments'
-        }
-      },
-      
-      // Stage 4: Calculate simplified statistics
-      {
-        $addFields: {
-          championStats: {
-            totalSkins: '$totalSkins',
-            totalRatings: { $size: '$ratings' },
-            totalComments: { $size: '$comments' },
-            
-            // Simplified average calculation (one rating per user)
-            averageRating: {
-              $cond: {
-                if: { $gt: [{ $size: '$ratings' }, 0] },
-                then: {
-                  $round: [
-                    {
-                      $avg: {
-                        $map: {
-                          input: '$ratings',
-                          as: 'rating',
-                          in: {
-                            $avg: ['$$rating.splashArtRating', '$$rating.inGameModelRating']
-                          }
-                        }
-                      }
-                    },
-                    1
-                  ]
-                },
-                else: 0
-              }
-            },
-            
-            // Simplified rating distribution (one rating per user)
-            ratingDistribution: {
-              $reduce: {
-                input: '$ratings',
-                initialValue: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
-                in: {
-                  $mergeObjects: [
-                    '$$value',
-                    {
-                      $let: {
-                        vars: {
-                          avgRating: {
-                            $round: [
-                              { $avg: ['$$this.splashArtRating', '$$this.inGameModelRating'] },
-                              0
-                            ]
-                          }
-                        },
-                        in: {
-                          $switch: {
-                            branches: [
-                              { case: { $eq: ['$$avgRating', 1] }, then: { 1: { $add: ['$$value.1', 1] } } },
-                              { case: { $eq: ['$$avgRating', 2] }, then: { 2: { $add: ['$$value.2', 1] } } },
-                              { case: { $eq: ['$$avgRating', 3] }, then: { 3: { $add: ['$$value.3', 1] } } },
-                              { case: { $eq: ['$$avgRating', 4] }, then: { 4: { $add: ['$$value.4', 1] } } },
-                              { case: { $eq: ['$$avgRating', 5] }, then: { 5: { $add: ['$$value.5', 1] } } }
-                            ],
-                            default: '$$value'
-                          }
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
+          // Calculate average of (splash + model) / 2 for each skin, then average across all skins
+          averageSkinRating: { 
+            $avg: {
+              $avg: ['$averageSplashRating', '$averageModelRating']
+            } 
           }
         }
       },
       
-      // Stage 5: Project final result
+      // Stage 2: Project final result
       {
         $project: {
           _id: 0,
           championId: '$_id',
-          stats: '$championStats'
+          stats: {
+            totalSkins: '$totalSkins',
+            // Round to 1 decimal place
+            averageSkinRating: { $round: ['$averageSkinRating', 1] }
+          }
         }
       },
       
-      // Stage 6: Sort by champion name
+      // Stage 3: Sort by champion name
       {
         $sort: { championId: 1 }
       }
@@ -142,31 +73,39 @@ const getChampionStats = async (req, res) => {
     // Merge in the ChampionStats (new model) data
     const allChampionStatsDocs = await ChampionStats.find({});
     allChampionStatsDocs.forEach((doc) => {
-      if (championStats[doc.championId]) {
-        // Merge existing pipeline stats with new persistent stats
-        championStats[doc.championId] = {
-          ...championStats[doc.championId],
-          championRatingStats: {
-            avgFun: doc.averageFunRating,
-            avgSkill: doc.averageSkillRating,
-            avgSynergy: doc.averageSynergyRating,
-            avgLaning: doc.averageLaningRating,
-            avgTeamfight: doc.averageTeamfightRating,
-            avgOpponentFrustration: doc.averageOpponentFrustrationRating,
-            avgTeammateFrustration: doc.averageTeammateFrustrationRating,
-            totalRatings: doc.totalRatings,
-            totalComments: doc.totalComments,
-          },
-        };
+      // Ensure we have an object for this champion even if pipeline didn't return stats (no skins rated/no skins)
+      if (!championStats[doc.championId]) {
+        championStats[doc.championId] = {};
       }
+      
+      // Merge existing stats with new persistent metadata & rating stats
+      // Only include fields needed for Landing Page
+      championStats[doc.championId] = {
+        ...championStats[doc.championId],
+        roles: doc.roles,
+        damageType: doc.damageType,
+        championRatingStats: {
+          avgFun: doc.averageFunRating,
+        },
+      };
     });
 
     console.log(`Aggregation complete. Processed ${results.length} champions.`);
-    res.json({
+    
+    const responseData = {
       success: true,
       data: championStats,
       timestamp: new Date().toISOString()
-    });
+    };
+
+    // Update cache
+    statsCache = {
+      data: responseData,
+      timestamp: Date.now(),
+      duration: 5 * 60 * 1000
+    };
+
+    res.json(responseData);
 
   } catch (error) {
     console.error('Error in champion stats aggregation:', error);
@@ -311,6 +250,12 @@ const getChampionSpecificStats = async (req, res) => {
         totalComments: championStatsDoc.totalComments,
         summary: championStatsDoc.championSummary,
       } : null,
+      // Include static data for Detail Pages to avoid extra fetch
+      title: championStatsDoc?.title || '',
+      roles: championStatsDoc?.roles || [],
+      damageType: championStatsDoc?.damageType || '',
+      playstyleInfo: championStatsDoc?.playstyleInfo || null,
+      tags: championStatsDoc?.roles || [], // Helper for legacy support
     };
     
     // console.log(`Champion specific stats for ${championName}:`, stats);

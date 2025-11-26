@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { SkinCarousel } from '../components/carousel';
 import { ChampionStatsCard } from '../components/stats';
 import { SkinRatingSection, SkinCommentSection } from '../components/sections';
-import { fetchChampionSpecificStats, fetchChampionList } from '../../../api/championApi';
+import { fetchChampionSpecificStats } from '../../../api/championApi'; // Removed unused fetchChampionList
 import { getChampionSquareAssetUrl } from '../../../utils/championNameUtils';
 import { useVersion } from '../../../contextProvider/VersionProvider';
 import { ReturnButton } from '../components/common';
@@ -29,22 +29,23 @@ const useChampionData = (championName) => {
       try {
         setState(prev => ({ ...prev, isLoading: true, error: null }));
 
-        // Load both stats and champion details in parallel
-        const [statsResponse, championListResponse] = await Promise.all([
-          fetchChampionSpecificStats(championName),
-          fetchChampionList()
-        ]);
+        // Load only stats (now includes static data)
+        const statsResponse = await fetchChampionSpecificStats(championName);
 
         if (statsResponse.success) {
-          // Find the specific champion details from the list
-          const championDetails = championListResponse.champions?.find(
-            champion => champion.name.toLowerCase() === championName.toLowerCase()
-          );
+          const stats = statsResponse.data;
+          
+          // Construct details from stats response
+          const championDetails = {
+            name: championName,
+            title: stats.title,
+            tags: stats.roles || stats.tags,
+          };
 
           setState(prev => ({
             ...prev,
-            stats: statsResponse.data,
-            championDetails: championDetails || null,
+            stats: stats,
+            championDetails: championDetails,
             isLoading: false
           }));
         } else {
@@ -73,7 +74,7 @@ const useChampionData = (championName) => {
   return { ...state, updateCurrentSkin };
 };
 
-const ChampionSkinInformation = () => {
+const ChampionSkinRatingPage = () => {
   const { championName } = useParams();
   const [activeSection, setActiveSection] = useState('rating');
   const { version } = useVersion();
@@ -174,4 +175,4 @@ const ChampionSkinInformation = () => {
   );
 };
 
-export default ChampionSkinInformation;
+export default ChampionSkinRatingPage;

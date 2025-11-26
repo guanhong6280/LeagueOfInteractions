@@ -19,7 +19,8 @@ const CommentList = memo(({
   onSubmitComment,
   onRefreshComments,
   error,
-  onClearError
+  onClearError,
+  enableFloatingForm = true
 }) => {
   const [sortBy, setSortBy] = useState('newest'); // newest, oldest, mostLiked
   const [isFormFloating, setIsFormFloating] = useState(false);
@@ -27,6 +28,8 @@ const CommentList = memo(({
 
   // Scroll listener to detect bottom of page and skin carousel section
   useEffect(() => {
+    if (!enableFloatingForm) return;
+
     const handleScroll = () => {
       const windowHeight = window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;

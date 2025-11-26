@@ -211,7 +211,7 @@ const NeoBadge = ({ label, color = '#A5D6A7' }) => (
       fontWeight: 900,
       textTransform: 'uppercase',
       fontSize: '0.8rem',
-        boxShadow: '2px 2px 0px #000',
+      boxShadow: '2px 2px 0px #000',
       mr: 1,
       mb: 1
     }}
@@ -284,7 +284,7 @@ const ChampionRatingPage = () => {
     teammateFrustration: 0
   });
   // No manual useEffect fetch needed anymore!
-  
+
   if (loading) return (
     <MUI.Box display="flex" justifyContent="center" mt={10}>
       <MUI.CircularProgress sx={{ color: 'black' }} size={60} thickness={5} />
@@ -381,7 +381,7 @@ const ChampionRatingPage = () => {
                   label="Role"
                   value={championData?.roles?.[0] || 'Unknown'}
                   color="primary"
-                  imageSrc={`/role${championData?.roles?.[0] || 'Fighter'}.svg`}
+                  imageSrc={`/role${(championData?.roles?.[0] || 'Fighter').replace(/^\w/, c => c.toUpperCase())}.svg`}
                 />
 
                 {/* Damage Type Card */}
@@ -424,7 +424,7 @@ const ChampionRatingPage = () => {
                   overflow: 'hidden'
                 }}
               >
-            <MUI.Box
+                <MUI.Box
                   position="absolute"
                   top={0}
                   left={0}
@@ -523,7 +523,7 @@ const ChampionRatingPage = () => {
               fontWeight="bold"
             >
               YOUR TURN
-                </MUI.Box>
+            </MUI.Box>
 
             <MUI.Typography
               variant="h5"
@@ -555,7 +555,7 @@ const ChampionRatingPage = () => {
                     marks
                     min={1}
                     max={5}
-                  sx={{
+                    sx={{
                       color: 'black',
                       height: 8,
                       '& .MuiSlider-thumb': {

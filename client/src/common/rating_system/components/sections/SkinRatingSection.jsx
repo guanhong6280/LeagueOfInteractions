@@ -1,9 +1,15 @@
 import React from 'react';
 import * as MUI from '@mui/material';
-import { Star as StarIcon, StarBorder as StarBorderIcon } from '@mui/icons-material';
+import Grid from '@mui/material/Grid2';
+import {
+  Palette as PaletteIcon,
+  ThreeDRotation as ModelIcon
+} from '@mui/icons-material';
 import useRatingData from '../../hooks/useRatingData';
+import NeoRatingCard from '../common/NeoRatingCard';
+import NeoStatsCard from '../common/NeoStatsCard';
 
-const SkinRatingSection = ({ currentSkinId, championName }) => {
+const SkinRatingSection = ({ currentSkinId, championName, skinStats }) => {
   const {
     userRating,
     isLoading,
@@ -16,37 +22,8 @@ const SkinRatingSection = ({ currentSkinId, championName }) => {
     submitRating,
   } = useRatingData(currentSkinId);
 
-  const handleStarClick = (ratingType, value) => {
-    if (ratingType === 'splash') {
-      updateSplashArtRating(value);
-    } else {
-      updateInGameModelRating(value);
-    }
-  };
-
   const handleRatingSubmit = async () => {
     await submitRating();
-  };
-
-  const renderStarRating = (ratingType, currentRating, onStarClick) => {
-    return (
-      <MUI.Box display="flex" gap={0.5}>
-        {[1, 2, 3, 4, 5].map((star) => (
-          <MUI.IconButton
-            key={star}
-            onClick={() => onStarClick(ratingType, star)}
-            size="small"
-            sx={{ p: 0.5 }}
-          >
-            {star <= currentRating ? (
-              <StarIcon sx={{ color: 'warning.main', fontSize: 20 }} />
-            ) : (
-              <StarBorderIcon sx={{ color: 'grey.400', fontSize: 20 }} />
-            )}
-          </MUI.IconButton>
-        ))}
-      </MUI.Box>
-    );
   };
 
   if (isLoading) {
@@ -57,70 +34,95 @@ const SkinRatingSection = ({ currentSkinId, championName }) => {
     );
   }
 
+  const ratingFields = [
+    {
+        id: 'splash',
+        label: 'Splash Art Rating',
+        min: 1,
+        max: 5,
+        step: 1
+    },
+    {
+        id: 'model',
+        label: 'In-Game Model Rating',
+        min: 1,
+        max: 5,
+        step: 1
+    }
+  ];
+
+  const handleRatingChange = (id, val) => {
+    if (id === 'splash') {
+      updateSplashArtRating(val);
+    } else {
+      updateInGameModelRating(val);
+    }
+  };
+
+  const currentValues = {
+    splash: splashArtRating,
+    model: inGameModelRating
+  };
+
+  const statsSections = [
+    {
+      items: [
+        {
+          icon: PaletteIcon,
+          label: 'SPLASH ART QUALITY',
+          value: skinStats?.averageSplashRating || 0,
+          color: '#FF4081'
+        },
+        {
+          icon: ModelIcon,
+          label: 'IN-GAME MODEL QUALITY',
+          value: skinStats?.averageModelRating || 0,
+          color: '#7C4DFF'
+        }
+      ]
+    }
+  ];
+
   return (
     <MUI.Box>
-      {/* Rating Form */}
-      <MUI.Card sx={{ mb: 3 }}>
-        <MUI.CardContent>
-          <MUI.Typography variant="h6" fontWeight="bold" mb={2}>
-            Rate This Skin
-          </MUI.Typography>
-
-          {!currentSkinId ? (
-            <MUI.Alert severity="info">
-              Please select a skin to rate
+        {!currentSkinId ? (
+            <MUI.Alert severity="info" sx={{border: '3px solid black', borderRadius: 0, boxShadow: '4px 4px 0px black'}}>
+                Please select a skin to rate
             </MUI.Alert>
-          ) : (
-            <MUI.Stack spacing={3}>
-              {/* Splash Art Rating */}
-              <MUI.Box>
-                <MUI.Typography variant="subtitle1" fontWeight="bold" mb={1}>
-                  Splash Art Rating
-                </MUI.Typography>
-                {renderStarRating('splash', splashArtRating, handleStarClick)}
-                <MUI.Typography variant="body2" color="text.secondary" mt={0.5}>
-                  {splashArtRating > 0 ? `${splashArtRating} star${splashArtRating > 1 ? 's' : ''}` : 'Click to rate'}
-                </MUI.Typography>
-              </MUI.Box>
-
-              {/* In-Game Model Rating */}
-              <MUI.Box>
-                <MUI.Typography variant="subtitle1" fontWeight="bold" mb={1}>
-                  In-Game Model Rating
-                </MUI.Typography>
-                {renderStarRating('model', inGameModelRating, handleStarClick)}
-                <MUI.Typography variant="body2" color="text.secondary" mt={0.5}>
-                  {inGameModelRating > 0 ? `${inGameModelRating} star${inGameModelRating > 1 ? 's' : ''}` : 'Click to rate'}
-                </MUI.Typography>
-              </MUI.Box>
-
-              {error && (
-                <MUI.Alert severity="error" sx={{ mt: 2 }}>
-                  {error}
-                </MUI.Alert>
-              )}
-
-              <MUI.Button
-                variant="contained"
-                onClick={handleRatingSubmit}
-                disabled={isSubmitting || splashArtRating === 0 || inGameModelRating === 0}
-                sx={{ alignSelf: 'flex-start' }}
-              >
-                {isSubmitting ? (
-                  <MUI.Box display="flex" alignItems="center" gap={1}>
-                    <MUI.CircularProgress size={16} color="inherit" />
-                    Submitting...
-                  </MUI.Box>
-                ) : userRating ? (
-                  'Update Rating'
-                ) : (
-                  'Submit Rating'
+        ) : (
+            <MUI.Box>
+                 {error && (
+                    <MUI.Alert severity="error" sx={{ mb: 2, border: '3px solid black', borderRadius: 0, boxShadow: '4px 4px 0px black' }}>
+                        {error}
+                    </MUI.Alert>
                 )}
-              </MUI.Button>
-            </MUI.Stack>
-          )}
-        </MUI.CardContent>
-      </MUI.Card>
+                
+                <Grid container spacing={4}>
+                  {/* Stats Card */}
+                  <Grid size={{ xs: 12, md: 6 }} display="flex">
+                    <NeoStatsCard
+                      title="COMMUNITY RATINGS"
+                      sections={statsSections}
+                      color="#E0F7FA"
+                    />
+                  </Grid>
+
+                  {/* Rating Card */}
+                  <Grid size={{ xs: 12, md: 6 }} display="flex">
+                    <NeoRatingCard
+                        title="RATE THIS SKIN"
+                        fields={ratingFields}
+                        values={currentValues}
+                        onChange={handleRatingChange}
+                        onSubmit={handleRatingSubmit}
+                        submitLabel={isSubmitting ? "SUBMITTING..." : (userRating ? "UPDATE RATING" : "SUBMIT RATING")}
+                        color="#FFCCBC"
+                        badgeText="YOUR TURN"
+                    />
+                  </Grid>
+                </Grid>
+            </MUI.Box>
+        )}
     </MUI.Box>
   );
 };

@@ -32,12 +32,7 @@ const SkinCommentSection = memo(({ currentSkinId, championName }) => {
 
   return (
     <MUI.Box
-      border='2px solid'
-      borderColor='divider'
-      borderRadius='10px'
-      paddingY='10px'
-      marginBottom='80px'
-      sx={{ width: '100%', maxWidth: 1000, mx: 'auto' }}
+      sx={{ width: '100%', mx: 'auto' }}
     >
 
       {/* Comments List */}

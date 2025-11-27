@@ -1,38 +1,60 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import * as MUI from '@mui/material';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { SkinCarousel } from '../components/carousel';
-import { ChampionStatsCard } from '../components/stats';
+import { ChampionSkinStatsSection } from '../components/stats';
 import { SkinRatingSection, SkinCommentSection } from '../components/sections';
 import { getChampionSquareAssetUrl } from '../../../utils/championNameUtils';
 import { useVersion } from '../../../contextProvider/VersionProvider';
 import { ReturnButton } from '../components/common';
 import { useChampionRatingSectionData } from '../../../hooks/useChampionRatingSectionData'; // Use reusable hook
+import { NeoCard } from '../components/design/NeoComponents';
 
 const ChampionSkinRatingPage = () => {
   const { championName } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeSection, setActiveSection] = useState('rating');
   const { version } = useVersion();
 
   // Unified data management with query params for 'skins'
-  const { 
-    data: stats, 
-    loading: isLoading, 
-    error, 
-    currentSkin, 
-    updateCurrentSkin 
+  const {
+    data: stats,
+    loading: isLoading,
+    error,
+    currentSkin,
+    updateCurrentSkin
   } = useChampionRatingSectionData(championName, { include: 'skins' });
+
+  // Handle skin selection change
+  const handleSkinChange = useCallback((skin) => {
+    updateCurrentSkin(skin);
+    // Update URL parameter without reloading page
+    if (skin?.skinId) {
+      setSearchParams({ skinId: skin.skinId }, { replace: true });
+    }
+  }, [updateCurrentSkin, setSearchParams]);
+
+  // Initialize skin from URL if present
+  useEffect(() => {
+    const skinIdFromUrl = searchParams.get('skinId');
+    if (stats?.skins && skinIdFromUrl && !currentSkin) {
+      const skinFromUrl = stats.skins.find(s => s.skinId === skinIdFromUrl);
+      if (skinFromUrl) {
+        updateCurrentSkin(skinFromUrl);
+      }
+    }
+  }, [stats, searchParams, currentSkin, updateCurrentSkin]);
 
   // Construct details from stats if available
   const championDetails = stats ? {
-      name: championName,
-      title: stats.title,
-      tags: stats.roles || stats.tags,
+    name: championName,
+    title: stats.title,
+    tags: stats.roles || stats.tags,
   } : null;
 
   return (
     <MUI.Container
-      maxWidth="xl"
+      maxWidth="lg"
       sx={{ py: 4 }}
     >
       {/* Return Button - Fixed Position */}
@@ -42,33 +64,13 @@ const ChampionSkinRatingPage = () => {
 
       {/* Champion Stats Section */}
       <MUI.Box sx={{ mb: 4 }}>
-        <ChampionStatsCard
+        <ChampionSkinStatsSection
           championImageUrl={getChampionSquareAssetUrl(championName, version)}
           championName={championDetails?.name || championName}
           championTitle={championDetails?.title || ''}
           stats={stats}
           error={error}
           onRetry={() => window.location.reload()}
-          onNavigateToRating={() => {
-            // Scroll to rating section
-            setActiveSection('rating');
-            setTimeout(() => {
-              const ratingSection = document.getElementById('rating-section');
-              if (ratingSection) {
-                ratingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }
-            }, 100); // Small delay to ensure section renders
-          }}
-          onNavigateToComments={() => {
-            // Set active section to comments and scroll
-            setActiveSection('comment');
-            setTimeout(() => {
-              const commentSection = document.getElementById('comment-section');
-              if (commentSection) {
-                commentSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }
-            }, 100); // Small delay to ensure section renders
-          }}
         />
       </MUI.Box>
 
@@ -76,31 +78,63 @@ const ChampionSkinRatingPage = () => {
       <MUI.Box sx={{ mb: 4 }}>
         <SkinCarousel
           championName={championName}
-          onSkinChange={updateCurrentSkin}
+          onSkinChange={handleSkinChange}
         />
       </MUI.Box>
 
       {/* Section Navigation */}
-      <MUI.Box id="section-navigation" sx={{ mb: 3, display: 'flex', justifyContent: 'center' }}>
-        <MUI.ButtonGroup variant="outlined" size="large">
-          <MUI.Button
-            variant={activeSection === 'rating' ? 'contained' : 'outlined'}
+      <MUI.Box id="section-navigation" sx={{ mb: 4, display: 'flex', justifyContent: 'center' }}>
+        <MUI.Box
+          sx={{
+            display: 'flex',
+            border: '3px solid #000',
+            boxShadow: '6px 6px 0px #000',
+            bgcolor: 'white',
+          }}
+        >
+          <MUI.ButtonBase
             onClick={() => setActiveSection('rating')}
+            sx={{
+              px: 4,
+              py: 2,
+              fontSize: '1.1rem',
+              fontWeight: 900,
+              textTransform: 'uppercase',
+              bgcolor: activeSection === 'rating' ? 'black' : 'white',
+              color: activeSection === 'rating' ? 'white' : 'black',
+              borderRight: '3px solid #000',
+              transition: 'all 0.2s',
+              '&:hover': {
+                bgcolor: activeSection === 'rating' ? 'black' : '#FFF9C4',
+              }
+            }}
           >
             Rate Skins
-          </MUI.Button>
-          <MUI.Button
-            variant={activeSection === 'comment' ? 'contained' : 'outlined'}
+          </MUI.ButtonBase>
+          <MUI.ButtonBase
             onClick={() => setActiveSection('comment')}
+            sx={{
+              px: 4,
+              py: 2,
+              fontSize: '1.1rem',
+              fontWeight: 900,
+              textTransform: 'uppercase',
+              bgcolor: activeSection === 'comment' ? 'black' : 'white',
+              color: activeSection === 'comment' ? 'white' : 'black',
+              transition: 'all 0.2s',
+              '&:hover': {
+                bgcolor: activeSection === 'comment' ? 'black' : '#E1BEE7',
+              }
+            }}
           >
             Comments
-          </MUI.Button>
-        </MUI.ButtonGroup>
+          </MUI.ButtonBase>
+        </MUI.Box>
       </MUI.Box>
 
       {/* Interactive Sections */}
       <MUI.Box
-        maxWidth={1000}
+        maxWidth={1200}
         mx='auto'
       >
         {activeSection === 'rating' ? (
@@ -108,14 +142,17 @@ const ChampionSkinRatingPage = () => {
             <SkinRatingSection
               currentSkinId={currentSkin?.skinId}
               championName={championName}
+              skinStats={currentSkin}
             />
           </MUI.Box>
         ) : (
           <MUI.Box id="comment-section">
-            <SkinCommentSection
-              currentSkinId={currentSkin?.skinId}
-              championName={championName}
-            />
+            <NeoCard bgcolor="#E1BEE7">
+              <SkinCommentSection
+                currentSkinId={currentSkin?.skinId}
+                championName={championName}
+              />
+            </NeoCard>
           </MUI.Box>
         )}
       </MUI.Box>

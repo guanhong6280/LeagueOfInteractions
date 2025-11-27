@@ -6,22 +6,30 @@ const AmountCard = (props) => {
     <MUI.Chip
       label={`$${props.amount}`}
       clickable
-      variant="outlined"
+      variant="filled"
       onClick={props.onClick}
       sx={{
-        'backgroundImage': props.imageURL ? `url(${props.imageURL})`:'none',
+        'backgroundImage': props.imageURL ? `url(${props.imageURL})` : 'none',
         'backgroundSize': 'cover',
         'backgroundPosition': 'center',
-        'width': '75px',
-        'height': '40px',
-        'color': 'primary.main', // Text color (for better contrast with the background)
-        'border': '2px solid', // Define the border thickness
-        'borderColor': 'primary.main', // Border color (can be a custom color or theme color)
-        'borderRadius': '5px', // Optional: Adjust the border radius
-        'transition': 'transform 0.5s ease', // Slows down the transition to 0.5 seconds
+        'width': '90px',
+        'height': '50px',
+        'color': 'black',
+        'backgroundColor': props.imageURL ? 'transparent' : 'white',
+        'border': '2px solid #000',
+        'borderRadius': '0px',
+        'boxShadow': '4px 4px 0px 0px #000',
+        'fontWeight': '800',
+        'fontSize': '1.1rem',
+        'transition': 'all 0.1s ease',
         '&:hover': {
-          transform: 'scale(1.1)',
-          borderColor: 'third.main',
+          transform: 'translate(-2px, -2px)',
+          boxShadow: '6px 6px 0px 0px #000',
+          backgroundColor: props.imageURL ? 'transparent' : '#f0f0f0',
+        },
+        '&:active': {
+          transform: 'translate(2px, 2px)',
+          boxShadow: '2px 2px 0px 0px #000',
         },
       }}
     />

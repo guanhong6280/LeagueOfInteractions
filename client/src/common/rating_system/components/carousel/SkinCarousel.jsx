@@ -180,24 +180,25 @@ const SkinCarousel = ({ championName, onSkinChange }) => {
     <MUI.Box
       position="relative"
       width="100%"
-      maxWidth="1000px"
+      maxWidth="1200px"
       mx="auto"
       onKeyDown={handleKeyDown}
       tabIndex={0}
       sx={{ outline: 'none' }}
     >
               {/* Main carousel container */}
-        <MUI.Box
-          position="relative"
-          width="100%"
-          sx={{
-            aspectRatio: '16 / 9',
-            borderRadius: 2,
-            overflow: 'hidden',
-            boxShadow: 3,
-            backgroundColor: 'grey.100',
-          }}
-        >
+      <MUI.Box
+        position="relative"
+        width="100%"
+        sx={{
+          aspectRatio: '16 / 9',
+          borderRadius: 0,
+          border: '3px solid #000',
+          boxShadow: '8px 8px 0px #000',
+          overflow: 'hidden',
+          backgroundColor: 'black', // Dark background for letterboxing if needed
+        }}
+      >
         {/* Main image */}
         {imageUrl ? (
           <MUI.Box
@@ -257,19 +258,25 @@ const SkinCarousel = ({ championName, onSkinChange }) => {
           bottom={0}
           left={0}
           right={0}
-          bgcolor="rgba(0, 0, 0, 0.7)"
-          color="white"
+          bgcolor="white"
+          color="black"
           p={2}
+          borderTop="3px solid #000"
         >
-          <MUI.Box display="flex" alignItems="center" gap={1} mb={0.5}>
-            <MUI.Typography variant="h5" fontWeight="bold">
+          <MUI.Box display="flex" alignItems="center" gap={2} mb={0.5}>
+            <MUI.Typography variant="h5" fontWeight="900" textTransform="uppercase">
               {currentSkin?.name || 'Unknown Skin'}
             </MUI.Typography>
             {currentSkin?.rarity && (
               <MUI.Chip
                 label={formatRarityName(currentSkin.rarity)}
                 size="small"
-                sx={getRarityChipStyles(currentSkin.rarity)}
+                sx={{
+                  ...getRarityChipStyles(currentSkin.rarity),
+                  borderRadius: 0,
+                  border: '2px solid #000',
+                  fontWeight: 'bold',
+                }}
               />
             )}
           </MUI.Box>
@@ -282,14 +289,26 @@ const SkinCarousel = ({ championName, onSkinChange }) => {
               onClick={goToPrevious}
               sx={{
                 position: 'absolute',
-                left: 16,
+                left: 20,
                 top: '50%',
                 transform: 'translateY(-50%)',
-                bgcolor: 'rgba(0, 0, 0, 0.5)',
-                color: 'white',
+                bgcolor: 'white',
+                color: 'black',
+                border: '2px solid #000',
+                borderRadius: 0,
+                boxShadow: '4px 4px 0px #000',
+                width: 48,
+                height: 48,
+                transition: 'all 0.1s',
                 '&:hover': {
-                  bgcolor: 'rgba(0, 0, 0, 0.7)',
+                  bgcolor: '#FFF9C4',
+                  transform: 'translateY(-50%) translate(-2px, -2px)',
+                  boxShadow: '6px 6px 0px #000',
                 },
+                '&:active': {
+                  transform: 'translateY(-50%)',
+                  boxShadow: 'none',
+                }
               }}
             >
               <ChevronLeft />
@@ -299,14 +318,26 @@ const SkinCarousel = ({ championName, onSkinChange }) => {
               onClick={goToNext}
               sx={{
                 position: 'absolute',
-                right: 16,
+                right: 20,
                 top: '50%',
                 transform: 'translateY(-50%)',
-                bgcolor: 'rgba(0, 0, 0, 0.5)',
-                color: 'white',
+                bgcolor: 'white',
+                color: 'black',
+                border: '2px solid #000',
+                borderRadius: 0,
+                boxShadow: '4px 4px 0px #000',
+                width: 48,
+                height: 48,
+                transition: 'all 0.1s',
                 '&:hover': {
-                  bgcolor: 'rgba(0, 0, 0, 0.7)',
+                  bgcolor: '#FFF9C4',
+                  transform: 'translateY(-50%) translate(-2px, -2px)',
+                  boxShadow: '6px 6px 0px #000',
                 },
+                '&:active': {
+                  transform: 'translateY(-50%)',
+                  boxShadow: 'none',
+                }
               }}
             >
               <ChevronRight />
@@ -317,13 +348,23 @@ const SkinCarousel = ({ championName, onSkinChange }) => {
               onClick={toggleFullscreen}
               sx={{
                 position: 'absolute',
-                top: 16,
-                right: 16,
-                bgcolor: 'rgba(0, 0, 0, 0.5)',
-                color: 'white',
+                top: 20,
+                right: 20,
+                bgcolor: 'white',
+                color: 'black',
+                border: '2px solid #000',
+                borderRadius: 0,
+                boxShadow: '4px 4px 0px #000',
+                transition: 'all 0.1s',
                 '&:hover': {
-                  bgcolor: 'rgba(0, 0, 0, 0.7)',
+                  bgcolor: '#FFF9C4',
+                  transform: 'translate(-2px, -2px)',
+                  boxShadow: '6px 6px 0px #000',
                 },
+                '&:active': {
+                  transform: 'translate(0, 0)',
+                  boxShadow: 'none',
+                }
               }}
             >
               {isFullscreen ? <FullscreenExit /> : <Fullscreen />}
@@ -371,13 +412,13 @@ const SkinCarousel = ({ championName, onSkinChange }) => {
                       position: 'relative',
                       width: 24,
                       height: 24,
-                      borderRadius: '50%',
+                      borderRadius: 0, // Squares instead of circles
                       bgcolor: skin.rarity ? getRarityColor(skin.rarity) : '#757575',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
-                      border: actualIndex === currentIndex ? '2px solid white' : '2px solid transparent',
-                      boxShadow: actualIndex === currentIndex ? '0 0 0 2px rgba(0,0,0,0.3)' : 'none',
-                      transform: actualIndex === currentIndex ? 'scale(1.2)' : 'scale(1)',
+                      border: '2px solid #000', // Always black border
+                      boxShadow: actualIndex === currentIndex ? '4px 4px 0px #000' : '2px 2px 0px #000', // Hard shadow
+                      transform: actualIndex === currentIndex ? 'translate(-2px, -2px)' : 'translate(0, 0)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -385,7 +426,8 @@ const SkinCarousel = ({ championName, onSkinChange }) => {
                       // Apply special gradient styles for premium tiers
                       ...getRarityGradientStyles(skin.rarity, actualIndex === currentIndex),
                       '&:hover': {
-                        transform: actualIndex === currentIndex ? 'scale(1.2)' : 'scale(1.1)',
+                         transform: 'translate(-2px, -2px)',
+                         boxShadow: '4px 4px 0px #000',
                       },
                     }}
                   >
@@ -430,18 +472,29 @@ const SkinCarousel = ({ championName, onSkinChange }) => {
                   onClick={goToPreviousPage}
                   disabled={!canGoLeft}
                   sx={{ 
-                    opacity: canGoLeft ? 1 : 0.3,
-                    transition: 'opacity 0.2s ease',
+                    border: '2px solid #000',
+                    borderRadius: 0,
+                    bgcolor: canGoLeft ? 'white' : '#eee',
+                    color: canGoLeft ? 'black' : 'text.disabled',
+                    opacity: 1, // Reset opacity to handle disabled state manually or let MUI handle it with color
+                    boxShadow: canGoLeft ? '4px 4px 0px #000' : 'none',
+                    transition: 'all 0.2s',
                     '&:hover': {
-                      bgcolor: canGoLeft ? 'action.hover' : 'transparent',
+                      bgcolor: canGoLeft ? '#FFF9C4' : '#eee',
+                      transform: canGoLeft ? 'translate(-2px, -2px)' : 'none',
+                      boxShadow: canGoLeft ? '6px 6px 0px #000' : 'none',
                     },
+                    '&:active': {
+                       transform: 'translate(0,0)',
+                       boxShadow: 'none'
+                    }
                   }}
                 >
                   <ChevronLeft fontSize="small" />
                 </MUI.IconButton>
                 
-                <MUI.Typography variant="caption" color="text.secondary" sx={{ minWidth: 60, textAlign: 'center' }}>
-                  Page {currentPage + 1} of {totalPages}
+                <MUI.Typography variant="caption" fontWeight="bold" sx={{ minWidth: 60, textAlign: 'center' }}>
+                  Page {currentPage + 1} / {totalPages}
                 </MUI.Typography>
                 
                 <MUI.IconButton
@@ -449,11 +502,22 @@ const SkinCarousel = ({ championName, onSkinChange }) => {
                   onClick={goToNextPage}
                   disabled={!canGoRight}
                   sx={{ 
-                    opacity: canGoRight ? 1 : 0.3,
-                    transition: 'opacity 0.2s ease',
+                    border: '2px solid #000',
+                    borderRadius: 0,
+                    bgcolor: canGoRight ? 'white' : '#eee',
+                    color: canGoRight ? 'black' : 'text.disabled',
+                    opacity: 1,
+                    boxShadow: canGoRight ? '4px 4px 0px #000' : 'none',
+                    transition: 'all 0.2s',
                     '&:hover': {
-                      bgcolor: canGoRight ? 'action.hover' : 'transparent',
+                      bgcolor: canGoRight ? '#FFF9C4' : '#eee',
+                      transform: canGoRight ? 'translate(-2px, -2px)' : 'none',
+                      boxShadow: canGoRight ? '6px 6px 0px #000' : 'none',
                     },
+                    '&:active': {
+                       transform: 'translate(0,0)',
+                       boxShadow: 'none'
+                    }
                   }}
                 >
                   <ChevronRight fontSize="small" />

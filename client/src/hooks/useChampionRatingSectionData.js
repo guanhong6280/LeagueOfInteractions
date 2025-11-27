@@ -30,6 +30,7 @@ export const useChampionRatingSectionData = (championName, options = {}) => {
         
         if (response.success && response.data) {
           setData(response.data);
+          console.log(response.data);
         } else {
           setError(response.message || 'Failed to fetch champion data');
         }

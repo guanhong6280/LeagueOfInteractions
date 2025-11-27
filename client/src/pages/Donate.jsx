@@ -34,8 +34,21 @@ const Donate = () => {
   };
 
   return (
-    <MUI.Stack>
-      <MUI.Box marginTop="50px" display="flex" justifyContent="center" gap="20px">
+    <MUI.Stack spacing={4} paddingY="50px" alignItems="center">
+      <MUI.Box
+        sx={{
+          backgroundColor: '#fff',
+          border: '4px solid #000',
+          boxShadow: '8px 8px 0px 0px #000',
+          padding: '20px',
+          width: 'fit-content',
+        }}
+      >
+        <MUI.Typography variant="h3" fontWeight="900" textTransform="uppercase" color="black">
+          Support Bob
+        </MUI.Typography>
+      </MUI.Box>
+      <MUI.Box display="flex" justifyContent="center" gap="40px" flexWrap="wrap">
         {donationInformation.map((item) => {
           return (
             <DonationCard

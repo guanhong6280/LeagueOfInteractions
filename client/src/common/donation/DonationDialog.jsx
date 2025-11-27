@@ -79,29 +79,40 @@ const DonationDialog = (props) => {
       onClose={props.onClose}
       sx={{
         '& .MuiPaper-root': {
-          backgroundColor: 'black',
-          opacity: 1,
+          backgroundColor: '#fff',
+          border: '4px solid #000',
+          borderRadius: '0px',
+          boxShadow: '12px 12px 0px 0px #000',
+        },
+        '& .MuiBackdrop-root': {
+          backgroundColor: 'rgba(0,0,0,0.5)',
         },
       }}
     >
       <CloseIcon
         onClick={props.onClose}
         sx={{
-          'color': 'white',
+          'color': 'black',
           'position': 'absolute',
           'right': 15,
           'top': 13,
           'cursor': 'pointer',
+          'border': '2px solid #000',
+          'backgroundColor': 'white',
+          'zIndex': 1,
           '&:hover': {
-            color: 'red', // Change color on hover
+            backgroundColor: 'black',
+            color: 'white',
           },
         }}
       />
-      <MUI.DialogTitle>
-        <MUI.Typography display="flex" alignItems="center" justifyContent="center" color="primary">Select Amount</MUI.Typography>
+      <MUI.DialogTitle sx={{ borderBottom: '3px solid #000', marginBottom: '20px' }}>
+        <MUI.Typography display="flex" alignItems="center" justifyContent="center" color="black" fontWeight="900" fontSize="1.5rem" textTransform="uppercase">
+          Select Amount
+        </MUI.Typography>
       </MUI.DialogTitle>
-      <MUI.DialogActions>
-        <MUI.Grid2 container spacing={2} marginX="50px">
+      <MUI.DialogActions sx={{ paddingBottom: '30px' }}>
+        <MUI.Grid2 container spacing={3} marginX="20px">
           {DonationAmounts.map((amount) => (
             <MUI.Grid2 size={4} key={amount.id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <AmountCard amount={amount.dollarValue} imageURL={amount.imageURL} onClick={() => handleDonate(amount.value)} />
@@ -113,9 +124,10 @@ const DonationDialog = (props) => {
         display="flex"
         alignItems="center"
         justifyContent="center"
-        color="primary"
-        fontSize="12px"
-        marginY="15px"
+        color="black"
+        fontSize="14px"
+        fontWeight="bold"
+        marginBottom="15px"
       >
         Thank you for your donation!
       </MUI.Typography>

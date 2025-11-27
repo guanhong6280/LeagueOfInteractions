@@ -26,41 +26,25 @@ const CommentList = memo(({
   const [isFormFloating, setIsFormFloating] = useState(false);
   const formPlaceholderRef = useRef(null);
 
-  // Scroll listener to detect bottom of page and skin carousel section
   useEffect(() => {
     if (!enableFloatingForm) return;
 
-    const handleScroll = () => {
-      const windowHeight = window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight;
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      
-      // Check if user hit the bottom of the page (with small threshold)
-      const isAtBottom = scrollTop + windowHeight >= documentHeight - 50;
-      
-      // Check if user scrolled back up to skin carousel area
-      // Assuming skin carousel is in the upper portion of the page
-      const skinCarouselThreshold = windowHeight * 0.6; // Adjust this based on your layout
-      const isBackToCarousel = scrollTop < skinCarouselThreshold;
-      
-      // Float form when at bottom, hide when back to carousel area
-      if (isAtBottom && !isBackToCarousel) {
-        setIsFormFloating(true);
-      } else if (isBackToCarousel) {
-        setIsFormFloating(false);
+    const handleKeyDown = (event) => {
+      // Toggle floating form on 'f' key press, but ignore if typing in an input or textarea
+      if (
+        (event.key === 'f' || event.key === 'F') && 
+        !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)
+      ) {
+        setIsFormFloating(prev => !prev);
       }
     };
 
-    // Add scroll listener
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    
-    // Initial check
-    handleScroll();
+    window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [enableFloatingForm]);
 
   // Sort comments based on selected option
   const sortedComments = React.useMemo(() => {
@@ -128,49 +112,50 @@ const CommentList = memo(({
         </MUI.Box>
       </MUI.Box>
 
-      {/* Floating Comment Form - Appears when at bottom of page */}
+      {/* Floating Comment Form - Appears when toggled via 'F' key */}
       {isFormFloating && (
-        <MUI.Box
-          sx={{
-            position: 'fixed',
-            bottom: 20,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 1300,
-            width: 'calc(100% - 40px)',
-            maxWidth: 600,
-            transition: 'all 0.3s ease-in-out',
-            animation: 'slideUp 0.3s ease-out',
-            '@keyframes slideUp': {
-              from: {
-                transform: 'translateX(-50%) translateY(100%)',
-                opacity: 0,
-              },
-              to: {
-                transform: 'translateX(-50%) translateY(0)',
-                opacity: 1,
-              },
-            },
-          }}
-        >
-          <MUI.Paper
-            elevation={8}
+        <MUI.Portal>
+          <MUI.Box
             sx={{
-              bgcolor: 'background.paper',
-              borderRadius: 2,
-              border: '1px solid',
-              borderColor: 'primary.main',
-              overflow: 'hidden',
+              position: 'fixed',
+              bottom: 20,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 1300,
+              width: 'calc(100% - 40px)',
+              maxWidth: 600,
+              animation: 'slideUp 0.3s ease-out',
+              '@keyframes slideUp': {
+                from: {
+                  transform: 'translateX(-50%) translateY(100%)',
+                  opacity: 0,
+                },
+                to: {
+                  transform: 'translateX(-50%) translateY(0)',
+                  opacity: 1,
+                },
+              },
             }}
           >
-            <InlineCommentForm
-              onSubmit={onSubmitComment}
-              isSubmitting={isSubmittingReply}
-              error={error}
-              onClearError={onClearError}
-            />
-          </MUI.Paper>
-        </MUI.Box>
+            <MUI.Paper
+              elevation={0}
+              sx={{
+                bgcolor: 'background.paper',
+                borderRadius: 0,
+                border: '3px solid black',
+                boxShadow: '6px 6px 0px black',
+                overflow: 'hidden',
+              }}
+            >
+              <InlineCommentForm
+                onSubmit={onSubmitComment}
+                isSubmitting={isSubmittingReply}
+                error={error}
+                onClearError={onClearError}
+              />
+            </MUI.Paper>
+          </MUI.Box>
+        </MUI.Portal>
       )}
     </>
   );

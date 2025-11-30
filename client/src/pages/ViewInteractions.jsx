@@ -17,6 +17,7 @@ const ViewInteractions = () => {
   const [selectedFirstChampionAbility, setSelectedFirstChampionAbility] = React.useState('');
   const [selectedSecondChampionAbility, setSelectedSecondChampionAbility] = React.useState('');
   const [videoData, setVideoData] = React.useState(null);
+  const [isLoading, setIsLoading] = React.useState(false);
 
   // Use a ref to track if restoration is in progress
   const isRestoring = React.useRef(true);
@@ -173,11 +174,15 @@ const ViewInteractions = () => {
 
   const fetchAndSetVideoData = async () => {
     setVideoData(null);
+    setIsLoading(true);
 
     const ability1Index = firstChampionAbilities.findIndex((ability) => ability.name === selectedFirstChampionAbility);
     const ability2Index = secondChampionAbilities.findIndex((ability) => ability.name === selectedSecondChampionAbility);
 
-    if (ability1Index === -1 || ability2Index === -1) return;
+    if (ability1Index === -1 || ability2Index === -1) {
+      setIsLoading(false);
+      return;
+    }
 
     const params = {
       champion1: firstChampion?.id,
@@ -186,9 +191,22 @@ const ViewInteractions = () => {
       ability2: AbilityMap[ability2Index],
     };
 
-    const data = await fetchVideoData(params);
-    setVideoData(data);
+    try {
+      const data = await fetchVideoData(params);
+      setVideoData(data);
+    } catch (error) {
+      console.error("Error fetching video data:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const selectionsComplete = Boolean(
+    firstChampion &&
+    selectedFirstChampionAbility &&
+    secondChampion &&
+    selectedSecondChampionAbility
+  );
 
   return (
     <MUI.Box
@@ -210,7 +228,17 @@ const ViewInteractions = () => {
         handleChampionSelect={handleFirstChampionSelect}
         handleAbilitySelect={selectFirstChampionAbility}
       />
-      <VideoPlayer videoData={videoData} />
+      <VideoPlayer 
+        videoData={videoData} 
+        isLoading={isLoading} 
+        selectionsComplete={selectionsComplete}
+        currentSelections={{
+          champion1: firstChampion,
+          champion2: secondChampion,
+          ability1: selectedFirstChampionAbility,
+          ability2: selectedSecondChampionAbility
+        }}
+      />
       <ChampionSelectCard
         order="Second"
         champion={secondChampion}

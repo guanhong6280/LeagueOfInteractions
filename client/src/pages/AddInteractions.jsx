@@ -7,6 +7,7 @@ import { useVideoEvents } from '../hooks/useVideoEvents';
 import { useChampion } from '../contextProvider/ChampionProvider';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import CloseIcon from '@mui/icons-material/Close';
+import { useLocation } from 'react-router-dom';
 
 export const AbilityMap = {
   0: 'P',
@@ -168,6 +169,7 @@ const ChampionBattleZone = ({
 
 const AddInteractions = () => {
   const { championNames } = useChampion();
+  const location = useLocation();
 
   const [firstChampion, setFirstChampion] = React.useState(null);
   const [secondChampion, setSecondChampion] = React.useState(null);
@@ -221,6 +223,28 @@ const AddInteractions = () => {
       setSecondChampionAbilities(abilities);
     }
   }, [secondChampion]);
+
+  React.useEffect(() => {
+    const prefillData = async () => {
+      if (location.state?.preselected) {
+        const { champion1, champion2, ability1, ability2 } = location.state.preselected;
+
+        if (champion1) {
+          const champ1Data = await fetchChampionDetails(champion1);
+          setFirstChampion(champ1Data);
+          setSelectedFirstChampionAbility(ability1 || '');
+        }
+
+        if (champion2) {
+          const champ2Data = await fetchChampionDetails(champion2);
+          setSecondChampion(champ2Data);
+          setSelectedSecondChampionAbility(ability2 || '');
+        }
+      }
+    };
+
+    prefillData();
+  }, [location.state]);
 
   const fetchChampionDetails = async (championName) => {
     const url = `https://ddragon.leagueoflegends.com/cdn/14.19.1/data/en_US/champion/${championName}.json`;

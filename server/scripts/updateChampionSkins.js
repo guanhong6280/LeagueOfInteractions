@@ -1,61 +1,36 @@
-const axios = require('axios');
 const mongoose = require('mongoose');
-const Skin = require('../models/Skin');
-require('dotenv').config();
-// MongoDB connection string (update as needed)
-const MONGODB_URI = process.env.MONGODB_URI;
+const path = require('path');
+const skinManager = require('../utils/skinManager');
 
-async function getAllChampionIds() {
-  const url = 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-summary.json';
-  const response = await axios.get(url);
-  return response.data.map((champ) => champ.id);
-}
-
-async function fetchChampionData(championId) {
-  const url = `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champions/${championId}.json`;
-  const response = await axios.get(url);
-  return response.data;
-}
+// Robustly load config.env from the parent directory
+require('dotenv').config({ path: path.join(__dirname, '../config.env') });
 
 async function main() {
-  await mongoose.connect(MONGODB_URI);
-  console.log('Connected to MongoDB');
-
-  const championIds = await getAllChampionIds();
-  console.log(`Found ${championIds.length} champion IDs`);
-
-  for (const championId of championIds) {
-    try {
-      const championData = await fetchChampionData(championId);
-      const championName = championData.name;
-
-      for (const skin of championData.skins) {
-        const skinDoc = {
-          championId: championName,
-          skinId: skin.id,
-          name: skin.name,
-          rarity: skin.rarity || 'kNoRarity',
-          splashPath: skin.splashPath || '',
-          loadScreenPath: skin.loadScreenPath || '',
-          skinLineId: skin.skinLines && skin.skinLines.length > 0 ? skin.skinLines[0].id : undefined,
-          description: skin.description || '',
-        };
-
-        // Upsert: update if exists, insert if not
-        await Skin.updateOne(
-          { skinId: skinDoc.skinId },
-          { $set: skinDoc },
-          { upsert: true },
-        );
-        console.log(`Upserted skin: ${skinDoc.name} (${skinDoc.skinId})`);
-      }
-    } catch (err) {
-      console.error(`Error processing championId ${championId}:`, err.message);
+  try {
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI is not defined in environment variables');
     }
-  }
 
-  await mongoose.disconnect();
-  console.log('Done!');
+    console.log('Connecting to MongoDB...');
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('Connected.');
+
+    // Use the SkinManager to perform the sync
+    const stats = await skinManager.syncSkins();
+    
+    console.log('Sync Stats:', stats);
+
+    await mongoose.disconnect();
+    console.log('Done!');
+    process.exit(0);
+
+  } catch (error) {
+    console.error('Fatal Error:', error);
+    if (mongoose.connection.readyState === 1) {
+      await mongoose.disconnect();
+    }
+    process.exit(1);
+  }
 }
 
 main();

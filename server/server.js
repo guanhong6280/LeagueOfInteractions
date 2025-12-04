@@ -14,6 +14,7 @@ const skinRoutes = require('./routes/skinRoutes');
 const championStatsRoutes = require('./routes/championStatsRoutes');
 const championCommentRoutes = require('./routes/championCommentRoutes');
 const moderationRoutes = require('./routes/moderationRoutes');
+const contactRoutes = require('./routes/contactRoutes');
 const { startReconciler } = require('./utils/reconciler');
 require('dotenv').config();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
@@ -25,16 +26,18 @@ const RAW_WEBHOOK_PATHS = [
   '/api/videos/webhook/mux',
 ];
 
-app.options('*', cors({ origin: 'http://localhost:5173', credentials: true }));
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+
+app.options('*', cors({ origin: CLIENT_URL, credentials: true }));
 
 app.use(cors({
-  origin: 'http://localhost:5173', // Allow requests from your frontend
+  origin: CLIENT_URL, // Allow requests from your frontend
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Specify allowed methods
   credentials: true, // Allow cookies to be sent
 }));
 
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:5173'); // Only allow this origin
+  res.header('Access-Control-Allow-Origin', CLIENT_URL); // Only allow this origin
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
   next();
 });
@@ -84,6 +87,7 @@ app.use('/api/skins', skinRoutes);
 app.use('/api/champions', championCommentRoutes);
 app.use('/api/champions', championStatsRoutes);
 app.use('/api/moderation', moderationRoutes);
+app.use('/api/contact', contactRoutes);
 
 
 connectDB().then(() => {

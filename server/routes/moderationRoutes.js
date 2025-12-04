@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const commentModerationController = require('../controllers/commentModerationController');
-const videoModerationController = require('../controllers/videoModerationController');
+const commentModerationController = require('../controllers/moderation/commentModerationController');
+const videoModerationController = require('../controllers/moderation/videoModerationController');
 const { ensureApiAdmin } = require('../middleware/auth');
 
 router.get('/comments', ensureApiAdmin, commentModerationController.getCommentModerationQueue);

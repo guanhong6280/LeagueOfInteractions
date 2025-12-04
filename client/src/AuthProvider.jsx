@@ -15,7 +15,7 @@ const AuthProvider = ({ children }) => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const { data } = await axios.get('http://localhost:5174/api/auth/user', { withCredentials: true });
+        const { data } = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5174'}/api/auth/user`, { withCredentials: true });
         setUser(data);
         console.log('log data from authprovider');
         console.log(data);
@@ -36,7 +36,7 @@ const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      const response = await axios.get('http://localhost:5174/api/auth/logout', { withCredentials: true });
+      const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5174'}/api/auth/logout`, { withCredentials: true });
       if (response.status === 200) {
         window.location.href = '/';
       }

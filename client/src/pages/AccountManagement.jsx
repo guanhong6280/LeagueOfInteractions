@@ -76,7 +76,7 @@ const AccountManagement = () => {
         timeJoinedTheGame: yearJoined, // assuming yearJoined is your input
       };
 
-      const { data } = await axios.put('http://localhost:5174/api/users/updateUserInformation', updatedData, {
+      const { data } = await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5174'}/api/users/updateUserInformation`, updatedData, {
         withCredentials: true,
       });
 

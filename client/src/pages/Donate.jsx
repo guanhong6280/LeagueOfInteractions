@@ -13,7 +13,7 @@ const Donate = () => {
   React.useEffect(() => {
     const fetchDonationCards = async () => {
       try {
-        const response = await axios.get('http://localhost:5174/api/donations/donation-cards');
+        const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5174'}/api/donations/donation-cards`);
         setDonationInformation(response.data);
       } catch (error) {
         console.error('Error fetching donation cards:', error);

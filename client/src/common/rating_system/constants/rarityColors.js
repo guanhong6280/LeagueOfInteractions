@@ -6,7 +6,7 @@ export const RARITY_COLORS = {
   'kLegendary': '#FF0000',  // Red for Legendary  
   'kEpic': '#2196F3',       // Blue for Epic
   'kRare': '#4CAF50',       // Green for Rare
-  'kNoRarity': '#757575',   // Grey for Legacy/No Rarity
+  'kNoRarity': '#607D8B',   // Blue Grey for Legacy/No Rarity - more sophisticated than plain grey
   'kUltimate': '#FFA500',   // Orange for Ultimate (rare tier)
   
   // Special tiers with gradient effects

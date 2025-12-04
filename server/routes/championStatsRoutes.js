@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const championStatsController = require('../controllers/championStatsController');
+const championStatsController = require('../controllers/champion/championStatsController');
 
 /**
  * GET /api/champions/stats

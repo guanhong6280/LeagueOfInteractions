@@ -15,6 +15,7 @@ import { VersionProvider } from './contextProvider/VersionProvider.jsx';
 import { QueryProvider } from './contextProvider/QueryProvider.jsx';
 import Donate from './pages/Donate.jsx';
 import AccountManagement from './pages/AccountManagement.jsx';
+import Contact from './pages/Contact.jsx';
 import RatingLanding from './pages/RatingLanding.jsx';
 import { ChampionRatingPage, ChampionSkinRatingPage } from './common/rating_system/index.js';
 
@@ -23,6 +24,7 @@ import AdminGuard from './admin/components/guards/AdminGuard.jsx';
 import AdminLayout from './layout/index.jsx';
 import CommentModeration from './admin/Pages/CommentModeration.jsx';
 import VideoModeration from './admin/Pages/VideoModeration.jsx';
+import AdminSettings from './admin/Pages/AdminSettings.jsx';
 
 const stripePromise = loadStripe('your-publishable-key-here');
 
@@ -42,6 +44,7 @@ createRoot(document.getElementById('root')).render(
                     <Route path="add" element={<AddInteractions />} />
                     <Route path="rating_landing" element={<RatingLanding />} />
                     <Route path="donation" element={<Donate />} />
+                    <Route path="contact" element={<Contact />} />
                     <Route path="setting" element={<AccountManagement />} />
                     <Route path="/champion-skin-details/:championName" element={<ChampionSkinRatingPage />} />
                     <Route path="/champion-rating/:championName" element={<ChampionRatingPage />} />
@@ -57,6 +60,7 @@ createRoot(document.getElementById('root')).render(
                   >
                     <Route path="comments" element={<CommentModeration />} />
                     <Route path="videos" element={<VideoModeration />} />
+                    <Route path="settings" element={<AdminSettings />} />
                     {/* <Route index element={<AdminDashboard />} /> */}
                     {/* Future admin routes will go here */}
                     {/* <Route path="users" element={<UserManagement />} /> */}

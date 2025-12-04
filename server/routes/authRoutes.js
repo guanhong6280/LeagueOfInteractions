@@ -1,7 +1,7 @@
 // server/routes/authRoutes.js
 const express = require('express');
 const passport = require('passport');
-const userController = require('../controllers/userController');
+const userController = require('../controllers/user/userController');
 
 const router = express.Router();
 
@@ -17,7 +17,7 @@ router.get(
   passport.authenticate('google', { failureRedirect: '/', keepSessionInfo: true }),
   (req, res) => {
     console.log('successfully authenticated');
-    res.status(200).redirect('http://localhost:5173');
+    res.status(200).redirect(process.env.CLIENT_URL || 'http://localhost:5173');
   },
 );
 

@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: 'http://localhost:5174', // Backend server URL
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5174', // Backend server URL
   withCredentials: true,
   timeout: 10000,
 });
@@ -80,6 +80,16 @@ export const fetchVideoData = async (params) => {
   } catch (error) {
     console.error('Error fetching video data:', error);
     return null;
+  }
+};
+
+export const toggleVideoLike = async (videoId) => {
+  try {
+    const response = await api.post(`/api/videos/${videoId}/like`);
+    return response.data;
+  } catch (error) {
+    console.error('Error toggling video like:', error);
+    throw error;
   }
 };
 
@@ -217,4 +227,3 @@ export const unlikeChampionReply = async (championId, commentId, replyId) => {
   const response = await api.post(`/api/champions/${championId}/comments/${commentId}/replies/${replyId}/unlike`);
   return response.data;
 };
- 

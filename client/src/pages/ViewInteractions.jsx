@@ -213,11 +213,13 @@ const ViewInteractions = () => {
       display="flex"
       minHeight="500px"
       paddingTop="50px"
+      // paddingBottom="50px" // Add bottom padding for scroll space
       paddingX="20px"
-      height="70vh"
+      height="auto" // Remove fixed viewport height constraint
       gap="25px"
       justifyContent="center"
-      alignItems="center"
+      alignItems="center" // Ensure items stretch to match tallest element
+      marginBottom="50px"
     >
       <ChampionSelectCard
         order="First"

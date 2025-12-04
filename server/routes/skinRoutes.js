@@ -1,14 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const skinController = require('../controllers/skinController');
-const skinRatingController = require('../controllers/skinRatingController');
-const skinCommentController = require('../controllers/skinCommentController');
-const { ensureApiAuthenticated, optionalAuth } = require('../middleware/auth');
+const skinController = require('../controllers/skin/skinController');
+const skinRatingController = require('../controllers/skin/skinRatingController');
+const skinCommentController = require('../controllers/skin/skinCommentController');
+const { ensureApiAuthenticated, optionalAuth, ensureApiAdmin } = require('../middleware/auth');
 const moderateComment = require('../middleware/moderateComment');
 
 // GET /api/skins - Get all skins (with optional filters)
 // Example: GET /api/skins?championId=Annie&skinLineId=110
 router.get('/', skinController.getAllSkins);
+
+// POST /api/skins/sync - Manual trigger for skin synchronization
+router.post('/sync', ensureApiAuthenticated, ensureApiAdmin, skinController.syncSkins);
 
 // GET /api/skins/:skinId - Get a specific skin by ID
 // Example: GET /api/skins/1000

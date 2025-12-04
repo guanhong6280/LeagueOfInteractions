@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const donationController = require('../controllers/donationController');
+const donationController = require('../controllers/donation/donationController');
 
 
 // Endpoint for creating a payment intent

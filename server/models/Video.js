@@ -1,4 +1,3 @@
-// server/models/Video.js
 const mongoose = require('mongoose');
 
 // I will probably just grab the views and likes and comment counts from youtube? can i do that?
@@ -27,6 +26,7 @@ const VideoSchema = new mongoose.Schema({
   tags: [String],
   views: { type: Number, default: 0 },
   likes: { type: Number, default: 0 },
+  likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // Array of user IDs who liked the video
   commentsCount: { type: Number, default: 0 },
   isApproved: { type: Boolean, default: false },
   moderationStatus: {

@@ -61,7 +61,7 @@ const DonationDialog = (props) => {
   const handleDonate = async (amount) => {
     try {
       // Send a POST request to your backend
-      const response = await axios.post('http://localhost:5174/api/donations/create-checkout-session', {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5174'}/api/donations/create-checkout-session`, {
         amount,
         donationCardId,
       });

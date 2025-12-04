@@ -9,7 +9,7 @@ const DonationCard = (props) => {
   React.useEffect(() => {
     const fetchProgress = async () => {
       try {
-        const response = await axios.get(`http://localhost:5174/api/donations/progress/${donationCardId}`, { withCredentials: true });
+        const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5174'}/api/donations/progress/${donationCardId}`, { withCredentials: true });
         setProgress(response.data.totalDonations);
         console.log(response.data.totalDonations);
       } catch (error) {

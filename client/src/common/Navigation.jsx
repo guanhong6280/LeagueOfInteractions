@@ -8,17 +8,18 @@ const Navigation = () => {
     <MUI.Box
       display="flex"
       width="100vw"
-      height="75px"
+      height="80px"
       alignItems="center"
-      bgcolor="black"
-      gap="5px"
-      borderBottom="2px solid"
-      borderColor="third.main"
+      bgcolor="#fff5f5"
+      borderBottom="3px solid black"
       position="sticky"
       top="0"
-      zIndex={2}
+      zIndex={1000}
+      sx={{
+        boxShadow: '0px 4px 0px 0px rgba(0,0,0,0.1)',
+      }}
     >
-      <Logo/>
+      <Logo />
       <SignIn />
     </MUI.Box>
   );

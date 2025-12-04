@@ -366,7 +366,7 @@ const AddInteractions = () => {
           videoURL: videoLink,
         };
 
-        const response = await axios.post('http://localhost:5174/api/videos/upload', payload, {
+        const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5174'}/api/videos/upload`, payload, {
           withCredentials: true,
         });
 

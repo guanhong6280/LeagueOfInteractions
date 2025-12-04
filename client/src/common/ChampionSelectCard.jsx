@@ -33,9 +33,10 @@ const ChampionSelectCard = (props) => {
   return (
     <MUI.Card
       sx={{
-        width: '280px', // Fixed Width
-        minWidth: '280px', // Prevents shrinking
+        width: '240px', // Fixed Width
+        minWidth: '240px', // Prevents shrinking
         height: '100%',
+        minHeight: '650px', // Enforce minimum height
         display: 'flex',
         flexDirection: 'column',
         borderRadius: '0px',

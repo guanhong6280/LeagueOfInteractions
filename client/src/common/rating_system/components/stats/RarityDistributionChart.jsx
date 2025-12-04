@@ -86,6 +86,18 @@ const RarityDistributionChart = memo(({ stats, isLoading = false }) => {
     if (!stats?.rarityDistribution) return [];
     const distribution = stats.rarityDistribution;
     
+    // Define the specific order for rarities (lowest to highest value/prestige)
+    const rarityOrder = [
+      'kNoRarity',
+      'kRare',
+      'kEpic',
+      'kLegendary',
+      'kMythic',
+      'kUltimate',
+      'kExalted',
+      'kTranscendent'
+    ];
+
     return Object.entries(distribution)
       .map(([rarity, count]) => {
         const pureColor = getRarityColor(rarity);
@@ -106,7 +118,13 @@ const RarityDistributionChart = memo(({ stats, isLoading = false }) => {
         };
       })
       .filter(item => item.value > 0)
-      .sort((a, b) => b.value - a.value);
+      .sort((a, b) => {
+        // Sort based on the defined rarityOrder index
+        const indexA = rarityOrder.indexOf(a.originalRarity);
+        const indexB = rarityOrder.indexOf(b.originalRarity);
+        // If a rarity isn't in the list (index -1), push it to the end
+        return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
+      });
   }, [stats]);
 
   const hasNoData = !stats?.rarityDistribution || chartData.length === 0;

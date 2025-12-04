@@ -28,6 +28,7 @@
     "mux-embed": "^5.13.0",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
+    "resend": "^6.5.2",
     "stripe": "^17.3.1"
   },
   "devDependencies": {

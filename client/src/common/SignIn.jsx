@@ -22,7 +22,7 @@ const SignIn = () => {
 
   const handleSignIn = () => {
     setLoading(true);
-    window.open('http://localhost:5174/api/auth/google', '_self');
+    window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5174'}/api/auth/google`, '_self');
   };
 
   const openDialog = () => {
@@ -38,26 +38,53 @@ const SignIn = () => {
       display="flex"
       alignItems="center"
       justifyContent="center"
-      gap="15px"
+      gap="20px"
       marginLeft="auto"
       marginRight="40px"
     >
-      <NavButton
-        buttonColor="primary"
-        variant="text"
-        pageLocation="/rating_landing"
-        hoverColor="third.main"
-        buttonText="Rating"
-      />
-      <NavButton
-        buttonColor="primary"
-        variant="text"
-        pageLocation="/donation"
-        hoverColor="third.main"
-        buttonText="Donate"
-      />
+      <MUI.Button
+        component={Link}
+        to="/rating_landing"
+        sx={{
+          color: 'black',
+          fontWeight: 900,
+          textTransform: 'uppercase',
+          border: '2px solid transparent',
+          borderRadius: '0px',
+          '&:hover': {
+            backgroundColor: '#FFDE00',
+            border: '2px solid black',
+            boxShadow: '4px 4px 0px black',
+            transform: 'translate(-2px, -2px)',
+          },
+          transition: 'all 0.2s',
+        }}
+      >
+        Rating
+      </MUI.Button>
+      <MUI.Button
+        component={Link}
+        to="/donation"
+        sx={{
+          color: 'black',
+          fontWeight: 900,
+          textTransform: 'uppercase',
+          border: '2px solid transparent',
+          borderRadius: '0px',
+          '&:hover': {
+            backgroundColor: '#FFDE00',
+            border: '2px solid black',
+            boxShadow: '4px 4px 0px black',
+            transform: 'translate(-2px, -2px)',
+          },
+          transition: 'all 0.2s',
+        }}
+      >
+        Donate
+      </MUI.Button>
+      
       {loading ? (
-        <MUI.CircularProgress />
+        <MUI.CircularProgress size={30} sx={{ color: 'black' }} />
       ) : user ? (
         <>
           <div
@@ -69,19 +96,24 @@ const SignIn = () => {
               ref={avatarRef}
               alt={user.username}
               src={user.profilePictureURL}
-              variant="circular"
+              variant="square" // Changed to square for brutalism
               sx={{
-                border: '2px solid #0AC8B9', // Add a white border of 2px
+                width: 45,
+                height: 45,
+                border: '3px solid black',
                 cursor: 'pointer',
                 position: 'relative',
                 zIndex: 2000,
-                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                transform: menuOpen ?
-                  'translateY(15px) scale(1.5)' : // Move down and scale when menu is open
-                  'translateY(0) scale(1)', // Reset position and scale when menu is closed
-                boxShadow: menuOpen ?
-                  '0 4px 8px rgba(0, 0, 0, 0.2)' :
-                  'none',
+                transition: 'all 0.2s ease',
+                boxShadow: '4px 4px 0px black',
+                '&:hover': {
+                   transform: 'translate(-2px, -2px)',
+                   boxShadow: '6px 6px 0px black',
+                },
+                ...(menuOpen && {
+                  transform: 'translate(-2px, -2px)',
+                  boxShadow: '6px 6px 0px black',
+                })
               }}
             />
             <MUI.Menu
@@ -95,48 +127,80 @@ const SignIn = () => {
               }}
               anchorOrigin={{
                 vertical: 'bottom',
-                horizontal: 'center',
+                horizontal: 'right', // Align to right
               }}
               transformOrigin={{
                 vertical: 'top',
-                horizontal: 'center',
+                horizontal: 'right',
               }}
               sx={{
-                'alignItems': 'center',
                 '& .MuiPaper-root': {
-                  width: '200px', // Fixed width
+                  width: '220px',
+                  borderRadius: '0px',
+                  border: '3px solid black',
+                  boxShadow: '8px 8px 0px black',
+                  marginTop: '10px',
                 },
+                '& .MuiMenuItem-root': {
+                  fontWeight: 'bold',
+                  textTransform: 'uppercase',
+                  borderBottom: '1px solid #eee',
+                  '&:hover': {
+                    backgroundColor: '#FFDE00',
+                    color: 'black',
+                  }
+                }
               }}
             >
-              <MUI.Stack marginTop="15px" alignItems="center">
-                <MUI.Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+              <MUI.Stack 
+                padding="15px" 
+                alignItems="center" 
+                borderBottom="3px solid black" 
+                bgcolor="#f0f0f0"
+              >
+                <MUI.Typography variant="subtitle1" sx={{ fontWeight: 900, textTransform: 'uppercase' }}>
                   {user.username}
                 </MUI.Typography>
               </MUI.Stack>
-              <MUI.MenuItem onClick={() => alert('Profile clicked')}>
-                Profile
-              </MUI.MenuItem>
+              
+              {user.isAdministrator && (
+                <MUI.MenuItem component={Link} to="/admin/comments">
+                  Moderation
+                </MUI.MenuItem>
+              )}
               <MUI.MenuItem component={Link} to="/setting">
-                Setting
+                Settings
               </MUI.MenuItem>
               <MUI.MenuItem component={Link} to="/add">
                 Add Interaction
               </MUI.MenuItem>
-              <MUI.Divider />
-              <MUI.MenuItem onClick={logout}>
-                Logout
+              <MUI.Divider sx={{ borderBottomWidth: '3px', borderColor: 'black' }} />
+              <MUI.MenuItem onClick={logout} sx={{ color: 'red' }}>
+                LOGOUT
               </MUI.MenuItem>
             </MUI.Menu>
           </div>
-          <MUI.Typography fontSize="15px" fontWeight="600" color="primary">
-            {user.username}
-          </MUI.Typography>
         </>
       ) : (
-        <MUI.Button variant="outlined" color="third" onClick={openDialog}>
-          <MUI.Typography fontSize="15px" fontWeight="600">
-            Login
-          </MUI.Typography>
+        <MUI.Button 
+          onClick={openDialog}
+          variant="contained"
+          sx={{
+            backgroundColor: 'black',
+            color: 'white',
+            fontWeight: 900,
+            borderRadius: '0px',
+            textTransform: 'uppercase',
+            border: '2px solid black',
+            boxShadow: '4px 4px 0px #888',
+            '&:hover': {
+              backgroundColor: '#fff',
+              color: 'black',
+              boxShadow: '6px 6px 0px black',
+            }
+          }}
+        >
+          Login
         </MUI.Button>
       )}
       <SignInDialog

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const championCommentController = require('../controllers/championCommentController');
-const championRatingController = require('../controllers/championRatingController');
+const championCommentController = require('../controllers/champion/championCommentController');
+const championRatingController = require('../controllers/champion/championRatingController');
 const { ensureApiAuthenticated } = require('../middleware/auth');
 const moderateComment = require('../middleware/moderateComment');
 

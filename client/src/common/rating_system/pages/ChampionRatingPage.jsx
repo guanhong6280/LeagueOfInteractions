@@ -1,19 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import * as MUI from '@mui/material';
-import Grid from '@mui/material/Grid2';
 import { useParams } from 'react-router-dom';
-import {
-  LocalFireDepartment as FireIcon,
-  Psychology as BrainIcon,
-  SentimentVeryDissatisfied as AngerIcon,
-  Shield as DefenseIcon,
-  Groups as TeamIcon,
-  Timeline as LaneIcon,
-} from '@mui/icons-material';
 
 import { ReturnButton } from '../components/common';
-import NeoRatingCard from '../components/common/NeoRatingCard';
-import NeoStatsCard from '../components/common/NeoStatsCard';
 import { useVersion } from '../../../contextProvider/VersionProvider';
 import { getChampionSquareAssetUrl } from '../../../utils/championNameUtils';
 import { useChampionRatingSectionData } from '../../../hooks/useChampionRatingSectionData'; // Reusable Hook
@@ -21,6 +10,9 @@ import PlaystyleRadarChart from '../components/stats/PlaystyleRadarChart';
 import AIChipsSection from '../components/stats/AIChipsSection';
 import ChampionCommentSection from '../components/sections/ChampionCommentSection';
 import { NeoCard, StatCard, ChampionImage } from '../components/design/NeoComponents';
+import ChampionRatingSection from '../components/sections/ChampionRatingSection';
+
+import { LocalFireDepartment as FireIcon, Psychology as BrainIcon } from '@mui/icons-material';
 
 // --- Main Component ---
 
@@ -40,17 +32,6 @@ const ChampionRatingPage = () => {
     stats: statsData
   } : null;
 
-  // User Rating State
-  const [userRatings, setUserRatings] = useState({
-    fun: 0,
-    skill: 0,
-    laning: 0,
-    teamfight: 0,
-    opponentFrustration: 0,
-    teammateFrustration: 0
-  });
-  // No manual useEffect fetch needed anymore!
-
   if (loading) return (
     <MUI.Box display="flex" justifyContent="center" mt={10}>
       <MUI.CircularProgress sx={{ color: 'black' }} size={60} thickness={5} />
@@ -58,41 +39,6 @@ const ChampionRatingPage = () => {
   );
 
   const stats = championData?.stats?.championRatingStats || {};
-
-  const ratingFields = [
-    { id: 'fun', label: 'Fun Level', min: 1, max: 5 },
-    { id: 'skill', label: 'Difficulty Level', min: 1, max: 5 },
-    { id: 'synergy', label: 'Ability Synergy', min: 1, max: 5 },
-    { id: 'laning', label: 'Laning Phase Strength', min: 1, max: 5 },
-    { id: 'teamfight', label: 'Teamfight Strength', min: 1, max: 5 },
-    { id: 'opponentFrustration', label: 'Opponent Frustration Level', min: 1, max: 5 },
-    { id: 'teammateFrustration', label: 'Teammate Frustration Level', min: 1, max: 5 },
-  ];
-
-  const statsSections = [
-    {
-      items: [
-        { icon: FireIcon, label: 'FUN TO PLAY', value: stats.avgFun, color: '#FF4081' },
-        { icon: BrainIcon, label: 'Difficulty', value: stats.avgSkill, color: '#7C4DFF' },
-        { icon: TeamIcon, label: 'Ability Synergy', value: stats.avgSynergy, color: '#4CAF50' }
-      ]
-    },
-    {
-      title: 'GAMEPLAY PHASE STRENGTH',
-      items: [
-        { icon: LaneIcon, label: 'LANING', value: stats.avgLaning, color: '#00BCD4' },
-        { icon: TeamIcon, label: 'TEAMFIGHT', value: stats.avgTeamfight, color: '#FF9800' }
-      ]
-    },
-    {
-      title: 'FRUSTRATION INDEX',
-      titleColor: 'error.main',
-      items: [
-        { icon: AngerIcon, label: 'PLAYING AGAINST (OPPRESSIVENESS)', value: stats.avgOpponentFrustration, color: '#F44336' },
-        { icon: DefenseIcon, label: 'PLAYING WITH (TEAM RELIABILITY)', value: stats.avgTeammateFrustration, color: '#4CAF50' }
-      ]
-    }
-  ];
 
   return (
     <MUI.Container maxWidth="lg" sx={{ py: 5 }}>
@@ -249,24 +195,7 @@ const ChampionRatingPage = () => {
       </MUI.Box>
 
       {/* --- PLAYER RATINGS SECTION --- */}
-      <Grid container spacing={4}>
-
-        {/* --- LEFT COLUMN: PLAYER RATINGS --- */}
-        <Grid size={{ xs: 12, md: 6 }} display="flex">
-          <NeoStatsCard sections={statsSections} />
-        </Grid>
-
-        {/* --- RIGHT COLUMN: CAST VOTE --- */}
-        <Grid size={{ xs: 12, md: 6 }} display="flex">
-            <NeoRatingCard
-                title="SUBMIT YOUR RATING"
-                fields={ratingFields}
-                values={userRatings}
-                onChange={(id, val) => setUserRatings(prev => ({ ...prev, [id]: val }))}
-                onSubmit={() => console.log('Submit', { userRatings })}
-            />
-        </Grid>
-      </Grid>
+      <ChampionRatingSection championName={championName} championStats={stats} />
 
       {/* --- BOTTOM: COMMENTS --- */}
       <MUI.Box mt={6}>

@@ -73,7 +73,7 @@ export const StatBar = ({ label, value, color = '#2196F3', icon: Icon }) => (
       <MUI.Box
         sx={{
           height: '100%',
-          width: `${(value / 5) * 100}%`,
+          width: `${(value / 10) * 100}%`,
           bgcolor: color,
           borderRight: '2px solid #000',
           transition: 'width 1s ease-in-out'

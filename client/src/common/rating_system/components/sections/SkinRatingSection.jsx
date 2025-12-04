@@ -39,14 +39,14 @@ const SkinRatingSection = ({ currentSkinId, championName, skinStats }) => {
         id: 'splash',
         label: 'Splash Art Rating',
         min: 1,
-        max: 5,
+        max: 10,
         step: 1
     },
     {
         id: 'model',
         label: 'In-Game Model Rating',
         min: 1,
-        max: 5,
+        max: 10,
         step: 1
     }
   ];

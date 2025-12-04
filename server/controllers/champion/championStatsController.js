@@ -240,11 +240,11 @@ const getChampionSpecificStats = async (req, res) => {
             };
         }
         
-        // Rating Distribution (1-5 Stars) - Used in Skin Stats
-        responseData.ratingDistribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        // Rating Distribution (1-10 Scale) - Used in Skin Stats
+        responseData.ratingDistribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0 };
         ratings.forEach(r => {
            const avg = Math.round((r.splashArtRating + r.inGameModelRating) / 2);
-           if (avg >= 1 && avg <= 5) responseData.ratingDistribution[avg]++;
+           if (avg >= 1 && avg <= 10) responseData.ratingDistribution[avg]++;
         });
       }
     }

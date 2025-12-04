@@ -37,7 +37,7 @@ const ratingService = new RatingService({
   ratingFields: ['splashArtRating', 'inGameModelRating'],
   updateStatsFn: updateSkinRatingStats,
   idType: 'Number',
-  ratingRange: { min: 1, max: 5 }
+  ratingRange: { min: 1, max: 10 }
 });
 
 exports.rateSkin = (req, res) => ratingService.rateEntity(req, res);

@@ -119,6 +119,22 @@ export const getUserSkinRating = async (skinId) => {
   return response.data;
 };
 
+// Champion Rating APIs
+export const submitChampionRating = async (championId, ratingData) => {
+  const response = await api.post(`/api/champions/${championId}/rate`, ratingData);
+  return response.data;
+};
+
+export const getChampionRatings = async (championId, includeUserDetails = false) => {
+  const response = await api.get(`/api/champions/${championId}/ratings?includeUserDetails=${includeUserDetails}`);
+  return response.data;
+};
+
+export const getUserChampionRating = async (championId) => {
+  const response = await api.get(`/api/champions/${championId}/ratings/user`);
+  return response.data;
+};
+
 // Skin Comment APIs
 export const submitSkinComment = async (skinId, commentData) => {
   const response = await api.post(`/api/skins/${skinId}/comment`, commentData);
@@ -169,13 +185,13 @@ export const unlikeReply = async (skinId, commentId, replyId) => {
 };
 
 export const fetchChampionStats = async () => {
-  const response = await api.get('/api/champions/stats');
+  const response = await api.get('/api/champion-stats/stats');
   return response.data;
 };
 
 export const fetchChampionSpecificStats = async (championName, include) => {
   const queryParams = include ? `?include=${include}` : '';
-  const response = await api.get(`/api/champions/${encodeURIComponent(championName)}/stats${queryParams}`);
+  const response = await api.get(`/api/champion-stats/${encodeURIComponent(championName)}/stats${queryParams}`);
   return response.data;
 };
 

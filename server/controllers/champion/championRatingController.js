@@ -73,6 +73,7 @@ const ratingService = new RatingService({
 });
 
 exports.rateChampion = (req, res) => ratingService.rateEntity(req, res);
+exports.getRatingsForChampion = (req, res) => ratingService.getRatings(req, res);
 exports.getUserChampionRating = (req, res) => ratingService.getUserRating(req, res);
 // Add getRatings for consistency if needed, though not in original file
 // exports.getRatingsForChampion = (req, res) => ratingService.getRatings(req, res);

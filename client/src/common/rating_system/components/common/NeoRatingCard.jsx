@@ -41,7 +41,7 @@ const NeoRatingCard = ({
         {fields.map((field) => (
           <MUI.Box key={field.id}>
             <MUI.Typography fontWeight="bold">
-              {field.label} ({values[field.id] || (field.min || 0)})
+              {field.label}
             </MUI.Typography>
             {field.component ? (
                 field.component
@@ -50,12 +50,25 @@ const NeoRatingCard = ({
                 value={values[field.id] || 0}
                 onChange={(_, val) => onChange(field.id, val)}
                 step={field.step || 1}
-                marks={field.marks}
+                marks={[
+                  { value: 1, label: '1' },
+                  { value: 2, label: '' },
+                  { value: 3, label: '' },
+                  { value: 4, label: '' },
+                  { value: 5, label: '5' },
+                  { value: 6, label: '' },
+                  { value: 7, label: '' },
+                  { value: 8, label: '' },
+                  { value: 9, label: '' },
+                  { value: 10, label: '10' },
+                ]}
                 min={field.min || 1}
-                max={field.max || 5}
+                max={field.max || 10}
+                valueLabelDisplay="auto"
                 sx={{
                     color: 'black',
                     height: 8,
+                    mb: 1, // Add margin bottom for labels
                     '& .MuiSlider-thumb': {
                     width: 20,
                     height: 20,
@@ -65,6 +78,27 @@ const NeoRatingCard = ({
                     },
                     '& .MuiSlider-track': { border: 'none' },
                     '& .MuiSlider-rail': { opacity: 0.5, backgroundColor: 'black' },
+                    '& .MuiSlider-mark': {
+                      backgroundColor: 'black',
+                      height: 8,
+                      width: 2,
+                      '&.MuiSlider-markActive': {
+                        opacity: 1,
+                        backgroundColor: 'white',
+                      },
+                    },
+                    '& .MuiSlider-markLabel': {
+                      fontSize: '0.75rem',
+                      fontWeight: 'bold',
+                      top: 30, // Push labels down slightly
+                    },
+                    '& .MuiSlider-valueLabel': {
+                      backgroundColor: 'white',
+                      color: 'black',
+                      borderRadius: 0,
+                      fontWeight: 900,
+                      fontSize: '0.875rem',
+                    }
                 }}
                 />
             )}

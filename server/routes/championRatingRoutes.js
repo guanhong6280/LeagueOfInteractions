@@ -10,6 +10,7 @@ router.get('/:championId/comments', championCommentController.getCommentsForCham
 router.get('/:championId/comments/user', ensureApiAuthenticated, championCommentController.getUserCommentForChampion);
 
 router.post('/:championId/rate', ensureApiAuthenticated, championRatingController.rateChampion);
+router.get('/:championId/ratings', championRatingController.getRatingsForChampion);
 router.get('/:championId/ratings/user', ensureApiAuthenticated, championRatingController.getUserChampionRating);
 
 router.post('/:championId/comments/:commentId/replies', ensureApiAuthenticated, moderateComment, championCommentController.addReply);

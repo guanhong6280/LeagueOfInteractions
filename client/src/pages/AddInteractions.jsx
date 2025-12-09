@@ -8,6 +8,8 @@ import { useChampion } from '../contextProvider/ChampionProvider';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import CloseIcon from '@mui/icons-material/Close';
 import { useLocation } from 'react-router-dom';
+import { toastMessages } from '../toast/useToast';
+import { useToast } from '../toast/useToast';
 
 export const AbilityMap = {
   0: 'P',
@@ -118,13 +120,13 @@ const ChampionBattleZone = ({
       {/* Ability Grid */}
       <MUI.Stack direction="row" spacing={2}>
         {abilities.map((ability, index) => {
-           const imageUrl = index === 0 ?
-              `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/passive/${ability.image})` :
-              `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/spell/${ability.image})`;
-          
-           const isSelected = ability.name === selectedAbility;
+          const imageUrl = index === 0 ?
+            `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/passive/${ability.image})` :
+            `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/spell/${ability.image})`;
 
-           return (
+          const isSelected = ability.name === selectedAbility;
+
+          return (
             <MUI.Tooltip key={index} title={`${AbilityMap[index]}: ${ability.name}`} arrow>
               <MUI.Box
                 onClick={() => onAbilitySelect({ target: { value: ability.name } })}
@@ -148,19 +150,19 @@ const ChampionBattleZone = ({
                 }}
               />
             </MUI.Tooltip>
-           );
+          );
         })}
         {/* Placeholders if no abilities loaded yet */}
         {!champion && Array(5).fill(0).map((_, i) => (
-           <MUI.Box
-             key={i}
-             sx={{
-               width: '50px',
-               height: '50px',
-               border: `3px solid ${borderColor}`,
-               backgroundColor: 'rgba(0,0,0,0.05)',
-             }}
-           />
+          <MUI.Box
+            key={i}
+            sx={{
+              width: '50px',
+              height: '50px',
+              border: `3px solid ${borderColor}`,
+              backgroundColor: 'rgba(0,0,0,0.05)',
+            }}
+          />
         ))}
       </MUI.Stack>
     </MUI.Box>
@@ -170,7 +172,7 @@ const ChampionBattleZone = ({
 const AddInteractions = () => {
   const { championNames } = useChampion();
   const location = useLocation();
-
+  const { success, error } = useToast();
   const [firstChampion, setFirstChampion] = React.useState(null);
   const [secondChampion, setSecondChampion] = React.useState(null);
   const [firstChampionAbilities, setFirstChampionAbilities] = React.useState([]);
@@ -310,7 +312,7 @@ const AddInteractions = () => {
   const uploadVideo = async () => {
     try {
       if (!selectedFirstChampionAbility || !selectedSecondChampionAbility) {
-        alert('Please select both champion abilities before uploading.');
+        info(toastMessages.addInteraction.info);
         return;
       }
       const ability1Index = firstChampionAbilities.findIndex(
@@ -352,7 +354,7 @@ const AddInteractions = () => {
           },
         );
 
-        alert('Upload complete! The video will appear after processing and approval.');
+        success(toastMessages.addInteraction.success);
       } else {
         if (!hasLink) {
           alert('Please provide a video link or select a file to upload.');
@@ -371,11 +373,11 @@ const AddInteractions = () => {
         });
 
         console.log('Video uploaded successfully:', response.data);
-        alert('Video uploaded successfully!');
+        success(toastMessages.addInteraction.success);
       }
     } catch (error) {
       console.error('Error uploading video:', error);
-      alert('Failed to upload video');
+      error(toastMessages.addInteraction.error);
     }
     finally {
       setIsUploading(false);
@@ -466,56 +468,56 @@ const AddInteractions = () => {
         }}
       >
         <MUI.Typography variant="h5" fontWeight="900" mb={3} textTransform="uppercase">
-          Battle Evidence
+          Video Upload
         </MUI.Typography>
 
         <MUI.Stack spacing={3}>
           <MUI.Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} gap={2}>
             {/* File Upload Button */}
-             {hasFile ? (
-               <MUI.Box
-                 flex={1}
-                 display="flex"
-                 alignItems="center"
-                 justifyContent="space-between"
-                 sx={{
-                   border: '3px solid black',
-                   padding: '10px 20px',
-                   backgroundColor: '#e6ffe6',
-                   fontWeight: 'bold'
-                 }}
-               >
-                  <MUI.Typography fontWeight="bold" noWrap sx={{ maxWidth: '200px' }}>
-                    {selectedFile.name}
-                  </MUI.Typography>
-                  <MUI.IconButton onClick={() => setSelectedFile(null)} size="small" sx={{ color: 'black' }}>
-                    <CloseIcon />
-                  </MUI.IconButton>
-               </MUI.Box>
-             ) : (
-                <MUI.Button
-                  component="label"
-                  variant="outlined"
-                  startIcon={<FileUploadIcon />}
-                  sx={{
-                    flex: 1,
-                    height: '56px',
+            {hasFile ? (
+              <MUI.Box
+                flex={1}
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+                sx={{
+                  border: '3px solid black',
+                  padding: '10px 20px',
+                  backgroundColor: '#e6ffe6',
+                  fontWeight: 'bold'
+                }}
+              >
+                <MUI.Typography fontWeight="bold" noWrap sx={{ maxWidth: '200px' }}>
+                  {selectedFile.name}
+                </MUI.Typography>
+                <MUI.IconButton onClick={() => setSelectedFile(null)} size="small" sx={{ color: 'black' }}>
+                  <CloseIcon />
+                </MUI.IconButton>
+              </MUI.Box>
+            ) : (
+              <MUI.Button
+                component="label"
+                variant="outlined"
+                startIcon={<FileUploadIcon />}
+                sx={{
+                  flex: 1,
+                  height: '56px',
+                  border: '3px solid black',
+                  borderRadius: '0px',
+                  color: 'black',
+                  fontWeight: 'bold',
+                  textTransform: 'uppercase',
+                  '&:hover': {
+                    backgroundColor: 'black',
+                    color: 'white',
                     border: '3px solid black',
-                    borderRadius: '0px',
-                    color: 'black',
-                    fontWeight: 'bold',
-                    textTransform: 'uppercase',
-                    '&:hover': {
-                      backgroundColor: 'black',
-                      color: 'white',
-                      border: '3px solid black',
-                    }
-                  }}
-                >
-                  Select Video File
-                  <input type="file" accept="video/*" hidden onChange={handleFileSelect} />
-                </MUI.Button>
-             )}
+                  }
+                }}
+              >
+                Select Video File
+                <input type="file" accept="video/*" hidden onChange={handleFileSelect} />
+              </MUI.Button>
+            )}
 
             {/* Link Input */}
             <MUI.TextField
@@ -546,20 +548,20 @@ const AddInteractions = () => {
 
           {/* Progress / Status */}
           {(isUploading || sseSnapshot) && (
-             <MUI.Box sx={{ border: '2px solid black', padding: '15px', backgroundColor: 'white' }}>
-               {isUploading ? (
-                  <MUI.Stack direction="row" alignItems="center" spacing={2}>
-                    <MUI.CircularProgress variant="determinate" value={uploadProgress} size={24} sx={{ color: 'black' }} />
-                    <MUI.Typography fontWeight="bold">UPLOADING: {uploadProgress}%</MUI.Typography>
-                  </MUI.Stack>
-               ) : (
-                 <MUI.Typography fontWeight="bold">
-                    {sseSnapshot?.status === 'processing' && 'Processing on Mux...'}
-                    {sseSnapshot?.status === 'ready' && 'Ready!'}
-                    {sseSnapshot?.status === 'failed' && 'Processing failed. Please try another video.'}
-                 </MUI.Typography>
-               )}
-             </MUI.Box>
+            <MUI.Box sx={{ border: '2px solid black', padding: '15px', backgroundColor: 'white' }}>
+              {isUploading ? (
+                <MUI.Stack direction="row" alignItems="center" spacing={2}>
+                  <MUI.CircularProgress variant="determinate" value={uploadProgress} size={24} sx={{ color: 'black' }} />
+                  <MUI.Typography fontWeight="bold">UPLOADING: {uploadProgress}%</MUI.Typography>
+                </MUI.Stack>
+              ) : (
+                <MUI.Typography fontWeight="bold">
+                  {sseSnapshot?.status === 'processing' && 'Processing on Mux...'}
+                  {sseSnapshot?.status === 'ready' && 'Ready!'}
+                  {sseSnapshot?.status === 'failed' && 'Processing failed. Please try another video.'}
+                </MUI.Typography>
+              )}
+            </MUI.Box>
           )}
 
           {/* Upload Action */}

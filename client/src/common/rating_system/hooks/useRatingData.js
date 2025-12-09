@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { submitSkinRating, getUserSkinRating } from '../../../api/championApi';
 import { useAuth } from '../../../AuthProvider';
+import { toastMessages } from '../../../toast/useToast';
+import { useToast } from '../../../toast/useToast';
 
 const useRatingData = (currentSkinId) => {
   const { user } = useAuth();
   const [userRating, setUserRating] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState(null);
+  const { success, error, info } = useToast();
 
   // Form state
   const [splashArtRating, setSplashArtRating] = useState(0);
@@ -24,7 +26,6 @@ const useRatingData = (currentSkinId) => {
   const loadRatingData = async () => {
     try {
       setIsLoading(true);
-      setError(null);
 
       // Load only user's rating
       const userRatingResponse = await getUserSkinRating(currentSkinId);
@@ -40,7 +41,7 @@ const useRatingData = (currentSkinId) => {
         setInGameModelRating(0);
       }
     } catch (err) {
-      setError('Failed to load rating data');
+      error(toastMessages.rating.failed_to_load);
     } finally {
       setIsLoading(false);
     }
@@ -48,18 +49,17 @@ const useRatingData = (currentSkinId) => {
 
   const submitRating = async () => {
     if (!user) {
-      setError('Please sign in to rate skins');
+      info(toastMessages.signIn.info);
       return false;
     }
 
     if (splashArtRating === 0 || inGameModelRating === 0) {
-      setError('Please rate both splash art and in-game model');
+      info(toastMessages.rating.has_missing);
       return false;
     }
 
     try {
       setIsSubmitting(true);
-      setError(null);
 
       const ratingData = {
         splashArtRating,
@@ -71,14 +71,14 @@ const useRatingData = (currentSkinId) => {
       if (response.success) {
         // Reload rating data
         await loadRatingData();
-        setError(null);
+        success(toastMessages.rating.skin.success);
         return true;
       } else {
-        setError(response.error || 'Failed to submit rating');
+        error(response.error || toastMessages.rating.skin.error);
         return false;
       }
     } catch (err) {
-      setError('Failed to submit rating');
+      error(toastMessages.rating.skin.error);
       return false;
     } finally {
       setIsSubmitting(false);
@@ -97,7 +97,6 @@ const useRatingData = (currentSkinId) => {
     userRating,
     isLoading,
     isSubmitting,
-    error,
     splashArtRating,
     inGameModelRating,
     updateSplashArtRating,

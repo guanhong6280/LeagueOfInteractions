@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import * as MUI from '@mui/material';
-import { Refresh as RefreshIcon, Search as SearchIcon, FilterList as FilterListIcon } from '@mui/icons-material';
+import { Refresh as RefreshIcon, Search as SearchIcon, FilterList as FilterListIcon, ArrowUpward as ArrowUpwardIcon } from '@mui/icons-material';
 import { useChampionStats } from '../contextProvider/ChampionStatsProvider';
 import ChampionPreviewCard from '../common/rating_system/components/cards/ChampionPreviewCard';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -221,6 +221,10 @@ const RatingLanding = () => {
         setSelectedDamage(null);
     };
 
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     return (
         <MUI.Box
             component="main"
@@ -386,6 +390,27 @@ const RatingLanding = () => {
                 >
                     TOTAL_ENTRIES: {filteredChampions.length} // END_OF_FILE
                 </MUI.Typography>
+            </MUI.Box>
+
+            <MUI.Box
+                position="sticky"
+                bottom="24px"
+                display="flex"
+                justifyContent="flex-end"
+                pr={{ xs: 2, sm: 3, md: 4 }}
+                zIndex={1300}
+            >
+                <NeoButton
+                    onClick={scrollToTop}
+                    color="#ffffff"
+                    sx={{
+                        border: '3px solid #000',
+                        boxShadow: '6px 6px 0px #000',
+                    }}
+                >
+                    <ArrowUpwardIcon sx={{ mr: 1 }} />
+                    TOP
+                </NeoButton>
             </MUI.Box>
         </MUI.Box>
     );

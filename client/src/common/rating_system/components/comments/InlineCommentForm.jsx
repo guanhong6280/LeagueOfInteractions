@@ -88,7 +88,7 @@ const InlineCommentForm = memo(({
         }}
       >
         <form onSubmit={handleSubmit}>
-          <MUI.Box display="flex" alignItems="stretch" gap={2}>
+          <MUI.Box display="flex" alignItems="center" gap={2}>
 
             {/* Input Field */}
             <MUI.Box sx={{ flex: 1 }}>
@@ -150,10 +150,9 @@ const InlineCommentForm = memo(({
                 variant="contained"
                 sx={{
                     minWidth: 'auto',
-                    width: 60,
-                    height: 'auto', // Let flexbox stretch it
-                    minHeight: '100%', // Ensure it takes at least the full height available
-                    borderRadius: 0,
+                    width: "50px",
+                    height: "50px", // Let flexbox stretch it
+                    borderRadius: "50%",
                     border: '2px solid black',
                     bgcolor: hasText && !isOverLimit && !isSubmitting ? '#FF4081' : '#e0e0e0',
                     color: hasText && !isOverLimit && !isSubmitting ? 'white' : '#9e9e9e',
@@ -169,7 +168,6 @@ const InlineCommentForm = memo(({
                     },
                     transition: 'all 0.1s ease-in-out',
                     p: 0,
-                    flex: 1, // Allow it to fill the container if needed
                 }}
                 >
                 {isSubmitting ? (

@@ -265,7 +265,7 @@ const ChampionPreviewCard = React.memo(({ championName, stats }) => {
                   SKINS
                 </MUI.Typography>
                 <MUI.Typography variant="body2" fontWeight="900">
-                  {stats?.averageSkinRating || 'N/A'}★
+                  {`${stats?.averageSkinRating}/10` || 'N/A'}
                 </MUI.Typography>
               </MUI.Box>
             </MUI.Box>
@@ -284,7 +284,7 @@ const ChampionPreviewCard = React.memo(({ championName, stats }) => {
                   FUN
                 </MUI.Typography>
                 <MUI.Typography variant="body2" fontWeight="900">
-                  {stats?.championRatingStats?.avgFun || 'N/A'}★
+                  {`${stats?.championRatingStats?.avgFun}/10` || 'N/A'}
                 </MUI.Typography>
               </MUI.Box>
             </MUI.Box>

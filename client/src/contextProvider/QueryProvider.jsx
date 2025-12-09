@@ -15,7 +15,7 @@ const queryClient = new QueryClient({
       // Retry delay with exponential backoff
       retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
       // Refetch when window regains focus
-      refetchOnWindowFocus: true,
+      refetchOnWindowFocus: false,
       // Refetch when network reconnects
       refetchOnReconnect: true,
     },

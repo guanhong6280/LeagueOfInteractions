@@ -13,6 +13,9 @@ router.get('/', skinController.getAllSkins);
 // POST /api/skins/sync - Manual trigger for skin synchronization
 router.post('/sync', ensureApiAuthenticated, ensureApiAdmin, skinController.syncSkins);
 
+// GET /api/skins/sync/status - Get current sync progress
+router.get('/sync/status', ensureApiAuthenticated, ensureApiAdmin, skinController.getSyncStatus);
+
 // GET /api/skins/:skinId - Get a specific skin by ID
 // Example: GET /api/skins/1000
 router.get('/:skinId', skinController.getSkinById);

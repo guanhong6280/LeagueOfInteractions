@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import * as MUI from '@mui/material';
-import useCommentData from '../../hooks/useCommentData';
+import useSkinCommentData from '../../hooks/useSkinCommentData';
 import { CommentList } from '../comments';
 
 const SkinCommentSection = memo(({ currentSkinId, championName }) => {
@@ -28,7 +28,7 @@ const SkinCommentSection = memo(({ currentSkinId, championName }) => {
     submitReply,
     clearError,
     refreshComments,
-  } = useCommentData(currentSkinId);
+  } = useSkinCommentData(currentSkinId);
 
   return (
     <MUI.Box

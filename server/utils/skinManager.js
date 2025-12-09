@@ -4,6 +4,27 @@ const Skin = require('../models/Skin');
 class SkinManager {
   constructor() {
     this.baseUrl = 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1';
+    this.progress = this._createInitialProgress();
+  }
+
+  _createInitialProgress() {
+    return {
+      status: 'idle',
+      totalChampions: 0,
+      processedChampions: 0,
+      errors: [],
+      startedAt: null,
+      endedAt: null,
+      message: ''
+    };
+  }
+
+  getProgress() {
+    return this.progress;
+  }
+
+  isSyncInProgress() {
+    return this.progress.status === 'running';
   }
 
   /**
@@ -14,7 +35,11 @@ class SkinManager {
     try {
       const url = `${this.baseUrl}/champion-summary.json`;
       const response = await axios.get(url);
-      return response.data.map((champ) => champ.id);
+      // Filter out special-mode bots (e.g., Doom Bots) so we do not import them
+      const validChampions = response.data.filter(
+        (champ) => !champ.name || !champ.name.toLowerCase().startsWith('doom bot')
+      );
+      return validChampions.map((champ) => champ.id);
     } catch (error) {
       console.error('Failed to fetch champion summary:', error.message);
       throw error;
@@ -43,12 +68,11 @@ class SkinManager {
    * @returns {Promise<{ totalProcessed: number, totalUpdated: number, errors: Array }>} Stats
    */
   async syncSkins(targetChampionId = null) {
+    if (this.isSyncInProgress()) {
+      throw new Error('Skin sync is already running.');
+    }
+
     console.log('Starting skin synchronization...');
-    const stats = {
-      totalProcessed: 0,
-      totalUpdated: 0,
-      errors: []
-    };
 
     try {
       let championIds = [];
@@ -60,17 +84,34 @@ class SkinManager {
       }
 
       console.log(`Found ${championIds.length} champion(s) to process.`);
+      this.progress = {
+        status: 'running',
+        totalChampions: championIds.length,
+        processedChampions: 0,
+        errors: [],
+        startedAt: new Date(),
+        endedAt: null,
+        message: ''
+      };
 
       for (const championId of championIds) {
         try {
           const championData = await this.fetchChampionData(championId);
           const championName = championData.name;
 
-          if (!championData.skins) continue;
+          // Skip Doom Bot variants defensively in case they slip through
+          if (championName && championName.toLowerCase().startsWith('doom bot')) {
+            console.log(`Skipping Doom Bot entry: ${championName} (${championId})`);
+            this.progress.processedChampions++;
+            continue;
+          }
+
+          if (!championData.skins || championData.skins.length === 0) {
+            this.progress.processedChampions++;
+            continue;
+          }
 
           for (const skin of championData.skins) {
-            stats.totalProcessed++;
-            
             const skinDoc = {
               championId: championName,
               skinId: skin.id,
@@ -100,22 +141,29 @@ class SkinManager {
               { upsert: true }
             );
             
-            stats.totalUpdated++;
           }
+          this.progress.processedChampions++;
           // Optional: Add a small delay to be nice to the API
           // await new Promise(resolve => setTimeout(resolve, 50)); 
           
         } catch (err) {
           console.error(`Error processing championId ${championId}:`, err.message);
-          stats.errors.push({ championId, error: err.message });
+          this.progress.errors.push({ championId, error: err.message });
+          this.progress.processedChampions++;
         }
       }
 
       console.log('Skin synchronization complete.');
-      return stats;
+      this.progress.status = 'completed';
+      this.progress.endedAt = new Date();
+      this.progress.message = 'Skin synchronization completed.';
+      return this.progress;
 
     } catch (error) {
       console.error('Fatal error in syncSkins:', error);
+      this.progress.status = 'error';
+      this.progress.endedAt = new Date();
+      this.progress.message = error.message || 'Fatal error during sync.';
       throw error;
     }
   }

@@ -14,7 +14,6 @@ const SkinRatingSection = ({ currentSkinId, championName, skinStats }) => {
     userRating,
     isLoading,
     isSubmitting,
-    error,
     splashArtRating,
     inGameModelRating,
     updateSplashArtRating,
@@ -91,12 +90,6 @@ const SkinRatingSection = ({ currentSkinId, championName, skinStats }) => {
             </MUI.Alert>
         ) : (
             <MUI.Box>
-                 {error && (
-                    <MUI.Alert severity="error" sx={{ mb: 2, border: '3px solid black', borderRadius: 0, boxShadow: '4px 4px 0px black' }}>
-                        {error}
-                    </MUI.Alert>
-                )}
-                
                 <Grid container spacing={4}>
                   {/* Stats Card */}
                   <Grid size={{ xs: 12, md: 6 }} display="flex">

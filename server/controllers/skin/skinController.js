@@ -143,19 +143,48 @@ exports.syncSkins = async (req, res) => {
   try {
     const { championId } = req.body; // Optional: sync single champion
     
+    if (skinManager.isSyncInProgress()) {
+      return res.status(409).json({
+        success: false,
+        error: 'Skin synchronization is already running.',
+      });
+    }
+
     // Call the manager
-    const stats = await skinManager.syncSkins(championId);
+    const progress = await skinManager.syncSkins(championId);
     
     res.json({
       success: true,
       message: 'Skin synchronization completed.',
-      data: stats
+      data: progress
     });
   } catch (err) {
     console.error('Error syncing skins:', err);
     res.status(500).json({
       success: false,
       error: 'Failed to sync skins.',
+      message: err.message,
+    });
+  }
+};
+
+/**
+ * Get current progress of skin synchronization.
+ * @param {Object} req
+ * @param {Object} res
+ */
+exports.getSyncStatus = async (req, res) => {
+  try {
+    const progress = skinManager.getProgress();
+    res.json({
+      success: true,
+      data: progress,
+    });
+  } catch (err) {
+    console.error('Error fetching sync status:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch sync status.',
       message: err.message,
     });
   }

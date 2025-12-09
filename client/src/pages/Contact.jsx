@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Box, Typography, TextField, Button, Stack, Alert, CircularProgress } from '@mui/material';
+import { Box, Typography, TextField, Button, CircularProgress } from '@mui/material';
 import axios from 'axios';
+import { useToast } from '../toast/useToast';
+import { toastMessages } from '../toast/useToast';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -9,7 +11,7 @@ const Contact = () => {
     message: ''
   });
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState({ type: '', message: '' });
+  const { success, error } = useToast();
 
   const handleChange = (e) => {
     setFormData({
@@ -21,18 +23,14 @@ const Contact = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setStatus({ type: '', message: '' });
 
     try {
       await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5174'}/api/contact`, formData);
-      setStatus({ type: 'success', message: 'Message sent successfully! I will get back to you soon.' });
+      success(toastMessages.contact.success);
       setFormData({ name: '', email: '', message: '' });
     } catch (error) {
       console.error('Error sending message:', error);
-      setStatus({ 
-        type: 'error', 
-        message: error.response?.data?.message || 'Failed to send message. Please try again later.' 
-      });
+      error(error.response?.data?.message || toastMessages.contact.error);
     } finally {
       setLoading(false);
     }
@@ -104,20 +102,6 @@ const Contact = () => {
         <Typography variant="body1" sx={{ fontWeight: 'bold', textAlign: 'center', marginBottom: '10px' }}>
           Have a suggestion, found a bug, or just want to say hi? Shoot me an email!
         </Typography>
-
-        {status.message && (
-          <Alert 
-            severity={status.type} 
-            sx={{ 
-              borderRadius: '0px', 
-              border: '2px solid black',
-              fontWeight: 'bold',
-              backgroundColor: status.type === 'success' ? '#d0f5d5' : '#ffcccb'
-            }}
-          >
-            {status.message}
-          </Alert>
-        )}
 
         <TextField
           label="Name"

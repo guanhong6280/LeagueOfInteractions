@@ -11,12 +11,12 @@ class CommentService {
    * @param {Function} [config.updateStatsFn] - Function to update entity stats after comment
    * @param {String} [config.idType='String'] - Type of ID ('String' or 'Number')
    */
-  constructor({ 
-    CommentModel, 
-    EntityModel, 
-    entityIdField, 
-    userHistoryField, 
-    validateEntityFn, 
+  constructor({
+    CommentModel,
+    EntityModel,
+    entityIdField,
+    userHistoryField,
+    validateEntityFn,
     updateStatsFn,
     idType = 'String'
   }) {
@@ -35,6 +35,48 @@ class CommentService {
       return isNaN(num) ? null : num;
     }
     return String(id).trim() || null;
+  }
+
+  /**
+   * Transform comment text based on moderation status
+   * Only transforms rejected/needsReview comments to show placeholder text
+   * @param {Object} comment - Comment object to transform
+   * @returns {Object} Transformed comment
+   */
+  transformCommentForResponse(comment) {
+    const transformed = { ...comment };
+
+    // Replace comment text for moderated content
+    if (transformed.status === 'rejected') {
+      transformed.comment = "This comment was rejected due to inappropriate content. Please revise and try again.";
+    } else if (transformed.status === 'needsReview') {
+      transformed.comment = "This comment is under review";
+    }
+
+    // Remove sensitive moderation data from response
+    delete transformed.toxicityScore;
+    delete transformed.spamScore;
+
+    return transformed;
+  }
+
+  /**
+   * Check if a comment should be visible to the requesting user
+   * @param {Object} comment - Comment to check
+   * @param {String} requestingUserId - ID of user making the request
+   * @returns {Boolean} True if comment should be shown
+   */
+  shouldShowComment(comment, requestingUserId) {
+    // Always show approved comments
+    if (comment.status === 'approved') return true;
+
+    // Show rejected/needsReview comments only to their authors
+    if (requestingUserId && comment.userId.toString() === requestingUserId.toString()) {
+      return true;
+    }
+
+    // Hide rejected/needsReview comments from everyone else
+    return false;
   }
 
   async validateEntity(id) {
@@ -141,10 +183,13 @@ class CommentService {
       else if (commentData.status === 'needsReview') message = 'Your comment will be reviewed before being displayed.';
       else message = existingComment ? 'Comment updated successfully.' : 'Comment submitted successfully.';
 
+      // Transform comment text for response
+      const responseData = this.transformCommentForResponse(commentData.toObject ? commentData.toObject() : commentData);
+
       res.json({
         success: true,
         message,
-        data: commentData,
+        data: responseData,
         moderation: {
           status: commentData.status,
           toxicityScore: commentData.toxicityScore,
@@ -161,6 +206,7 @@ class CommentService {
     try {
       const rawId = req.params[this.entityIdField] || req.params.championId || req.params.skinId;
       const { includeUserDetails = false } = req.query;
+      const requestingUserId = req.user?._id; // Get requesting user ID for filtering
 
       const normalizedId = this.normalizeId(rawId);
       if (normalizedId === null) return res.status(400).json({ success: false, error: 'Invalid ID.' });
@@ -171,12 +217,16 @@ class CommentService {
       const commentsWithReplies = await this.CommentModel.find({ [this.entityIdField]: normalizedId })
         .sort({ createdAt: -1, dateCreated: -1 });
 
-      const commentsWithCounts = commentsWithReplies.map((commentDoc) => {
-        const commentObj = commentDoc.toObject({ virtuals: true });
-        commentObj.replyCount = commentDoc.replies ? commentDoc.replies.length : 0;
-        delete commentObj.replies;
-        return commentObj;
-      });
+      // Filter and transform comments based on user permissions
+      const commentsWithCounts = commentsWithReplies
+        .map((commentDoc) => {
+          const commentObj = commentDoc.toObject({ virtuals: true });
+          commentObj.replyCount = commentDoc.replies ? commentDoc.replies.length : 0;
+          delete commentObj.replies; // Don't return full replies here
+          return commentObj;
+        })
+        .filter(comment => this.shouldShowComment(comment, requestingUserId)) // SERVER-SIDE FILTERING
+        .map(comment => this.transformCommentForResponse(comment)); // Transform text
 
       let processedComments = commentsWithCounts;
       if (includeUserDetails === 'true') {
@@ -206,7 +256,14 @@ class CommentService {
         userId,
       });
 
-      res.json({ success: true, data: comment || null });
+      if (!comment) {
+        return res.json({ success: true, data: null });
+      }
+
+      // Transform user's own comment (show rejection message if rejected)
+      const transformed = this.transformCommentForResponse(comment.toObject());
+
+      res.json({ success: true, data: transformed });
     } catch (err) {
       console.error('Error fetching user comment:', err);
       res.status(500).json({ success: false, error: 'Failed to fetch user comment.', message: err.message });
@@ -286,15 +343,20 @@ class CommentService {
       parentComment.replies.push(newReply);
       await parentComment.save();
 
+      // Retrieve the newly added reply (it will have an _id now)
+      const addedReply = parentComment.replies[parentComment.replies.length - 1];
+
       let message;
       if (newReply.status === 'rejected') message = 'Your reply was rejected due to inappropriate content.';
       else if (newReply.status === 'needsReview') message = 'Your reply will be reviewed before being displayed.';
       else message = 'Reply added successfully.';
 
+      const responseData = this.transformCommentForResponse(addedReply.toObject());
+
       res.json({
         success: true,
         message,
-        data: newReply,
+        data: responseData,
         moderation: {
           status: newReply.status,
           toxicityScore: newReply.toxicityScore,
@@ -312,7 +374,8 @@ class CommentService {
       const rawId = req.params[this.entityIdField] || req.params.championId || req.params.skinId;
       const { commentId } = req.params;
       const { includeUserDetails = false } = req.query;
-      
+      const requestingUserId = req.user?._id; // Get requesting user ID for filtering
+
       const normalizedId = this.normalizeId(rawId);
       if (normalizedId === null) return res.status(400).json({ success: false, error: 'Invalid ID.' });
 
@@ -323,18 +386,25 @@ class CommentService {
         return res.status(400).json({ success: false, error: 'Comment does not belong to the specified entity.' });
       }
 
-      let replies = parentComment.replies;
+      // Convert replies to plain objects
+      let replies = parentComment.replies.map(r => r.toObject ? r.toObject() : r);
+
+      // SERVER-SIDE FILTERING: Only show approved replies or user's own rejected/needsReview replies
+      replies = replies.filter(reply => this.shouldShowComment(reply, requestingUserId));
 
       if (includeUserDetails === 'true') {
         const userIds = [...new Set(replies.map(reply => reply.userId))];
         const users = await User.find({ _id: { $in: userIds } }).select('username profilePictureURL');
         const userMap = new Map(users.map(u => [u._id.toString(), u]));
-        
+
         replies = replies.map(reply => ({
-          ...reply.toObject(),
+          ...reply,
           user: userMap.get(reply.userId.toString()) || null
         }));
       }
+
+      // Transform comment text based on status
+      replies = replies.map(reply => this.transformCommentForResponse(reply));
 
       res.json({ success: true, count: replies.length, data: replies });
     } catch (err) {

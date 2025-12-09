@@ -18,6 +18,8 @@ import AccountManagement from './pages/AccountManagement.jsx';
 import Contact from './pages/Contact.jsx';
 import RatingLanding from './pages/RatingLanding.jsx';
 import { ChampionRatingPage, ChampionSkinRatingPage } from './common/rating_system/index.js';
+import { ToastProvider } from './toast/ToastProvider.jsx';
+import ToastTest from './pages/ToastTest.jsx';
 
 // Admin imports
 import AdminGuard from './admin/components/guards/AdminGuard.jsx';
@@ -45,6 +47,7 @@ createRoot(document.getElementById('root')).render(
                     <Route path="rating_landing" element={<RatingLanding />} />
                     <Route path="donation" element={<Donate />} />
                     <Route path="contact" element={<Contact />} />
+                    <Route path="toast-test" element={<ToastTest />} />
                     <Route path="setting" element={<AccountManagement />} />
                     <Route path="/champion-skin-details/:championName" element={<ChampionSkinRatingPage />} />
                     <Route path="/champion-rating/:championName" element={<ChampionRatingPage />} />
@@ -68,6 +71,7 @@ createRoot(document.getElementById('root')).render(
                     {/* <Route path="analytics" element={<Analytics />} /> */}
                   </Route>
                 </Routes>
+                <ToastProvider />
                 </BrowserRouter>
               </Elements>
             </ChampionStatsProvider>

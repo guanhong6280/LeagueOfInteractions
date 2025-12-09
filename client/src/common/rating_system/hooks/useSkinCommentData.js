@@ -1,27 +1,27 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  getChampionComments, 
-  getUserChampionComment, 
-  submitChampionComment,
-  likeChampionComment,
-  unlikeChampionComment,
-  addChampionReply,
-  getChampionRepliesForComment,
+import {
+  getSkinComments,
+  getUserSkinComment,
+  submitSkinComment,
+  likeComment,
+  unlikeComment,
+  addReply,
+  getRepliesForComment,
 } from '../../../api/championApi';
 import { useAuth } from '../../../AuthProvider';
 
 // Query key factory to prevent typos and centralize key management
 const queryKeys = {
-  comments: (championId) => ['champion-comments', championId],
-  userComment: (championId, userId) => ['user-champion-comment', championId, userId],
+  comments: (skinId) => ['skin-comments', skinId],
+  userComment: (skinId, userId) => ['user-skin-comment', skinId, userId],
 };
 
 // Configuration constants
 const COMMENT_MAX_LENGTH = 1000;
 const REPLY_MAX_LENGTH = 500;
 
-const useChampionCommentData = (championId) => {
+const useCommentData = (currentSkinId) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -39,12 +39,13 @@ const useChampionCommentData = (championId) => {
     error: commentsError,
     refetch: refreshComments
   } = useQuery({
-    queryKey: queryKeys.comments(championId),
+    queryKey: queryKeys.comments(currentSkinId),
     queryFn: async () => {
-      const response = await getChampionComments(championId, true);
+      const response = await getSkinComments(currentSkinId, true);
+      console.log('response', response);
       return response.success ? response.data : [];
     },
-    enabled: !!championId,
+    enabled: !!currentSkinId,
   });
 
   // Transform comments only when needed (add displayText for backward compatibility)
@@ -57,12 +58,12 @@ const useChampionCommentData = (championId) => {
 
   // 2. Fetch user's comment (inherits global React Query config)
   const { data: userComment } = useQuery({
-    queryKey: queryKeys.userComment(championId, user?._id),
+    queryKey: queryKeys.userComment(currentSkinId, user?._id),
     queryFn: async () => {
-      const response = await getUserChampionComment(championId);
+      const response = await getUserSkinComment(currentSkinId);
       return response.success ? response.data : null;
     },
-    enabled: !!championId && !!user,
+    enabled: !!currentSkinId && !!user,
   });
 
   // ==================== MUTATIONS ====================
@@ -76,11 +77,11 @@ const useChampionCommentData = (championId) => {
 
   // 3. Submit/Update Comment Mutation
   const submitCommentMutation = useMutation({
-    mutationFn: (commentText) => submitChampionComment(championId, { comment: commentText.trim() }),
+    mutationFn: (commentText) => submitSkinComment(currentSkinId, { comment: commentText.trim() }),
 
     onMutate: async (commentText) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.comments(championId) });
-      const previousComments = queryClient.getQueryData(queryKeys.comments(championId));
+      await queryClient.cancelQueries({ queryKey: queryKeys.comments(currentSkinId) });
+      const previousComments = queryClient.getQueryData(queryKeys.comments(currentSkinId));
 
       const optimisticComment = {
         _id: `temp-${Date.now()}`,
@@ -94,10 +95,10 @@ const useChampionCommentData = (championId) => {
         isEdited: false,
         status: 'approved',
         displayText: commentText.trim(),
-        championId: championId
+        skinId: currentSkinId
       };
 
-      queryClient.setQueryData(queryKeys.comments(championId), (oldData = []) => {
+      queryClient.setQueryData(queryKeys.comments(currentSkinId), (oldData = []) => {
         const existingIndex = oldData.findIndex(c => c.userId === user._id);
         const isUpdate = existingIndex !== -1;
 
@@ -133,7 +134,7 @@ const useChampionCommentData = (championId) => {
         user: createOptimisticUser()
       };
 
-      queryClient.setQueryData(queryKeys.comments(championId), (oldData = []) => {
+      queryClient.setQueryData(queryKeys.comments(currentSkinId), (oldData = []) => {
         let foundTemp = false;
         const updatedComments = oldData.map(comment => {
           if (comment._id.startsWith('temp-')) {
@@ -157,9 +158,9 @@ const useChampionCommentData = (championId) => {
 
     onError: (err, variables, context) => {
       if (context?.previousComments) {
-        queryClient.setQueryData(queryKeys.comments(championId), context.previousComments);
+        queryClient.setQueryData(queryKeys.comments(currentSkinId), context.previousComments);
       } else {
-        queryClient.invalidateQueries({ queryKey: queryKeys.comments(championId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.comments(currentSkinId) });
       }
     }
   });
@@ -215,14 +216,14 @@ const useChampionCommentData = (championId) => {
   const toggleCommentLikeMutation = useMutation({
     mutationFn: ({ commentId, isCurrentlyLiked }) =>
       isCurrentlyLiked
-        ? unlikeChampionComment(championId, commentId)
-        : likeChampionComment(championId, commentId),
+        ? unlikeComment(currentSkinId, commentId)
+        : likeComment(currentSkinId, commentId),
 
     onMutate: async ({ commentId, isCurrentlyLiked }) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.comments(championId) });
-      const previousComments = queryClient.getQueryData(queryKeys.comments(championId));
+      await queryClient.cancelQueries({ queryKey: queryKeys.comments(currentSkinId) });
+      const previousComments = queryClient.getQueryData(queryKeys.comments(currentSkinId));
 
-      queryClient.setQueryData(queryKeys.comments(championId), (oldData = []) =>
+      queryClient.setQueryData(queryKeys.comments(currentSkinId), (oldData = []) =>
         oldData.map(comment =>
           comment._id === commentId
             ? {
@@ -240,7 +241,7 @@ const useChampionCommentData = (championId) => {
 
     onError: (err, variables, context) => {
       if (context?.previousComments) {
-        queryClient.setQueryData(queryKeys.comments(championId), context.previousComments);
+        queryClient.setQueryData(queryKeys.comments(currentSkinId), context.previousComments);
       }
     }
   });
@@ -260,7 +261,7 @@ const useChampionCommentData = (championId) => {
   // Load replies (optimized to not depend on comments array)
   const loadReplies = useCallback(async (commentId) => {
     // Check cache directly to avoid dependency on comments
-    const currentComments = queryClient.getQueryData(queryKeys.comments(championId)) || [];
+    const currentComments = queryClient.getQueryData(queryKeys.comments(currentSkinId)) || [];
     const comment = currentComments.find(c => c._id === commentId);
 
     // Skip if already loading or loaded
@@ -271,14 +272,14 @@ const useChampionCommentData = (championId) => {
     setLoadingReplies(prev => new Set([...prev, commentId]));
 
     try {
-      const response = await getChampionRepliesForComment(championId, commentId, true);
+      const response = await getRepliesForComment(currentSkinId, commentId, true);
       if (response.success) {
         const transformedReplies = response.data.map(reply => ({
           ...reply,
           displayText: reply.comment,
         }));
 
-        queryClient.setQueryData(queryKeys.comments(championId), (oldData = []) =>
+        queryClient.setQueryData(queryKeys.comments(currentSkinId), (oldData = []) =>
           oldData.map(comment => {
             if (comment._id !== commentId) return comment;
 
@@ -307,7 +308,7 @@ const useChampionCommentData = (championId) => {
         return newSet;
       });
     }
-  }, [championId, loadingReplies, queryClient]);
+  }, [currentSkinId, loadingReplies, queryClient]);
 
   // Toggle reply expansion
   const toggleReplies = useCallback(async (commentId) => {
@@ -321,7 +322,7 @@ const useChampionCommentData = (championId) => {
       });
     } else {
       // Check if replies need to be loaded
-      const currentComments = queryClient.getQueryData(queryKeys.comments(championId)) || [];
+      const currentComments = queryClient.getQueryData(queryKeys.comments(currentSkinId)) || [];
       const comment = currentComments.find(c => c._id === commentId);
 
       if (!comment?.replies || comment.replies.length === 0) {
@@ -330,7 +331,7 @@ const useChampionCommentData = (championId) => {
 
       setExpandedReplies(prev => new Set([...prev, commentId]));
     }
-  }, [expandedReplies, championId, loadReplies, queryClient]);
+  }, [expandedReplies, currentSkinId, loadReplies, queryClient]);
 
   // Start/stop replying
   const startReply = useCallback((commentId) => {
@@ -344,11 +345,11 @@ const useChampionCommentData = (championId) => {
   // 5. Submit Reply Mutation
   const submitReplyMutation = useMutation({
     mutationFn: ({ commentId, replyText }) =>
-      addChampionReply(championId, commentId, { comment: replyText.trim() }),
+      addReply(currentSkinId, commentId, { comment: replyText.trim() }),
 
     onMutate: async ({ commentId, replyText }) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.comments(championId) });
-      const previousComments = queryClient.getQueryData(queryKeys.comments(championId));
+      await queryClient.cancelQueries({ queryKey: queryKeys.comments(currentSkinId) });
+      const previousComments = queryClient.getQueryData(queryKeys.comments(currentSkinId));
 
       const optimisticReply = {
         _id: `temp-reply-${Date.now()}`,
@@ -362,7 +363,7 @@ const useChampionCommentData = (championId) => {
         displayText: replyText.trim(),
       };
 
-      queryClient.setQueryData(queryKeys.comments(championId), (oldData = []) =>
+      queryClient.setQueryData(queryKeys.comments(currentSkinId), (oldData = []) =>
         oldData.map(comment =>
           comment._id === commentId
             ? { ...comment, replies: [...(comment.replies || []), optimisticReply] }
@@ -382,7 +383,7 @@ const useChampionCommentData = (championId) => {
         user: createOptimisticUser()
       };
 
-      queryClient.setQueryData(queryKeys.comments(championId), (oldData = []) =>
+      queryClient.setQueryData(queryKeys.comments(currentSkinId), (oldData = []) =>
         oldData.map(comment => {
           if (comment._id !== commentId) return comment;
 
@@ -416,7 +417,7 @@ const useChampionCommentData = (championId) => {
 
     onError: (err, variables, context) => {
       if (context?.previousComments) {
-        queryClient.setQueryData(queryKeys.comments(championId), context.previousComments);
+        queryClient.setQueryData(queryKeys.comments(currentSkinId), context.previousComments);
       }
     }
   });
@@ -477,4 +478,4 @@ const useChampionCommentData = (championId) => {
   };
 };
 
-export default useChampionCommentData;
+export default useCommentData;

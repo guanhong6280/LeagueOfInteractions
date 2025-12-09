@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { submitChampionRating, getUserChampionRating } from '../../../api/championApi';
 import { useAuth } from '../../../AuthProvider';
+import { toastMessages } from '../../../toast/useToast';
+import { useToast } from '../../../toast/useToast';
 
 const initialRatings = {
   fun: 0,
@@ -18,8 +20,7 @@ const useChampionRatingData = (championName) => {
   const [userRating, setUserRating] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
+  const { success, error, info } = useToast();
 
   const loadRatingData = useCallback(async () => {
     if (!championName) {
@@ -37,8 +38,7 @@ const useChampionRatingData = (championName) => {
     }
 
     try {
-      setIsLoading(true);
-      setError(null);
+      // setIsLoading(true);
 
       const response = await getUserChampionRating(championName);
 
@@ -58,7 +58,7 @@ const useChampionRatingData = (championName) => {
         setValues(initialRatings);
       }
     } catch (err) {
-      setError('Failed to load your rating');
+      error(toastMessages.rating.failed_to_load);
     } finally {
       setIsLoading(false);
     }
@@ -70,20 +70,18 @@ const useChampionRatingData = (championName) => {
 
   const submitRating = async () => {
     if (!user) {
-      setError('Please sign in to rate champions');
+      error(toastMessages.signIn.info);
       return false;
     }
 
     const hasMissing = Object.values(values).some((val) => !val || val < 1);
     if (hasMissing) {
-      setError('Please provide a rating for all fields (1-10).');
-      return false;
+      info(toastMessages.rating.has_missing);
+      return false; 
     }
 
     try {
       setIsSubmitting(true);
-      setError(null);
-      setSuccess(false);
 
       const payload = {
         funRating: values.fun,
@@ -98,15 +96,15 @@ const useChampionRatingData = (championName) => {
       const response = await submitChampionRating(championName, payload);
 
       if (response.success) {
-        setSuccess(true);
+        success(toastMessages.rating.champion.success);
         await loadRatingData();
         return true;
       }
 
-      setError(response.error || 'Failed to submit rating.');
+      error(response.error || toastMessages.rating.champion.error);
       return false;
     } catch (err) {
-      setError('Failed to submit rating.');
+      error(toastMessages.rating.champion.error);
       return false;
     } finally {
       setIsSubmitting(false);
@@ -123,8 +121,6 @@ const useChampionRatingData = (championName) => {
     submitRating,
     isLoading,
     isSubmitting,
-    error,
-    success,
     hasExistingRating: !!userRating,
   };
 };

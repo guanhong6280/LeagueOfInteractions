@@ -20,8 +20,6 @@ const ChampionRatingSection = ({ championName, championStats }) => {
     submitRating,
     isLoading,
     isSubmitting,
-    error,
-    success,
     hasExistingRating,
   } = useChampionRatingData(championName);
 
@@ -70,23 +68,6 @@ const ChampionRatingSection = ({ championName, championStats }) => {
 
   return (
     <MUI.Box>
-      {error && (
-        <MUI.Alert
-          severity="error"
-          sx={{ mb: 2, border: '3px solid black', borderRadius: 0, boxShadow: '4px 4px 0px black' }}
-        >
-          {error}
-        </MUI.Alert>
-      )}
-      {success && (
-        <MUI.Alert
-          severity="success"
-          sx={{ mb: 2, border: '3px solid black', borderRadius: 0, boxShadow: '4px 4px 0px black' }}
-        >
-          Rating submitted! Thanks for your feedback.
-        </MUI.Alert>
-      )}
-
       <Grid container spacing={4}>
         {/* Stats Card */}
         <Grid size={{ xs: 12, md: 6 }} display="flex">

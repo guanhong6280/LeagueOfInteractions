@@ -24,7 +24,8 @@ const CommentActions = memo(({
   const isLiked = user && comment.likedBy?.includes(user._id);
   const likeCount = comment.likedBy?.length || 0;
   const replyCount = comment.replyCount || 0;
-  const isDisabled = comment.isInteractionDisabled;
+  // Disable interactions for rejected or pending comments
+  const isDisabled = comment.status === 'rejected' || comment.status === 'needsReview';
 
   const handleLikeClick = async () => {
     if (!user || isDisabled) return;

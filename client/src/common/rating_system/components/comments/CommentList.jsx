@@ -21,7 +21,9 @@ const CommentList = memo(({
   isRefreshing = false,
   error,
   onClearError,
-  enableFloatingForm = true
+  enableFloatingForm = true,
+  onDeleteComment,
+  onDeleteReply
 }) => {
   const [sortBy, setSortBy] = useState('newest'); // newest, oldest, mostLiked
   const [isFormFloating, setIsFormFloating] = useState(false);
@@ -105,6 +107,8 @@ const CommentList = memo(({
               expandedReplies={expandedReplies}
               isSubmittingReply={isSubmittingReply}
               loadingReplies={loadingReplies}
+              onDeleteComment={onDeleteComment}
+              onDeleteReply={onDeleteReply}
             />
           )}
         </MUI.Box>

@@ -27,6 +27,8 @@ const SkinCommentSection = memo(({ currentSkinId, championName }) => {
     startReply,
     cancelReply,
     submitReply,
+    deleteComment,
+    deleteReply,
     clearError,
     refreshComments,
   } = useSkinCommentData(currentSkinId);
@@ -54,6 +56,8 @@ const SkinCommentSection = memo(({ currentSkinId, championName }) => {
         isRefreshing={isRefreshing}
         error={error}
         onClearError={clearError}
+        onDeleteComment={deleteComment}
+        onDeleteReply={deleteReply}
       />
     </MUI.Box>
   );

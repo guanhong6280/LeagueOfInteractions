@@ -13,7 +13,9 @@ const CommentItems = memo(({
   replyingTo,
   expandedReplies,
   isSubmittingReply,
-  loadingReplies
+  loadingReplies,
+  onDeleteComment,
+  onDeleteReply
 }) => {
   if (comments.length === 0) {
     return (
@@ -42,6 +44,8 @@ const CommentItems = memo(({
           showReplies={expandedReplies.has(comment._id)}
           isSubmittingReply={isSubmittingReply}
           isLoadingReplies={loadingReplies.has(comment._id)}
+          onDeleteComment={onDeleteComment}
+          onDeleteReply={onDeleteReply}
         />
       ))}
     </>

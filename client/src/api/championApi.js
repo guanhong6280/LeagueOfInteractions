@@ -162,6 +162,12 @@ export const unlikeComment = async (skinId, commentId) => {
   return response.data;
 };
 
+// Delete Comment API
+export const deleteSkinComment = async (skinId, commentId) => {
+  const response = await api.delete(`/api/skins/${skinId}/comments/${commentId}`);
+  return response.data;
+};
+
 // Reply APIs
 export const addReply = async (skinId, commentId, replyData) => {
   const response = await api.post(`/api/skins/${skinId}/comments/${commentId}/replies`, replyData);
@@ -181,6 +187,12 @@ export const likeReply = async (skinId, commentId, replyId) => {
 
 export const unlikeReply = async (skinId, commentId, replyId) => {
   const response = await api.post(`/api/skins/${skinId}/comments/${commentId}/replies/${replyId}/unlike`);
+  return response.data;
+};
+
+// Delete Reply API
+export const deleteSkinReply = async (skinId, commentId, replyId) => {
+  const response = await api.delete(`/api/skins/${skinId}/comments/${commentId}/replies/${replyId}`);
   return response.data;
 };
 
@@ -222,6 +234,12 @@ export const unlikeChampionComment = async (championId, commentId) => {
   return response.data;
 };
 
+// Delete Champion Comment API
+export const deleteChampionComment = async (championId, commentId) => {
+  const response = await api.delete(`/api/champions/${championId}/comments/${commentId}`);
+  return response.data;
+};
+
 // Champion Reply APIs
 export const addChampionReply = async (championId, commentId, replyData) => {
   const response = await api.post(`/api/champions/${championId}/comments/${commentId}/replies`, replyData);
@@ -241,5 +259,11 @@ export const likeChampionReply = async (championId, commentId, replyId) => {
 
 export const unlikeChampionReply = async (championId, commentId, replyId) => {
   const response = await api.post(`/api/champions/${championId}/comments/${commentId}/replies/${replyId}/unlike`);
+  return response.data;
+};
+
+// Delete Champion Reply API
+export const deleteChampionReply = async (championId, commentId, replyId) => {
+  const response = await api.delete(`/api/champions/${championId}/comments/${commentId}/replies/${replyId}`);
   return response.data;
 };

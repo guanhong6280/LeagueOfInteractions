@@ -8,6 +8,8 @@ import {
   unlikeChampionComment,
   addChampionReply,
   getChampionRepliesForComment,
+  deleteChampionComment,
+  deleteChampionReply,
 } from '../../../api/championApi';
 import { useAuth } from '../../../AuthProvider';
 
@@ -471,6 +473,88 @@ const useChampionCommentData = (championId) => {
     }
   }, [user, submitReplyMutation]);
 
+  // ==================== DELETE ====================
+
+  // 6. Delete Comment Mutation
+  const deleteCommentMutation = useMutation({
+    mutationFn: (commentId) => deleteChampionComment(championId, commentId),
+
+    onMutate: async (commentId) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.comments(championId) });
+      const previousComments = queryClient.getQueryData(queryKeys.comments(championId));
+
+      // Optimistically remove the comment
+      queryClient.setQueryData(queryKeys.comments(championId), (oldData = []) =>
+        oldData.filter(comment => comment._id !== commentId)
+      );
+
+      return { previousComments };
+    },
+
+    onError: (err, variables, context) => {
+      if (context?.previousComments) {
+        queryClient.setQueryData(queryKeys.comments(championId), context.previousComments);
+      }
+    }
+  });
+
+  const deleteComment = useCallback(async (commentId) => {
+    if (!user) {
+      return { success: false, message: 'Please sign in to delete comments' };
+    }
+
+    try {
+      const result = await deleteCommentMutation.mutateAsync(commentId);
+      return { success: true, message: 'Comment deleted successfully' };
+    } catch (err) {
+      const errorMessage = err.response?.data?.error || 'Failed to delete comment';
+      return { success: false, message: errorMessage };
+    }
+  }, [user, deleteCommentMutation]);
+
+  // 7. Delete Reply Mutation
+  const deleteReplyMutation = useMutation({
+    mutationFn: ({ commentId, replyId }) => deleteChampionReply(championId, commentId, replyId),
+
+    onMutate: async ({ commentId, replyId }) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.comments(championId) });
+      const previousComments = queryClient.getQueryData(queryKeys.comments(championId));
+
+      // Optimistically remove the reply
+      queryClient.setQueryData(queryKeys.comments(championId), (oldData = []) =>
+        oldData.map(comment => {
+          if (comment._id !== commentId) return comment;
+          return {
+            ...comment,
+            replies: (comment.replies || []).filter(reply => reply._id !== replyId)
+          };
+        })
+      );
+
+      return { previousComments };
+    },
+
+    onError: (err, variables, context) => {
+      if (context?.previousComments) {
+        queryClient.setQueryData(queryKeys.comments(championId), context.previousComments);
+      }
+    }
+  });
+
+  const deleteReply = useCallback(async (commentId, replyId) => {
+    if (!user) {
+      return { success: false, message: 'Please sign in to delete replies' };
+    }
+
+    try {
+      const result = await deleteReplyMutation.mutateAsync({ commentId, replyId });
+      return { success: true, message: 'Reply deleted successfully' };
+    } catch (err) {
+      const errorMessage = err.response?.data?.error || 'Failed to delete reply';
+      return { success: false, message: errorMessage };
+    }
+  }, [user, deleteReplyMutation]);
+
   // ==================== REFRESH ====================
 
   // Handle refresh with full UI state reset and rate limiting
@@ -535,6 +619,8 @@ const useChampionCommentData = (championId) => {
     startReply,
     cancelReply,
     submitReply,
+    deleteComment,
+    deleteReply,
     refreshComments: handleRefresh,
   };
 };

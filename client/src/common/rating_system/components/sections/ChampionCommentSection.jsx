@@ -27,6 +27,8 @@ const ChampionCommentSection = memo(({ championName }) => {
     startReply,
     cancelReply,
     submitReply,
+    deleteComment,
+    deleteReply,
     clearError,
     refreshComments,
   } = useChampionCommentData(championName);
@@ -54,6 +56,8 @@ const ChampionCommentSection = memo(({ championName }) => {
         error={error}
         onClearError={clearError}
         enableFloatingForm={false}
+        onDeleteComment={deleteComment}
+        onDeleteReply={deleteReply}
       />
     </MUI.Box>
   );

@@ -466,6 +466,117 @@ class CommentService {
       res.status(500).json({ success: false, error: 'Failed to unlike reply.', message: err.message });
     }
   }
+
+  /**
+   * Delete a comment (only the comment author can delete)
+   * Deletes the entire comment including all replies
+   */
+  async deleteComment(req, res) {
+    try {
+      const userId = req.user._id;
+      const { commentId } = req.params;
+
+      // Find the comment first to verify ownership
+      const comment = await this.CommentModel.findById(commentId);
+      
+      if (!comment) {
+        return res.status(404).json({ success: false, error: 'Comment not found.' });
+      }
+
+      // Security: Only allow the comment author to delete their comment
+      if (comment.userId.toString() !== userId.toString()) {
+        return res.status(403).json({ 
+          success: false, 
+          error: 'Unauthorized. You can only delete your own comments.' 
+        });
+      }
+
+      // Store entityId for stats update
+      const entityId = comment[this.entityIdField];
+
+      // Delete the comment (and all its replies)
+      await this.CommentModel.findByIdAndDelete(commentId);
+
+      // Update entity stats if function provided
+      if (this.updateStatsFn) {
+        await this.updateStatsFn(entityId);
+      }
+
+      // Remove from user history
+      try {
+        await User.updateOne(
+          { _id: userId },
+          { $pull: { [this.userHistoryField]: { [this.entityIdField]: entityId } } }
+        );
+      } catch (err) {
+        console.error('Error removing from user history:', err);
+      }
+
+      res.json({ 
+        success: true, 
+        message: 'Comment deleted successfully.',
+        deletedCommentId: commentId 
+      });
+    } catch (err) {
+      console.error('Error deleting comment:', err);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to delete comment.', 
+        message: err.message 
+      });
+    }
+  }
+
+  /**
+   * Delete a reply (only the reply author can delete)
+   * Removes the reply from the parent comment's replies array
+   */
+  async deleteReply(req, res) {
+    try {
+      const userId = req.user._id;
+      const { commentId, replyId } = req.params;
+
+      // Find the parent comment
+      const comment = await this.CommentModel.findById(commentId);
+      
+      if (!comment) {
+        return res.status(404).json({ success: false, error: 'Parent comment not found.' });
+      }
+
+      // Find the specific reply
+      const reply = comment.replies.id(replyId);
+      
+      if (!reply) {
+        return res.status(404).json({ success: false, error: 'Reply not found.' });
+      }
+
+      // Security: Only allow the reply author to delete their reply
+      if (reply.userId.toString() !== userId.toString()) {
+        return res.status(403).json({ 
+          success: false, 
+          error: 'Unauthorized. You can only delete your own replies.' 
+        });
+      }
+
+      // Remove the reply using Mongoose subdocument method
+      reply.deleteOne();
+      await comment.save();
+
+      res.json({ 
+        success: true, 
+        message: 'Reply deleted successfully.',
+        deletedReplyId: replyId,
+        parentCommentId: commentId 
+      });
+    } catch (err) {
+      console.error('Error deleting reply:', err);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to delete reply.', 
+        message: err.message 
+      });
+    }
+  }
 }
 
 module.exports = CommentService;

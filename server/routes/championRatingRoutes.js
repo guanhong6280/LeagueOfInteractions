@@ -18,9 +18,11 @@ router.get('/:championId/comments/:commentId/replies', championCommentController
 
 router.post('/:championId/comments/:commentId/like', ensureApiAuthenticated, championCommentController.likeComment);
 router.post('/:championId/comments/:commentId/unlike', ensureApiAuthenticated, championCommentController.unlikeComment);
+router.delete('/:championId/comments/:commentId', ensureApiAuthenticated, championCommentController.deleteComment);
 
 router.post('/:championId/comments/:commentId/replies/:replyId/like', ensureApiAuthenticated, championCommentController.likeReply);
 router.post('/:championId/comments/:commentId/replies/:replyId/unlike', ensureApiAuthenticated, championCommentController.unlikeReply);
+router.delete('/:championId/comments/:commentId/replies/:replyId', ensureApiAuthenticated, championCommentController.deleteReply);
 
 module.exports = router;
 

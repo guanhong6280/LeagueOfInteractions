@@ -50,9 +50,15 @@ router.get('/:skinId/comments/:commentId/replies', skinCommentController.getRepl
 router.post('/:skinId/comments/:commentId/like', ensureApiAuthenticated, skinCommentController.likeComment);
 router.post('/:skinId/comments/:commentId/unlike', ensureApiAuthenticated, skinCommentController.unlikeComment);
 
+// Delete comment
+router.delete('/:skinId/comments/:commentId', ensureApiAuthenticated, skinCommentController.deleteComment);
+
 // Like/unlike reply
 router.post('/:skinId/comments/:commentId/replies/:replyId/like', ensureApiAuthenticated, skinCommentController.likeReply);
 router.post('/:skinId/comments/:commentId/replies/:replyId/unlike', ensureApiAuthenticated, skinCommentController.unlikeReply);
+
+// Delete reply
+router.delete('/:skinId/comments/:commentId/replies/:replyId', ensureApiAuthenticated, skinCommentController.deleteReply);
 
 // GET /api/skins/:skinId/summary - Get AI-generated summary for a skin (Week 1 addition)
 router.get('/:skinId/summary', skinController.getSkinSummary);

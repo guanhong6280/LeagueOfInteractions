@@ -2,11 +2,12 @@ import React from 'react';
 import * as MUI from '@mui/material';
 import { Sort as SortIcon, Refresh as RefreshIcon } from '@mui/icons-material';
 
-const CommentListHeader = ({ sortBy, setSortBy, onRefreshComments }) => (
+const CommentListHeader = ({ sortBy, setSortBy, onRefreshComments, isRefreshing = false }) => (
   <MUI.Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
     <MUI.Button
-      startIcon={<RefreshIcon />}
+      startIcon={isRefreshing ? <MUI.CircularProgress size={16} thickness={6} sx={{ color: 'black' }} /> : <RefreshIcon />}
       onClick={onRefreshComments}
+      disabled={isRefreshing}
       variant="contained"
       size="small"
       sx={{ 
@@ -18,18 +19,23 @@ const CommentListHeader = ({ sortBy, setSortBy, onRefreshComments }) => (
         bgcolor: 'white',
         color: 'black',
         '&:hover': {
-          bgcolor: '#f0f0f0',
-          transform: 'translate(-2px, -2px)',
-          boxShadow: '6px 6px 0px black',
+          bgcolor: isRefreshing ? 'white' : '#f0f0f0',
+          transform: isRefreshing ? 'none' : 'translate(-2px, -2px)',
+          boxShadow: isRefreshing ? '4px 4px 0px black' : '6px 6px 0px black',
         },
         '&:active': {
           transform: 'translate(0, 0)',
           boxShadow: 'none',
         },
+        '&.Mui-disabled': {
+          bgcolor: '#E0E0E0',
+          color: '#9E9E9E',
+          border: '2px solid #9E9E9E',
+        },
         transition: 'all 0.1s',
       }}
     >
-      Refresh
+      {isRefreshing ? 'Refreshing...' : 'Refresh'}
     </MUI.Button>
     <MUI.Box display="flex" gap={1}>
       <MUI.FormControl size="small" sx={{ minWidth: 150 }}>

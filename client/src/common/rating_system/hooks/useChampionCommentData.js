@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   getChampionComments, 
@@ -29,6 +29,11 @@ const useChampionCommentData = (championId) => {
   const [expandedReplies, setExpandedReplies] = useState(new Set());
   const [replyingTo, setReplyingTo] = useState(null);
   const [loadingReplies, setLoadingReplies] = useState(new Set());
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState(0);
+  
+  // Debounce map for like operations (prevents spam clicking)
+  const likeDebounceMap = useRef(new Map());
 
   // ==================== QUERIES ====================
   
@@ -45,6 +50,7 @@ const useChampionCommentData = (championId) => {
       return response.success ? response.data : [];
     },
     enabled: !!championId,
+    staleTime: 30000, // Consider data fresh for 30 seconds
   });
 
   // Transform comments only when needed (add displayText for backward compatibility)
@@ -52,6 +58,9 @@ const useChampionCommentData = (championId) => {
     return comments.map(comment => ({
       ...comment,
       displayText: comment.comment, // Backward compatibility
+      // Calculate replyCount from replies array when available (more accurate after optimistic updates)
+      // Fall back to server's replyCount if replies haven't been loaded yet
+      replyCount: comment.replies?.length ?? comment.replyCount ?? 0,
     }));
   }, [comments]);
 
@@ -248,11 +257,24 @@ const useChampionCommentData = (championId) => {
   const toggleCommentLike = useCallback(async (commentId, isCurrentlyLiked) => {
     if (!user) return;
 
-    try {
-      await toggleCommentLikeMutation.mutateAsync({ commentId, isCurrentlyLiked });
-    } catch (err) {
-      console.error('Failed to toggle like:', err);
+    // Clear existing debounce timeout for this comment
+    if (likeDebounceMap.current.has(commentId)) {
+      clearTimeout(likeDebounceMap.current.get(commentId));
     }
+
+    // The optimistic UI update happens immediately in onMutate
+    // We just debounce the actual server request to prevent spam
+    const timeoutId = setTimeout(async () => {
+      try {
+        await toggleCommentLikeMutation.mutateAsync({ commentId, isCurrentlyLiked });
+      } catch (err) {
+        console.error('Failed to toggle like:', err);
+      } finally {
+        likeDebounceMap.current.delete(commentId);
+      }
+    }, 300); // 300ms debounce - UI is still instant!
+
+    likeDebounceMap.current.set(commentId, timeoutId);
   }, [user, toggleCommentLikeMutation]);
 
   // ==================== REPLIES ====================
@@ -449,6 +471,45 @@ const useChampionCommentData = (championId) => {
     }
   }, [user, submitReplyMutation]);
 
+  // ==================== REFRESH ====================
+
+  // Handle refresh with full UI state reset and rate limiting
+  const handleRefresh = useCallback(async () => {
+    const COOLDOWN_PERIOD = 5000; // 5 seconds cooldown
+    const now = Date.now();
+    
+    // Prevent refresh if still in cooldown period
+    if (now - lastRefreshTime < COOLDOWN_PERIOD) {
+      console.log('Refresh on cooldown. Please wait.');
+      return { success: false, message: 'Please wait before refreshing again' };
+    }
+    
+    // Prevent multiple simultaneous refreshes
+    if (isRefreshing) {
+      return { success: false, message: 'Refresh already in progress' };
+    }
+    
+    try {
+      setIsRefreshing(true);
+      setLastRefreshTime(now);
+      
+      // Reset all UI state
+      setExpandedReplies(new Set());
+      setReplyingTo(null);
+      setLoadingReplies(new Set());
+      
+      // Refetch comments from server
+      await refreshComments();
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Refresh failed:', error);
+      return { success: false, message: 'Refresh failed' };
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refreshComments, lastRefreshTime, isRefreshing]);
+
   // ==================== RETURN ====================
 
   return {
@@ -459,6 +520,7 @@ const useChampionCommentData = (championId) => {
     // Loading states
     isLoading,
     isSubmitting: submitCommentMutation.isPending || submitReplyMutation.isPending,
+    isRefreshing,
     error: commentsError?.message || null,
 
     // UI state
@@ -473,7 +535,7 @@ const useChampionCommentData = (championId) => {
     startReply,
     cancelReply,
     submitReply,
-    refreshComments,
+    refreshComments: handleRefresh,
   };
 };
 

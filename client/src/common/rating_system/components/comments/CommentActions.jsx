@@ -7,6 +7,59 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../../../AuthProvider';
 
+// Neo-brutalist View Replies Button Component
+const ViewRepliesButton = memo(({ 
+  replyCount, 
+  showReplies, 
+  onToggleReplies, 
+  isLoadingReplies 
+}) => {
+  if (replyCount === 0) return null;
+
+  return (
+    <MUI.Button
+      onClick={onToggleReplies}
+      disabled={isLoadingReplies}
+      startIcon={isLoadingReplies ? <MUI.CircularProgress size={12} thickness={6} /> : undefined}
+      sx={{
+        minWidth: 'auto',
+        px: 1.5,
+        py: 0.5,
+        border: '2px solid black',
+        borderRadius: 0,
+        bgcolor: showReplies ? '#FFE082' : 'white',
+        color: 'black',
+        fontWeight: 900,
+        fontSize: '0.7rem',
+        textTransform: 'uppercase',
+        boxShadow: '2px 2px 0px black',
+        transition: 'all 0.1s ease-in-out',
+        '&:hover': {
+          bgcolor: showReplies ? '#FFD54F' : '#F5F5F5',
+          transform: 'translate(-1px, -1px)',
+          boxShadow: '3px 3px 0px black',
+        },
+        '&:active': {
+          transform: 'translate(0, 0)',
+          boxShadow: '1px 1px 0px black',
+        },
+        '&.Mui-disabled': {
+          bgcolor: '#E0E0E0',
+          color: '#9E9E9E',
+          border: '2px solid #9E9E9E',
+        },
+      }}
+    >
+      {isLoadingReplies 
+        ? 'Loading...' 
+        : `${showReplies ? 'Hide' : 'View'} ${replyCount} ${replyCount === 1 ? 'reply' : 'replies'}`
+      }
+    </MUI.Button>
+  );
+});
+
+ViewRepliesButton.displayName = 'ViewRepliesButton';
+
 const CommentActions = memo(({
   comment,
   onToggleLike,
@@ -48,26 +101,24 @@ const CommentActions = memo(({
   };
 
   return (
-    <MUI.Box display="flex" alignItems="center">
-      {/* Like Button - TikTok Style */}
+    <MUI.Box display="flex" alignItems="center" gap={1}>
+      {/* Like Button - Neo-Brutalist Style */}
       <MUI.Button
         onClick={handleLikeClick}
         disabled={!user || isDisabled}
-        size="small"
         startIcon={
           isLiked ? (
             <ThumbUp
               sx={{
-                fontSize: 14,
+                fontSize: 16,
                 transform: likeAnimation ? 'scale(1.3)' : 'scale(1)',
                 transition: 'transform 0.2s ease-in-out',
-                color: 'primary.main'
               }}
             />
           ) : (
             <ThumbUpOutlined
               sx={{
-                fontSize: 14,
+                fontSize: 16,
                 transform: likeAnimation ? 'scale(1.3)' : 'scale(1)',
                 transition: 'transform 0.2s ease-in-out'
               }}
@@ -76,80 +127,85 @@ const CommentActions = memo(({
         }
         sx={{
           minWidth: 'auto',
-          p: 0.5,
-          color: isLiked ? 'primary.main' : 'text.secondary',
-          fontSize: '0.75rem',
-          textTransform: 'none',
+          px: 1.5,
+          py: 0.5,
+          border: '2px solid black',
+          borderRadius: 0,
+          bgcolor: isLiked ? '#90CAF9' : 'white',
+          color: 'black',
+          fontWeight: 900,
+          fontSize: '0.7rem',
+          textTransform: 'uppercase',
+          boxShadow: '2px 2px 0px black',
+          transition: 'all 0.1s ease-in-out',
           '&:hover': {
-            bgcolor: 'transparent',
-            color: isLiked ? 'primary.dark' : 'primary.main',
+            bgcolor: isLiked ? '#64B5F6' : '#F5F5F5',
+            transform: 'translate(-1px, -1px)',
+            boxShadow: '3px 3px 0px black',
+          },
+          '&:active': {
+            transform: 'translate(0, 0)',
+            boxShadow: '1px 1px 0px black',
           },
           '&.Mui-disabled': {
-            color: 'action.disabled',
+            bgcolor: '#E0E0E0',
+            color: '#9E9E9E',
+            border: '2px solid #9E9E9E',
           },
         }}
       >
-        {likeCount > 0 ? likeCount : ''}
+        {likeCount > 0 && likeCount}
       </MUI.Button>
       
-      {/* Reply Button - TikTok Style */}
+      {/* Reply Button - Neo-Brutalist Style */}
       <MUI.Button
         onClick={handleReplyClick}
         disabled={!user || isDisabled || isSubmittingReply}
-        size="small"
+        startIcon={<ReplyIcon sx={{ fontSize: 16 }} />}
         sx={{
           minWidth: 'auto',
-          p: 0.5,
-          color: isReplyingTo ? 'primary.main' : 'text.secondary',
-          fontSize: '0.75rem',
-          textTransform: 'none',
+          px: 1.5,
+          py: 0.5,
+          border: '2px solid black',
+          borderRadius: 0,
+          bgcolor: isReplyingTo ? '#A5D6A7' : 'white',
+          color: 'black',
+          fontWeight: 900,
+          fontSize: '0.7rem',
+          textTransform: 'uppercase',
+          boxShadow: '2px 2px 0px black',
+          transition: 'all 0.1s ease-in-out',
           '&:hover': {
-            bgcolor: 'transparent',
-            color: 'primary.main',
+            bgcolor: isReplyingTo ? '#81C784' : '#F5F5F5',
+            transform: 'translate(-1px, -1px)',
+            boxShadow: '3px 3px 0px black',
+          },
+          '&:active': {
+            transform: 'translate(0, 0)',
+            boxShadow: '1px 1px 0px black',
           },
           '&.Mui-disabled': {
-            color: 'action.disabled',
+            bgcolor: '#E0E0E0',
+            color: '#9E9E9E',
+            border: '2px solid #9E9E9E',
           },
         }}
       >
-        <MUI.Box sx={{ display: 'flex', alignItems: 'center', columnGap: '1px' }}>
-          <ReplyIcon sx={{ fontSize: 14, mb: '1px' }} />
-          Reply
-        </MUI.Box>
+        Reply
       </MUI.Button>
 
-      {/* View Replies Button - TikTok Style */}
-      {replyCount > 0 && (
-        <MUI.Button
-          onClick={onToggleReplies}
-          disabled={isLoadingReplies}
-          size="small"
-          startIcon={isLoadingReplies ? <MUI.CircularProgress size={12} /> : undefined}
-          sx={{
-            minWidth: 'auto',
-            p: 0.5,
-            color: 'text.secondary',
-            fontSize: '0.75rem',
-            textTransform: 'none',
-            '&:hover': {
-              bgcolor: 'transparent',
-              color: 'primary.main',
-            },
-            '&.Mui-disabled': {
-              color: 'action.disabled',
-            },
-          }}
-        >
-          {isLoadingReplies 
-            ? 'Loading...' 
-            : `${showReplies ? 'Hide' : 'View'} ${replyCount} ${replyCount === 1 ? 'reply' : 'replies'}`
-          }
-        </MUI.Button>
-      )}
+      {/* View Replies Button - Extracted Component */}
+      <ViewRepliesButton
+        replyCount={replyCount}
+        showReplies={showReplies}
+        onToggleReplies={onToggleReplies}
+        isLoadingReplies={isLoadingReplies}
+      />
     </MUI.Box>
   );
 });
 
 CommentActions.displayName = 'CommentActions';
 
-export default CommentActions; 
+export default CommentActions;
+export { ViewRepliesButton }; 

@@ -12,6 +12,7 @@ const SkinCommentSection = memo(({ currentSkinId, championName }) => {
     // Loading states
     isLoading,
     isSubmitting,
+    isRefreshing,
     error,
 
     // UI state
@@ -50,6 +51,7 @@ const SkinCommentSection = memo(({ currentSkinId, championName }) => {
         loadingReplies={loadingReplies}
         onSubmitComment={submitComment}
         onRefreshComments={refreshComments}
+        isRefreshing={isRefreshing}
         error={error}
         onClearError={clearError}
       />

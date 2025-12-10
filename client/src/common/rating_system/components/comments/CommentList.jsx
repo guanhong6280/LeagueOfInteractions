@@ -18,6 +18,7 @@ const CommentList = memo(({
   loadingReplies,
   onSubmitComment,
   onRefreshComments,
+  isRefreshing = false,
   error,
   onClearError,
   enableFloatingForm = true
@@ -60,10 +61,30 @@ const CommentList = memo(({
     }
   }, [comments, sortBy]);
 
+  // Find the comment being replied to (if any)
+  const replyToComment = React.useMemo(() => {
+    if (!replyingTo) return null;
+    
+    // Search through all comments and their replies
+    for (const comment of comments) {
+      if (comment._id === replyingTo) {
+        return comment;
+      }
+      // Check replies too
+      if (comment.replies) {
+        const reply = comment.replies.find(r => r._id === replyingTo);
+        if (reply) return reply;
+      }
+    }
+    return null;
+  }, [replyingTo, comments]);
+
+  const replyToUsername = replyToComment?.user?.username || null;
+
   return (
     <>
       <MUI.Box marginX="10px">
-        <CommentListHeader sortBy={sortBy} setSortBy={setSortBy} onRefreshComments={onRefreshComments} />
+        <CommentListHeader sortBy={sortBy} setSortBy={setSortBy} onRefreshComments={onRefreshComments} isRefreshing={isRefreshing} />
         <MUI.Box height="550px" overflow="auto">
           {isLoading ? (
             <MUI.Box display="flex" height="100%" justifyContent="center" alignItems="center">
@@ -103,10 +124,15 @@ const CommentList = memo(({
         <MUI.Box ref={formPlaceholderRef} sx={{ mt: 4 }}>
           {!isFormFloating && (
             <InlineCommentForm
-              onSubmit={onSubmitComment}
+              onSubmit={replyingTo ? onSubmitReply : onSubmitComment}
               isSubmitting={isSubmittingReply}
               error={error}
               onClearError={onClearError}
+              isReplyMode={!!replyingTo}
+              replyToUsername={replyToUsername}
+              parentCommentId={replyingTo}
+              onCancel={onCancelReply}
+              characterLimit={replyingTo ? 500 : 1000}
             />
           )}
         </MUI.Box>
@@ -148,10 +174,15 @@ const CommentList = memo(({
               }}
             >
               <InlineCommentForm
-                onSubmit={onSubmitComment}
+                onSubmit={replyingTo ? onSubmitReply : onSubmitComment}
                 isSubmitting={isSubmittingReply}
                 error={error}
                 onClearError={onClearError}
+                isReplyMode={!!replyingTo}
+                replyToUsername={replyToUsername}
+                parentCommentId={replyingTo}
+                onCancel={onCancelReply}
+                characterLimit={replyingTo ? 500 : 1000}
               />
             </MUI.Paper>
           </MUI.Box>

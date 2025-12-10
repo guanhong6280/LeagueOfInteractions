@@ -4,7 +4,6 @@ import {
   Warning as WarningIcon
 } from '@mui/icons-material';
 import CommentActions from './CommentActions';
-import ReplyForm from './ReplyForm';
 
 const CommentItem = memo(({
   comment,
@@ -18,8 +17,6 @@ const CommentItem = memo(({
   isSubmittingReply,
   isLoadingReplies
 }) => {
-  const replyingToUsername = comment.user?.username || 'User';
-
   return (
     <MUI.Box
       sx={{
@@ -143,20 +140,9 @@ const CommentItem = memo(({
             isLoadingReplies={isLoadingReplies}
           />
           
-          {(showReplies || isReplyingTo === comment._id) && <MUI.Divider sx={{ my: 2, borderColor: 'black', borderBottomWidth: 2 }} />}
+          {showReplies && <MUI.Divider sx={{ my: 2, borderColor: 'black', borderBottomWidth: 2 }} />}
         </MUI.Box>
       </MUI.Box>
-
-      {/* Reply Form */}
-      {isReplyingTo === comment._id && (
-        <ReplyForm
-          onSubmit={onSubmitReply}
-          onCancel={onCancelReply}
-          isSubmitting={isSubmittingReply}
-          parentCommentId={comment._id}
-          replyingToUsername={replyingToUsername}
-        />
-      )}
 
       {/* Replies List - TikTok Style */}
       {showReplies && comment.replies && comment.replies.length > 0 && (

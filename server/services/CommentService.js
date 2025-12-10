@@ -275,12 +275,15 @@ class CommentService {
       const userId = req.user._id;
       const { commentId } = req.params;
 
-      const comment = await this.CommentModel.findById(commentId);
-      if (!comment) return res.status(404).json({ success: false, error: 'Comment not found.' });
+      // Use $addToSet for atomic operation (prevents duplicates even with race conditions)
+      const comment = await this.CommentModel.findByIdAndUpdate(
+        commentId,
+        { $addToSet: { likedBy: userId } },  // Only adds if not already present
+        { new: true }  // Return updated document
+      );
 
-      if (!comment.likedBy.includes(userId)) {
-        comment.likedBy.push(userId);
-        await comment.save();
+      if (!comment) {
+        return res.status(404).json({ success: false, error: 'Comment not found.' });
       }
 
       res.json({ success: true, likes: comment.likedBy.length });
@@ -294,11 +297,16 @@ class CommentService {
       const userId = req.user._id;
       const { commentId } = req.params;
 
-      const comment = await this.CommentModel.findById(commentId);
-      if (!comment) return res.status(404).json({ success: false, error: 'Comment not found.' });
+      // Use $pull for atomic operation (removes all instances)
+      const comment = await this.CommentModel.findByIdAndUpdate(
+        commentId,
+        { $pull: { likedBy: userId } },  // Removes userId atomically
+        { new: true }  // Return updated document
+      );
 
-      comment.likedBy = comment.likedBy.filter((id) => id.toString() !== userId.toString());
-      await comment.save();
+      if (!comment) {
+        return res.status(404).json({ success: false, error: 'Comment not found.' });
+      }
 
       res.json({ success: true, likes: comment.likedBy.length });
     } catch (err) {
@@ -418,17 +426,18 @@ class CommentService {
       const userId = req.user._id;
       const { commentId, replyId } = req.params;
 
-      const comment = await this.CommentModel.findById(commentId);
-      if (!comment) return res.status(404).json({ success: false, error: 'Comment not found.' });
+      // Use $addToSet with positional operator for nested document
+      const comment = await this.CommentModel.findOneAndUpdate(
+        { _id: commentId, 'replies._id': replyId },
+        { $addToSet: { 'replies.$.likedBy': userId } },  // Only adds if not already present
+        { new: true }
+      );
 
-      const reply = comment.replies.id(replyId);
-      if (!reply) return res.status(404).json({ success: false, error: 'Reply not found.' });
-
-      if (!reply.likedBy.includes(userId)) {
-        reply.likedBy.push(userId);
-        await comment.save();
+      if (!comment) {
+        return res.status(404).json({ success: false, error: 'Comment or reply not found.' });
       }
 
+      const reply = comment.replies.id(replyId);
       res.json({ success: true, likes: reply.likedBy.length });
     } catch (err) {
       res.status(500).json({ success: false, error: 'Failed to like reply.', message: err.message });
@@ -440,15 +449,18 @@ class CommentService {
       const userId = req.user._id;
       const { commentId, replyId } = req.params;
 
-      const comment = await this.CommentModel.findById(commentId);
-      if (!comment) return res.status(404).json({ success: false, error: 'Comment not found.' });
+      // Use $pull with positional operator for nested document
+      const comment = await this.CommentModel.findOneAndUpdate(
+        { _id: commentId, 'replies._id': replyId },
+        { $pull: { 'replies.$.likedBy': userId } },  // Removes userId atomically
+        { new: true }
+      );
+
+      if (!comment) {
+        return res.status(404).json({ success: false, error: 'Comment or reply not found.' });
+      }
 
       const reply = comment.replies.id(replyId);
-      if (!reply) return res.status(404).json({ success: false, error: 'Reply not found.' });
-
-      reply.likedBy = reply.likedBy.filter(id => id.toString() !== userId.toString());
-      await comment.save();
-
       res.json({ success: true, likes: reply.likedBy.length });
     } catch (err) {
       res.status(500).json({ success: false, error: 'Failed to unlike reply.', message: err.message });

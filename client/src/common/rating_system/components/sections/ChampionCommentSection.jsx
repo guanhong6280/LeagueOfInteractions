@@ -12,6 +12,7 @@ const ChampionCommentSection = memo(({ championName }) => {
     // Loading states
     isLoading,
     isSubmitting,
+    isRefreshing,
     error,
 
     // UI state
@@ -49,6 +50,7 @@ const ChampionCommentSection = memo(({ championName }) => {
         loadingReplies={loadingReplies}
         onSubmitComment={submitComment}
         onRefreshComments={refreshComments}
+        isRefreshing={isRefreshing}
         error={error}
         onClearError={clearError}
         enableFloatingForm={false}

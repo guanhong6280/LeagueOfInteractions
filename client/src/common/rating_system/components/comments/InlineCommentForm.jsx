@@ -1,7 +1,8 @@
 import React, { useState, memo } from 'react';
 import * as MUI from '@mui/material';
 import { 
-  Send as SendIcon
+  Send as SendIcon,
+  Close as CloseIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../../../AuthProvider';
 
@@ -9,7 +10,13 @@ const InlineCommentForm = memo(({
   onSubmit,
   isSubmitting,
   error,
-  onClearError
+  onClearError,
+  // New props for reply mode
+  isReplyMode = false,
+  replyToUsername = null,
+  parentCommentId = null,
+  onCancel = null,
+  characterLimit = 1000
 }) => {
   const { user } = useAuth();
   const [commentText, setCommentText] = useState('');
@@ -20,7 +27,10 @@ const InlineCommentForm = memo(({
     
     if (!commentText.trim()) return;
 
-    const result = await onSubmit(commentText);
+    // Call onSubmit with appropriate signature based on mode
+    const result = isReplyMode 
+      ? await onSubmit(parentCommentId, commentText)
+      : await onSubmit(commentText);
     
     if (result?.success) {
       setCommentText('');
@@ -39,7 +49,7 @@ const InlineCommentForm = memo(({
   };
 
   const characterCount = commentText.length;
-  const isOverLimit = characterCount > 1000;
+  const isOverLimit = characterCount > characterLimit;
   const hasText = commentText.trim().length > 0;
 
   if (!user) {
@@ -53,7 +63,7 @@ const InlineCommentForm = memo(({
   }
 
   return (
-    <MUI.Box>
+    <MUI.Box sx={{ mt: isReplyMode ? 2 : 0 }}>
       {/* Success Message */}
       {showSuccessMessage && (
         <MUI.Alert 
@@ -87,6 +97,39 @@ const InlineCommentForm = memo(({
           borderRadius: 0,
         }}
       >
+        {/* Reply Mode: @username cancel button */}
+        {isReplyMode && replyToUsername && (
+          <MUI.Box sx={{ mb: 2 }}>
+            <MUI.Chip
+              label={`@${replyToUsername}`}
+              onDelete={onCancel}
+              deleteIcon={<CloseIcon sx={{ fontSize: '1rem' }} />}
+              sx={{
+                height: 32,
+                fontSize: '0.875rem',
+                fontWeight: 'bold',
+                borderRadius: 0,
+                border: '2px solid black',
+                bgcolor: '#E3F2FD', // Light blue to indicate reply context
+                color: 'black',
+                boxShadow: '3px 3px 0px black',
+                '& .MuiChip-deleteIcon': {
+                  color: 'black',
+                  '&:hover': {
+                    color: '#d32f2f',
+                  }
+                },
+                '&:hover': {
+                  bgcolor: '#BBDEFB',
+                  transform: 'translate(-1px, -1px)',
+                  boxShadow: '4px 4px 0px black',
+                },
+                transition: 'all 0.1s ease-in-out',
+              }}
+            />
+          </MUI.Box>
+        )}
+
         <form onSubmit={handleSubmit}>
           <MUI.Box display="flex" alignItems="center" gap={2}>
 
@@ -98,7 +141,7 @@ const InlineCommentForm = memo(({
                 maxRows={4}
                 value={commentText}
                 onChange={handleInputChange}
-                placeholder="Type your comment here..."
+                placeholder={isReplyMode ? "Type your reply here..." : "Type your comment here..."}
                 disabled={isSubmitting}
                 error={isOverLimit}
                 variant="outlined"
@@ -127,7 +170,7 @@ const InlineCommentForm = memo(({
               />
               
               {/* Character Count & Error */}
-              {(isOverLimit || characterCount > 800) && (
+              {(isOverLimit || characterCount > characterLimit * 0.8) && (
                 <MUI.Typography 
                   variant="caption" 
                   fontWeight="bold"
@@ -135,8 +178,8 @@ const InlineCommentForm = memo(({
                   sx={{ display: 'block', mt: 1, ml: 0.5, textTransform: 'uppercase' }}
                 >
                   {isOverLimit 
-                    ? `${characterCount - 1000} characters over limit`
-                    : `${1000 - characterCount} characters remaining`
+                    ? `${characterCount - characterLimit} characters over limit`
+                    : `${characterLimit - characterCount} characters remaining`
                   }
                 </MUI.Typography>
               )}

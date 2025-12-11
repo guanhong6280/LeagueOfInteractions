@@ -55,7 +55,8 @@ exports.getVideoModerationQueue = async (req, res) => {
     const limit = parseLimit(req.query.limit);
     const moderationStatuses = parseVideoModerationStatuses(req.query.moderationStatus);
     const processingStatuses = parseCsvParam(req.query.processingStatus);
-    const providers = parseCsvParam(req.query.provider);
+    // Force Mux only as requested
+    const providers = ['mux']; 
     const cursor = toObjectIdCursor(req.query.cursor);
 
     const filter = {};
@@ -171,6 +172,11 @@ exports.getVideoModerationSummary = async (req, res) => {
   try {
     const aggregation = await Video.aggregate([
       {
+        $match: {
+          provider: 'mux', // Filter for Mux only
+        },
+      },
+      {
         $group: {
           _id: { $ifNull: ['$moderationStatus', 'pending'] },
           count: { $sum: 1 },
@@ -201,4 +207,3 @@ exports.getVideoModerationSummary = async (req, res) => {
     });
   }
 };
-

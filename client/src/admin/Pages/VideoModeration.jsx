@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import * as MUI from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import VideoModerationCard from '../components/moderation/VideoModerationCard';
+import MinimalAlert from '../components/moderation/common/MinimalAlert';
 import {
   approveVideoModeration,
   getVideoModerationQueue,
@@ -34,13 +35,33 @@ const VideoModeration = () => {
     refetchOnWindowFocus: false,
   });
 
-  const videos = useMemo(() => data ?? [], [data]);
+  // Extract the array from the response object
+  const videos = useMemo(() => {
+    // If data is the response object { success: true, data: [...], ... }
+    if (data?.data && Array.isArray(data.data)) {
+      return data.data;
+    }
+    // Fallback if data is already the array (unlikely given your console.log)
+    if (Array.isArray(data)) {
+      return data;
+    }
+    return [];
+  }, [data]);
 
   const removeVideoFromCache = useCallback(
     (videoId) => {
       queryClient.setQueryData(['moderation', 'videos'], (oldData) => {
-        if (!Array.isArray(oldData)) return oldData;
-        return oldData.filter((video) => video?._id !== videoId);
+        if (!oldData) return oldData;
+        
+        // Handle the nested structure in cache update too
+        const currentVideos = oldData.data || (Array.isArray(oldData) ? oldData : []);
+        const newVideos = currentVideos.filter((video) => video?._id !== videoId && video?.videoId !== videoId);
+        
+        // Return structure matching the original response
+        if (oldData.data) {
+          return { ...oldData, data: newVideos };
+        }
+        return newVideos;
       });
     },
     [queryClient]
@@ -142,9 +163,18 @@ const VideoModeration = () => {
             Video Moderation
           </MUI.Typography>
           <MUI.Button
-            variant="outlined"
+            variant="contained"
             onClick={() => refetch()}
             disabled={isLoading || isFetching}
+            sx={{
+              backgroundColor: '#000000',
+              color: '#ffffff',
+              textTransform: 'none',
+              fontWeight: 600,
+              '&:hover': {
+                backgroundColor: '#1a1a1a',
+              },
+            }}
           >
             {isFetching ? 'Refreshing...' : 'Refresh'}
           </MUI.Button>
@@ -172,18 +202,18 @@ const VideoModeration = () => {
         ) : (
           <MUI.Stack spacing={3}>
             {videos.length === 0 && !isFetching && (
-              <MUI.Alert severity="info">
-                All caught up! There are no videos waiting for review.
-              </MUI.Alert>
+            <MinimalAlert severity="info">
+              All caught up! There are no videos waiting for review.
+            </MinimalAlert>
             )}
 
             {videos.map((video) => (
               <VideoModerationCard
-                key={video._id}
+                key={video.videoId || video._id} // Handle potentially different ID key
                 video={video}
-                onApprove={(payload) => handleApprove(video._id, payload)}
-                onReject={(payload) => handleReject(video._id, payload)}
-                isProcessing={isMutating && pendingActionId === video._id}
+                onApprove={(payload) => handleApprove(video.videoId || video._id, payload)}
+                onReject={(payload) => handleReject(video.videoId || video._id, payload)}
+                isProcessing={isMutating && pendingActionId === (video.videoId || video._id)}
               />
             ))}
           </MUI.Stack>

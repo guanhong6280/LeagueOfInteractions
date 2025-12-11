@@ -7,6 +7,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../AuthProvider.jsx';
+import Logo from '../../common/Logo';
 
 
 export default function AdminNav() {
@@ -61,7 +62,7 @@ export default function AdminNav() {
       {/* profile / nav list / bottom utils go here */}
       <MUI.Stack >
         <MUI.Avatar src={user?.profilePictureURL ?? undefined} variant="square">
-          {!user?.profilePictureURL && displayName[0]}
+          {!user?.profilePictureURL && (user?.username?.[0] || 'A')}
         </MUI.Avatar>
         <MUI.Typography variant="admin_name">
           {user?.username}
@@ -80,21 +81,20 @@ export default function AdminNav() {
               component={NavLink}
               to={to}
               variant="text"
-              color="inherit"
               startIcon={<Icon />}
               sx={{
                 justifyContent: 'flex-start',
+                // textColor: 'navigation_text',
+                color: '#878787',
                 px: 1.5,
                 borderRadius: 2,
                 gap: 1.5,
                 textTransform: 'none',
                 fontWeight: 500,
                 '& .MuiButton-startIcon': { color: 'text.secondary', mr: 1.5 },
-                '&:hover': { bgcolor: 'rgba(255,255,255,0.04)' },
                 '&.active': {
-                  bgcolor: 'rgba(0,112,243,0.14)',
-                  color: 'primary.main',
-                  '& .MuiButton-startIcon': { color: 'primary.main' },
+                  color: 'white',
+                  '& .MuiButton-startIcon': { color: 'white' },
                 },
               }}
             >
@@ -103,6 +103,17 @@ export default function AdminNav() {
           </Box>
         ))}
       </MUI.Stack>
+
+      <MUI.Box
+        marginTop="auto"
+        display="flex"
+        padding="6px"
+        width="fit-content"
+        bgcolor="background.default"
+        borderRadius="10px"
+      >
+        <Logo marginLeft={false} />
+      </MUI.Box>
     </Box>
   );
 }

@@ -74,8 +74,8 @@ const CommentModerationCard = ({
             alignItems="center"
             gap="10px"
           >
-            <MUI.Typography>{comment?.username || 'Unknown user'}</MUI.Typography>
-            <MUI.Typography variant="date_text">
+            <MUI.Typography color="white">{comment?.username || 'Unknown user'}</MUI.Typography>
+            <MUI.Typography variant="date_text" color="#878787">
               {formatDate(comment?.createdAt)}
             </MUI.Typography>
             {subjectType === 'champion' && (
@@ -101,14 +101,14 @@ const CommentModerationCard = ({
             />
           </MUI.Box>
 
-          <MUI.Typography variant="body2">
+          <MUI.Typography variant="body2" color="white">
             {comment?.comment || 'No comment text available.'}
           </MUI.Typography>
         </MUI.Stack>
 
         {/* Subject (Skin or Champion) Information */}
         <MUI.Stack gap="10px">
-          <MUI.Typography>
+          <MUI.Typography color="white">
             {subjectName}
           </MUI.Typography>
           <MUI.Box display="flex">
@@ -134,7 +134,7 @@ const CommentModerationCard = ({
                 alignItems="center"
                 justifyContent="center"
               >
-                <MUI.Typography variant="body2">No preview</MUI.Typography>
+                <MUI.Typography variant="body2" color="white">No preview</MUI.Typography>
               </MUI.Box>
             )}
           </MUI.Box>
@@ -144,19 +144,31 @@ const CommentModerationCard = ({
         <MUI.Stack gap="10px">
           <MUI.Button
             variant="contained"
-            color="primary"
-            startIcon={<CheckIcon />}
             onClick={onApprove}
             disabled={isProcessing}
+            sx={{
+              backgroundColor: '#ffffff',
+              color: '#000000',
+              fontWeight: 600,
+              '&:hover': {
+                backgroundColor: '#e0e0e0',
+              },
+            }}
           >
             Approve
           </MUI.Button>
           <MUI.Button
-            variant="contained"
-            color="error"
-            startIcon={<CloseIcon />}
+            variant="outlined"
             onClick={onReject}
             disabled={isProcessing}
+            sx={{
+              borderColor: '#ffffff',
+              color: '#ffffff',
+              '&:hover': {
+                borderColor: '#ffffff',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              },
+            }}
           >
             Reject
           </MUI.Button>

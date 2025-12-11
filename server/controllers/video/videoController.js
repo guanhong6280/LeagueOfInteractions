@@ -1,5 +1,5 @@
 const Video = require('../../models/Video');
-const { createDirectUpload, verifyWebhookSignature, deleteAsset, fetchAssetMetadata } = require('../../utils/mux');
+const { createDirectUpload, verifyWebhookSignature, fetchAssetMetadata } = require('../../utils/mux');
 const { buildInteractionKey } = require('../../utils/interaction');
 const { addSseClient, removeSseClient, broadcastToVideo, writeSse } = require('../../utils/sseManager');
 
@@ -298,86 +298,5 @@ exports.muxWebhook = async (req, res) => {
   } catch (e) {
     console.error('Error handling Mux webhook:', e);
     return res.status(500).send('Webhook handling error');
-  }
-};
-
-// Admin: list pending videos (ready or processing, not approved)
-exports.listPendingVideos = async (req, res) => {
-  try {
-    const pendingFilter = {
-      isApproved: false,
-      status: { $in: ['processing', 'ready'] },
-      $or: [
-        { moderationStatus: 'pending' },
-        { moderationStatus: { $exists: false } },
-      ],
-    };
-    const videos = await Video.find(pendingFilter)
-      .populate('contributor', 'username email')
-      .sort({ dateUploaded: -1 });
-    res.json(videos);
-  } catch (error) {
-    console.error('Error listing pending videos:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-exports.approveVideo = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { note = '' } = req.body || {};
-    const video = await Video.findById(id);
-    if (!video) return res.status(404).json({ message: 'Video not found' });
-
-    video.isApproved = true;
-    video.moderationStatus = 'approved';
-    video.moderatedBy = req.user?._id || null;
-    video.moderatedAt = new Date();
-    video.moderatorNotes = note;
-
-    await video.save();
-    await video.populate('contributor', 'username email');
-
-    broadcastToVideo(video._id, 'approved', { status: 'approved', note });
-
-    res.json(video);
-  } catch (error) {
-    console.error('Error approving video:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-exports.rejectVideo = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { deleteRemote, note = '' } = req.body || {};
-    const video = await Video.findById(id);
-    if (!video) return res.status(404).json({ message: 'Video not found' });
-
-    if (deleteRemote && video.provider === 'mux' && video.assetId) {
-      try { await deleteAsset(video.assetId); } catch (e) { console.error('Failed to delete Mux asset:', e.message); }
-    }
-
-    video.isApproved = false;
-    video.moderationStatus = 'rejected';
-    video.moderatedBy = req.user?._id || null;
-    video.moderatedAt = new Date();
-    video.moderatorNotes = note;
-    if (deleteRemote && video.provider === 'mux') {
-      video.status = 'failed';
-      video.playbackUrl = null;
-      video.playbackId = null;
-      video.assetId = null;
-    }
-
-    await video.save();
-    await video.populate('contributor', 'username email');
-
-    broadcastToVideo(video._id, 'rejected', { status: 'rejected', note, deleteRemote: !!deleteRemote });
-
-    res.json({ message: 'Video rejected', video });
-  } catch (error) {
-    console.error('Error rejecting video:', error);
-    res.status(500).json({ message: 'Server error' });
   }
 };

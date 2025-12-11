@@ -13,6 +13,7 @@ export const adminTheme = createTheme({
       progress: '#1a1a1a',
       card: '#000000',
       description: '#111111',
+      side_panel:"#F9FAFD"
     },
 
     // Semantic rails / surfaces unique to your admin
@@ -56,7 +57,7 @@ export const adminTheme = createTheme({
     admin_name: { fontSize: "28px", fontWeight: 600 },
     admin_email: { fontSize: "16px", colors: alpha('#ffffff', 0.5) },
     title_text: { fontSize: "32px", fontWeight: 600, color: "#010101" },
-    navigation_text: { fontSize: "22px", colors: alpha('#ffffff', 0.5) },
+    navigation_text: { fontSize: "22px", color: "#878787" },
     date_text: { fontSize: "10px", color: '#808080' },
     chip_text: { fontSize: "12px" },
     h6: { fontWeight: 600, letterSpacing: '-0.01em' },

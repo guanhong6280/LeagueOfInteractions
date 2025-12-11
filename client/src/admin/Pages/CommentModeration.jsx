@@ -6,6 +6,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import CommentModerationCard from '../components/moderation/CommentModerationCard';
+import MinimalAlert from '../components/moderation/common/MinimalAlert';
 import {
   approveCommentModeration,
   getCommentModerationQueue,
@@ -155,14 +156,51 @@ const CommentModeration = () => {
   return (
     <>
       <MUI.Stack spacing={4}>
-        <MUI.Stack spacing={1}>
+        <MUI.Stack
+          direction="row"
+          spacing={2}
+          alignItems="center"
+          justifyContent="space-between"
+        >
           <MUI.Typography variant="title_text">
             Comment Moderation
           </MUI.Typography>
-          <MUI.Divider />
+          <MUI.Button
+            variant="contained"
+            onClick={() => refetch()}
+            disabled={isLoading || isFetching}
+            sx={{
+              backgroundColor: '#000000',
+              color: '#ffffff',
+              textTransform: 'none',
+              fontWeight: 600,
+              '&:hover': {
+                backgroundColor: '#1a1a1a',
+              },
+            }}
+          >
+            {isFetching ? 'Refreshing...' : 'Refresh'}
+          </MUI.Button>
         </MUI.Stack>
+        <MUI.Divider />
 
-        <MUI.Tabs value={tabIndex} onChange={handleTabChange} aria-label="moderation tabs">
+        <MUI.Tabs
+          value={tabIndex}
+          onChange={handleTabChange}
+          aria-label="moderation tabs"
+          sx={{
+            '& .MuiTabs-indicator': {
+              backgroundColor: '#000000',
+            },
+            '& .MuiTab-root': {
+              color: '#878787',
+              '&.Mui-selected': {
+                color: '#000000',
+                fontWeight: 'bold',
+              },
+            },
+          }}
+        >
           <MUI.Tab label="Skin Comments" />
           <MUI.Tab label="Champion Comments" />
         </MUI.Tabs>
@@ -187,9 +225,9 @@ const CommentModeration = () => {
         ) : (
           <MUI.Stack spacing={3}>
             {comments.length === 0 && !isFetching && (
-              <MUI.Alert severity="info">
+              <MinimalAlert severity="info">
                 All caught up! There are no {currentType} comments waiting for review.
-              </MUI.Alert>
+              </MinimalAlert>
             )}
 
             {comments.map((comment) => (

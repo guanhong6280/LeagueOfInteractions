@@ -26,9 +26,4 @@ router.post('/webhook/mux',
   videoController.muxWebhook);
 router.get('/:id/events', ensureApiAuthenticated, videoController.subscribeVideoEvents);
 
-// Admin moderation
-router.get('/admin/pending', ensureApiAuthenticated, ensureApiAdmin, videoController.listPendingVideos);
-router.post('/admin/:id/approve', ensureApiAuthenticated, ensureApiAdmin, videoController.approveVideo);
-router.post('/admin/:id/reject', ensureApiAuthenticated, ensureApiAdmin, videoController.rejectVideo);
-
 module.exports = router;

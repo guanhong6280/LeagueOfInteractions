@@ -78,14 +78,9 @@ const AdminSettings = () => {
 
   return (
     <MUI.Box>
-      <MUI.Typography variant="h4" fontWeight="900" gutterBottom>
+      <MUI.Typography variant="title_text" gutterBottom>
         Admin Settings
       </MUI.Typography>
-      <MUI.Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-        Configure system parameters and run maintenance tasks.
-      </MUI.Typography>
-
-      <MUI.Divider sx={{ mb: 4 }} />
 
       <MUI.Paper 
         variant="outlined" 
@@ -96,16 +91,10 @@ const AdminSettings = () => {
         }}
       >
         <MUI.Stack direction="row" alignItems="center" gap={2} mb={2}>
-          <SyncIcon color="primary" />
           <MUI.Typography variant="h6" fontWeight="bold">
             Skin Database Synchronization
           </MUI.Typography>
         </MUI.Stack>
-
-        <MUI.Typography variant="body2" sx={{ mb: 3, maxWidth: '600px' }}>
-          Manually trigger a synchronization with CommunityDragon to fetch the latest champion skins, 
-          update rarities, and refresh metadata. This is usually handled by a weekly scheduled task.
-        </MUI.Typography>
 
         <MUI.Button 
           variant="contained" 
@@ -115,7 +104,7 @@ const AdminSettings = () => {
           disabled={syncLoading}
           sx={{ fontWeight: 'bold' }}
         >
-          {syncLoading ? 'Syncing...' : 'Sync Skins Now'}
+          {syncLoading ? 'Syncing...' : 'Sync'}
         </MUI.Button>
 
         {syncProgress && (

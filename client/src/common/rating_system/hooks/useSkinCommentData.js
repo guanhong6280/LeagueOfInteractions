@@ -11,7 +11,7 @@ import {
   deleteSkinComment,
   deleteSkinReply,
 } from '../../../api/championApi';
-import { useAuth } from '../../../AuthProvider';
+import useCurrentUser from '../../../hooks/useCurrentUser';
 
 // Query key factory to prevent typos and centralize key management
 const queryKeys = {
@@ -24,7 +24,7 @@ const COMMENT_MAX_LENGTH = 1000;
 const REPLY_MAX_LENGTH = 500;
 
 const useCommentData = (currentSkinId) => {
-  const { user } = useAuth();
+  const { user } = useCurrentUser();
   const queryClient = useQueryClient();
 
   // UI state

@@ -4,7 +4,7 @@ import {
   Send as SendIcon,
   Close as CloseIcon
 } from '@mui/icons-material';
-import { useAuth } from '../../../../AuthProvider';
+import useCurrentUser from '../../../../hooks/useCurrentUser';
 
 const InlineCommentForm = memo(({ 
   onSubmit,
@@ -18,7 +18,7 @@ const InlineCommentForm = memo(({
   onCancel = null,
   characterLimit = 1000
 }) => {
-  const { user } = useAuth();
+  const { user } = useCurrentUser();
   const [commentText, setCommentText] = useState('');
   const [showSuccessMessage, setShowSuccessMessage] = useState('');
 

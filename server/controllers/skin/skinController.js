@@ -68,6 +68,50 @@ exports.getSkinById = async (req, res) => {
 };
 
 /**
+ * Get multiple skins by their IDs (batch fetch).
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getSkinsByIds = async (req, res) => {
+  try {
+    const { ids } = req.query; // e.g., ?ids=1,2,3,4,5
+    
+    if (!ids) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameter: ids',
+      });
+    }
+
+    // Parse comma-separated IDs and convert to numbers
+    const skinIds = ids.split(',').map(id => Number(id.trim())).filter(id => !isNaN(id));
+    
+    if (skinIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'No valid skin IDs provided',
+      });
+    }
+
+    // Fetch all skins matching the provided IDs
+    const skins = await Skin.find({ skinId: { $in: skinIds } }).lean();
+
+    res.json({
+      success: true,
+      count: skins.length,
+      data: skins,
+    });
+  } catch (err) {
+    console.error('Error fetching skins by IDs:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch skins.',
+      message: err.message,
+    });
+  }
+};
+
+/**
  * Get AI-generated summary for a specific skin.
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object

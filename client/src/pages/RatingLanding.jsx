@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import * as MUI from '@mui/material';
 import { Refresh as RefreshIcon, Search as SearchIcon, FilterList as FilterListIcon, ArrowUpward as ArrowUpwardIcon } from '@mui/icons-material';
-import { useChampionStats } from '../contextProvider/ChampionStatsProvider';
+import { useChampionStats } from '../hooks/useChampionStats';
 import ChampionPreviewCard from '../common/rating_system/components/cards/ChampionPreviewCard';
 import CircularProgress from '@mui/material/CircularProgress';
 

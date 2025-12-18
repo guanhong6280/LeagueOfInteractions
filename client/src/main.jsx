@@ -8,11 +8,10 @@ import MainLayout from './layout/mainLayout.jsx';
 import './index.css';
 import ViewInteractions from './pages/ViewInteractions.jsx';
 import AddInteractions from './pages/AddInteractions.jsx';
-import AuthProvider from './AuthProvider.jsx';
 import ChampionProvider from './contextProvider/ChampionProvider.jsx';
-import { ChampionStatsProvider } from './contextProvider/ChampionStatsProvider.jsx';
 import { VersionProvider } from './contextProvider/VersionProvider.jsx';
 import { QueryProvider } from './contextProvider/QueryProvider.jsx';
+import Profile from './pages/Profile.jsx';
 import Donate from './pages/Donate.jsx';
 import AccountManagement from './pages/AccountManagement.jsx';
 import Contact from './pages/Contact.jsx';
@@ -33,51 +32,47 @@ const stripePromise = loadStripe('your-publishable-key-here');
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <QueryProvider>
-      <AuthProvider>
-        <VersionProvider>
-          <ChampionProvider>
-            <ChampionStatsProvider>
-              <Elements stripe={stripePromise}>
-                <BrowserRouter>
-                <Routes>
-                  <Route path="/" element={<MainLayout />}>
-                    {/* The default route that shows creators */}
-                    <Route index element={<ViewInteractions />} />
-                    <Route path="add" element={<AddInteractions />} />
-                    <Route path="rating_landing" element={<RatingLanding />} />
-                    <Route path="donation" element={<Donate />} />
-                    <Route path="contact" element={<Contact />} />
-                    <Route path="toast-test" element={<ToastTest />} />
-                    <Route path="setting" element={<AccountManagement />} />
-                    <Route path="/champion-skin-details/:championName" element={<ChampionSkinRatingPage />} />
-                    <Route path="/champion-rating/:championName" element={<ChampionRatingPage />} />
-                  </Route>
-                  
-                  {/* Admin Routes - Protected by AdminGuard */}
-                  <Route path="admin/*"
-                    element={
-                      <AdminGuard>
-                        <AdminLayout />
-                      </AdminGuard>
-                    }
-                  >
-                    <Route path="comments" element={<CommentModeration />} />
-                    <Route path="videos" element={<VideoModeration />} />
-                    <Route path="settings" element={<AdminSettings />} />
-                    {/* <Route index element={<AdminDashboard />} /> */}
-                    {/* Future admin routes will go here */}
-                    {/* <Route path="users" element={<UserManagement />} /> */}
-                    {/* <Route path="comments" element={<CommentModeration />} /> */}
-                    {/* <Route path="analytics" element={<Analytics />} /> */}
-                  </Route>
-                </Routes>
-                <ToastProvider />
-                </BrowserRouter>
-              </Elements>
-            </ChampionStatsProvider>
-          </ChampionProvider>
-        </VersionProvider>
-      </AuthProvider>
+      <VersionProvider>
+        <ChampionProvider>
+            <Elements stripe={stripePromise}>
+              <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<MainLayout />}>
+                  {/* The default route that shows creators */}
+                  <Route index element={<ViewInteractions />} />
+                  <Route path="add" element={<AddInteractions />} />
+                  <Route path="rating_landing" element={<RatingLanding />} />
+                  <Route path="profile" element={<Profile />} />
+                  <Route path="donation" element={<Donate />} />
+                  <Route path="contact" element={<Contact />} />
+                  <Route path="toast-test" element={<ToastTest />} />
+                  <Route path="settings" element={<AccountManagement />} />
+                  <Route path="/champion-skin-details/:championName" element={<ChampionSkinRatingPage />} />
+                  <Route path="/champion-rating/:championName" element={<ChampionRatingPage />} />
+                </Route>
+                
+                {/* Admin Routes - Protected by AdminGuard */}
+                <Route path="admin/*"
+                  element={
+                    <AdminGuard>
+                      <AdminLayout />
+                    </AdminGuard>
+                  }
+                >
+                  <Route path="comments" element={<CommentModeration />} />
+                  <Route path="videos" element={<VideoModeration />} />
+                  <Route path="settings" element={<AdminSettings />} />
+                  {/* <Route index element={<AdminDashboard />} /> */}
+                  {/* Future admin routes will go here */}
+                  {/* <Route path="users" element={<UserManagement />} /> */}
+                  {/* <Route path="analytics" element={<Analytics />} /> */}
+                </Route>
+              </Routes>
+              <ToastProvider />
+              </BrowserRouter>
+            </Elements>
+        </ChampionProvider>
+      </VersionProvider>
     </QueryProvider>
   </StrictMode>,
 );

@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { submitSkinRating, getUserSkinRating } from '../../../api/championApi';
-import { useAuth } from '../../../AuthProvider';
 import { toastMessages } from '../../../toast/useToast';
 import { useToast } from '../../../toast/useToast';
+import useCurrentUser from '../../../hooks/useCurrentUser';
 
-const useRatingData = (currentSkinId) => {
-  const { user } = useAuth();
+const useSkinRatingData = (currentSkinId) => {
+  const { user } = useCurrentUser();
   const [userRating, setUserRating] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -106,4 +106,4 @@ const useRatingData = (currentSkinId) => {
   };
 };
 
-export default useRatingData; 
+export default useSkinRatingData; 

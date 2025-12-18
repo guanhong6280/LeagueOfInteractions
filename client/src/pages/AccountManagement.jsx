@@ -1,185 +1,698 @@
 import React from 'react';
 import * as MUI from '@mui/material';
-import axios from 'axios';
+import { 
+  Logout, 
+  Save, 
+  DeleteForever,
+  CheckCircle,
+  Cancel,
+  Person,
+  Face,
+  SportsEsports,
+  Security,
+  VideogameAsset
+} from '@mui/icons-material';
 
 import AccountSettingBox from '../common/setting/AccountSettingBox';
 import SettingTextField from '../common/setting/SettingTextField';
 import SelectField from '../common/setting/SelectField';
-import { useAuth } from '../AuthProvider';
-import { sexOptions, rankOptions, yearJoinedOptions } from '../common/setting/settingConstants';
+import { useChampion } from '../contextProvider/ChampionProvider';
+import { 
+  sexOptions, 
+  rankOptions, 
+  yearJoinedOptions, 
+  popularCountries,
+  roleOptions,
+  gameModeOptions
+} from '../common/setting/settingConstants';
+import { useNavigate } from 'react-router-dom';
+import useAccountManagement from '../hooks/useAccountManagement';
+import useCurrentUser from '../hooks/useCurrentUser';
+import useLogout from '../hooks/useLogout';
 
 const AccountManagement = () => {
-  const [username, setUsername] = React.useState('');
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user, isLoading } = useCurrentUser();
+  const { mutateAsync: logout } = useLogout();
+  const { mutateAsync: updateAccountInformation } = useAccountManagement();
+  const { championNames } = useChampion();
+  
+  // Refs for scrolling
+  const summonerSettingsRef = React.useRef(null);
+  const personalInfoRef = React.useRef(null);
+  const profileCustomRef = React.useRef(null);
+  const riotAccountsRef = React.useRef(null);
+  const accountActionsRef = React.useRef(null);
+
+  // 1. Summoner Settings (Game Identity)
   const [rank, setRank] = React.useState('');
+  const [yearJoined, setYearJoined] = React.useState('');
+  const [mainRoles, setMainRoles] = React.useState([]);
+  const [preferredGameModes, setPreferredGameModes] = React.useState([]);
+  const [favoriteChampions, setFavoriteChampions] = React.useState([]);
+  const [favoriteSkins, setFavoriteSkins] = React.useState([]); // IDs
+  const [initialSummonerData, setInitialSummonerData] = React.useState(null);
+
+  // 2. Personal Information (Account Security) - Read Only / Disabled
+  const [email, setEmail] = React.useState('');
+  
+  // 3. Profile Customization (Public Profile)
+  const [username, setUsername] = React.useState('');
   const [age, setAge] = React.useState('');
   const [sex, setSex] = React.useState('');
-  const [yearJoined, setYearJoined] = React.useState('');
+  const [homeCountry, setHomeCountry] = React.useState('');
+  const [profilePictureURL, setProfilePictureURL] = React.useState('');
+  const [initialProfileData, setInitialProfileData] = React.useState(null);
 
-  const [initialData, setInitialData] = React.useState(null);
+  // 4. Riot Accounts
+  const [riotAccounts, setRiotAccounts] = React.useState([]);
 
+  // UI States
+  const [saveStatus, setSaveStatus] = React.useState({ summoner: '', profile: '' });
 
   React.useEffect(() => {
     if (user) {
+      // 1. Summoner Settings
+      setRank(user.rank || '');
+      setYearJoined(user.timeJoinedTheGame || '');
+      setMainRoles(user.mainRoles || []);
+      setPreferredGameModes(user.preferredGameModes || []);
+      setFavoriteChampions(user.favoriteChampions || []);
+      setFavoriteSkins(user.favoriteSkins || []);
+      
+      setInitialSummonerData({
+        rank: user.rank || '',
+        yearJoined: user.timeJoinedTheGame || '',
+        mainRoles: user.mainRoles || [],
+        preferredGameModes: user.preferredGameModes || [],
+        favoriteChampions: user.favoriteChampions || [],
+        favoriteSkins: user.favoriteSkins || [],
+      });
+
+      // 2. Personal Info
+      setEmail(user.email || '');
+
+      // 3. Profile Customization
       setUsername(user.username || '');
       setAge(user.age || '');
-      setRank(user.rank || '');
       setSex(user.sex || '');
-      setYearJoined(user.timeJoinedTheGame || '');
-      setInitialData({
+      setHomeCountry(user.homeCountry || '');
+      setProfilePictureURL(user.profilePictureURL || '');
+
+      setInitialProfileData({
         username: user.username || '',
         age: user.age || '',
-        rank: user.rank || '',
         sex: user.sex || '',
-        yearJoined: user.timeJoinedTheGame || '',
+        homeCountry: user.homeCountry || '',
+        profilePictureURL: user.profilePictureURL || '',
       });
+
+      // 4. Riot Accounts
+      setRiotAccounts(user.riotAccounts || []);
     }
   }, [user]);
 
-  const handleUsernameChange = (event) => {
-    setUsername(event.target.value);
-  };
-  const handleSexChange = (event) => {
-    setSex(event.target.value);
-  };
-
-  const handleRankChange = (event) => {
-    setRank(event.target.value);
-  };
-
-  const handleAgeChange = (event) => {
-    setAge(event.target.value);
-  };
-
-  const handleYearJoinedChange = (event) => {
-    setYearJoined(event.target.value);
-  };
-
-  const isFormChanged = () => {
-    if (!initialData) return false; // prevent button flickering during loading
+  if (isLoading) {
     return (
-      username !== initialData.username ||
-      age !== initialData.age ||
-      rank !== initialData.rank ||
-      sex !== initialData.sex ||
-      yearJoined !== initialData.yearJoined
+      <MUI.Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <MUI.CircularProgress size={60} sx={{ color: 'black' }} />
+      </MUI.Box>
+    );
+  }
+
+  if (!user) {
+    return (
+      <MUI.Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 4 }}>
+        <MUI.Box sx={{ bgcolor: 'white', border: '4px solid black', boxShadow: '8px 8px 0px 0px #000000', p: 4, textAlign: 'center' }}>
+          <MUI.Typography fontSize="24px" fontWeight="900" mb={1}>
+            Please sign in
+          </MUI.Typography>
+          <MUI.Typography color="#666">
+            You need to be logged in to manage your account settings.
+          </MUI.Typography>
+        </MUI.Box>
+      </MUI.Box>
+    );
+  }
+
+  const isSummonerFormChanged = () => {
+    if (!initialSummonerData) return false;
+    return (
+      rank !== initialSummonerData.rank ||
+      yearJoined !== initialSummonerData.yearJoined ||
+      JSON.stringify(mainRoles) !== JSON.stringify(initialSummonerData.mainRoles) ||
+      JSON.stringify(preferredGameModes) !== JSON.stringify(initialSummonerData.preferredGameModes) ||
+      JSON.stringify(favoriteChampions) !== JSON.stringify(initialSummonerData.favoriteChampions) ||
+      JSON.stringify(favoriteSkins) !== JSON.stringify(initialSummonerData.favoriteSkins)
     );
   };
 
-  const handleSave = async () => {
+  const isProfileFormChanged = () => {
+    if (!initialProfileData) return false;
+    return (
+      username !== initialProfileData.username ||
+      age !== initialProfileData.age ||
+      sex !== initialProfileData.sex ||
+      homeCountry !== initialProfileData.homeCountry ||
+      profilePictureURL !== initialProfileData.profilePictureURL
+    );
+  };
+
+  const handleSaveSummonerSettings = async () => {
+    try {
+      const updatedData = {
+        rank,
+        timeJoinedTheGame: yearJoined,
+        mainRoles,
+        preferredGameModes,
+        favoriteChampions,
+        favoriteSkins
+      };
+
+      await updateAccountInformation(updatedData);
+
+      setInitialSummonerData({
+        rank,
+        yearJoined,
+        mainRoles,
+        preferredGameModes,
+        favoriteChampions,
+        favoriteSkins
+      });
+      setSaveStatus({ ...saveStatus, summoner: 'success' });
+      setTimeout(() => setSaveStatus({ ...saveStatus, summoner: '' }), 3000);
+    } catch (error) {
+      console.error('Error updating summoner settings:', error);
+      setSaveStatus({ ...saveStatus, summoner: 'error' });
+      setTimeout(() => setSaveStatus({ ...saveStatus, summoner: '' }), 3000);
+    }
+  };
+
+  const handleSaveProfileCustomization = async () => {
     try {
       const updatedData = {
         username,
         age,
-        rank,
         sex,
-        timeJoinedTheGame: yearJoined, // assuming yearJoined is your input
+        homeCountry,
+        profilePictureURL,
       };
 
-      const { data } = await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5174'}/api/users/updateUserInformation`, updatedData, {
-        withCredentials: true,
-      });
+      await updateAccountInformation(updatedData);
 
-      console.log('Update success:', data);
-      alert('Profile updated successfully!');
-      // Optional: refresh user data here if needed
+      setInitialProfileData(updatedData);
+      setSaveStatus({ ...saveStatus, profile: 'success' });
+      setTimeout(() => setSaveStatus({ ...saveStatus, profile: '' }), 3000);
     } catch (error) {
       console.error('Error updating profile:', error);
-      alert('Failed to update profile');
+      setSaveStatus({ ...saveStatus, profile: 'error' });
+      setTimeout(() => setSaveStatus({ ...saveStatus, profile: '' }), 3000);
     }
   };
 
+  const handleAddChampion = (championName) => {
+    if (favoriteChampions.length < 5 && !favoriteChampions.includes(championName)) {
+      setFavoriteChampions([...favoriteChampions, championName]);
+    }
+  };
+
+  const handleRemoveChampion = (championName) => {
+    setFavoriteChampions(favoriteChampions.filter(c => c !== championName));
+  };
+
+  const handleLogout = async () => {
+    await logout();
+  };
+
+  const scrollToSection = (ref) => {
+    if (ref.current) {
+      const yOffset = -100; 
+      const element = ref.current;
+      const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  };
+
+  const menuItems = [
+    { label: 'Summoner Settings', icon: <VideogameAsset />, ref: summonerSettingsRef },
+    { label: 'Personal Information', icon: <Person />, ref: personalInfoRef },
+    { label: 'Profile Customization', icon: <Face />, ref: profileCustomRef },
+    { label: 'Riot Accounts', icon: <SportsEsports />, ref: riotAccountsRef },
+    { label: 'Account Actions', icon: <Security />, ref: accountActionsRef },
+  ];
+
   return (
     <MUI.Box
-      height="100%"
-      width="100%"
-      position="relative"
-      bgcolor="black"
-      paddingY="100px"
+      sx={{
+        minHeight: '100vh',
+        width: '100%',
+        paddingY: '100px',
+        paddingX: '20px',
+        display: 'flex',
+        flexDirection: { xs: 'column', md: 'row' },
+      }}
     >
-      <MUI.Stack
-        height="500px"
-        width="500px"
-        position="fixed"
-        top="100px"
-        left="60px"
-        bgcolor="transparent"
+      {/* Sidebar - Fixed Position */}
+      <MUI.Box
         sx={{
-          color: 'white',
+          position: { xs: 'relative', md: 'fixed' },
+          top: { xs: 'auto', md: '120px' },
+          left: { xs: 'auto', md: '60px' },
+          width: { xs: '100%', md: '280px' },
+          zIndex: 10,
+          mb: { xs: 4, md: 0 },
         }}
       >
-        <MUI.Typography fontSize="28px">
-          <span>Account</span>
-          <br />
-          <span>Management</span>
-        </MUI.Typography>
-      </MUI.Stack>
-      <MUI.Stack marginLeft="30vw" spacing="20px">
-        <AccountSettingBox
-          title="Personal Information"
-          description="This information will be private and will not be shared"
+        <MUI.Typography
+          sx={{
+            fontSize: '36px',
+            fontWeight: '900',
+            color: 'black',
+            textTransform: 'uppercase',
+            lineHeight: '1.1',
+            letterSpacing: '-2px',
+            textShadow: '4px 4px 0px rgba(255,255,255,0.3)',
+            marginLeft: '24px',
+            marginBottom: '20px',
+          }}
         >
-          <SettingTextField
-            label="username"
-            value={username}
-            onChange={handleUsernameChange}
-            required={true}
-            id="username-input"
-            type="text"
-          />
-          <MUI.Box display="flex" gap="20px">
-            <SettingTextField
-              label="Age"
-              value={age}
-              onChange={handleAgeChange}
-              required={true}
-              id="age-input"
-              type="number"
-            />
+          Account
+          <br />
+          Settings
+        </MUI.Typography>
+
+        <MUI.List component="nav" sx={{ p: 0 }}>
+          {menuItems.map((item) => (
+            <MUI.ListItemButton
+              key={item.label}
+              onClick={() => scrollToSection(item.ref)}
+              sx={{
+                mb: 1.5,
+                border: '2px solid transparent',
+                borderRadius: '0px',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  border: '2px solid black',
+                  boxShadow: '4px 4px 0px 0px #000000',
+                  transform: 'translate(-2px, -2px)',
+                  bgcolor: 'white',
+                },
+              }}
+            >
+              <MUI.ListItemIcon sx={{ color: 'black', minWidth: '40px' }}>
+                {item.icon}
+              </MUI.ListItemIcon>
+              <MUI.ListItemText 
+                primary={item.label} 
+                primaryTypographyProps={{ 
+                  fontWeight: 800, 
+                  textTransform: 'uppercase',
+                  fontSize: '14px',
+                  letterSpacing: '0.5px',
+                }} 
+              />
+            </MUI.ListItemButton>
+          ))}
+        </MUI.List>
+      </MUI.Box>
+
+      {/* Main Content */}
+      <MUI.Stack
+        sx={{
+          marginLeft: { xs: '0', md: '350px' },
+          marginRight: { xs: '0', md: '50px' },
+          spacing: '30px',
+          gap: '30px',
+          flex: 1,
+          maxWidth: '1000px',
+        }}
+      >
+        {/* 1. Summoner Settings */}
+        <MUI.Box ref={summonerSettingsRef}>
+        <AccountSettingBox
+            title="Summoner Settings"
+            description="Manage your League of Legends identity and preferences"
+          >
+          <MUI.Box display="flex" gap="20px" flexWrap="wrap">
+            <MUI.Box flex="1" minWidth="200px">
             <SelectField
               label="Rank"
               value={rank}
-              onChange={handleRankChange}
+                onChange={(e) => setRank(e.target.value)}
               options={rankOptions}
             />
-          </MUI.Box>
-          <MUI.Box display="flex" gap="20px">
+            </MUI.Box>
+            <MUI.Box flex="1" minWidth="200px">
             <SelectField
-              label="Sex"
-              value={sex}
-              onChange={handleSexChange}
-              options={sexOptions}
-            />
-            <SelectField
-              label="Year Joined"
+                label="Year Joined LoL"
               value={yearJoined}
-              onChange={handleYearJoinedChange}
+                onChange={(e) => setYearJoined(e.target.value)}
               options={yearJoinedOptions}
             />
+            </MUI.Box>
           </MUI.Box>
+
+            <MUI.Box display="flex" gap="20px" flexWrap="wrap">
+              <MUI.Box flex="1" minWidth="200px">
+                <SelectField
+                  label="Main Roles (Max 2)"
+                  value={mainRoles}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val.length <= 2) setMainRoles(typeof val === 'string' ? val.split(',') : val);
+                  }}
+                  options={roleOptions}
+                  multiple={true}
+                />
+              </MUI.Box>
+              <MUI.Box flex="1" minWidth="200px">
+          <SelectField
+                  label="Preferred Game Modes (Max 2)"
+                  value={preferredGameModes}
+                  onChange={(e) => {
+                     const val = e.target.value;
+                     if (val.length <= 2) setPreferredGameModes(typeof val === 'string' ? val.split(',') : val);
+                  }}
+                  options={gameModeOptions}
+                  multiple={true}
+                />
+              </MUI.Box>
+            </MUI.Box>
+
+            {/* Favorite Champions */}
+            <MUI.Box>
+              <MUI.Typography fontWeight="bold" mb={1} sx={{ color: '#555' }}>
+                Favorite Champions (Max 5)
+              </MUI.Typography>
+              
+              <MUI.Box display="flex" gap="10px" flexWrap="wrap" mb={2}>
+                {favoriteChampions.map((champion) => (
+                  <MUI.Chip
+                    key={champion}
+                    label={champion}
+                    onDelete={() => handleRemoveChampion(champion)}
+                    deleteIcon={<Cancel />}
+                    sx={{
+                      bgcolor: 'white',
+                      color: 'black',
+                      fontWeight: 'bold',
+                      border: '2px solid black',
+                      borderRadius: '0px',
+                      boxShadow: '2px 2px 0px 0px #000000',
+                      '& .MuiChip-deleteIcon': {
+                        color: '#ff4d4d',
+                        '&:hover': { color: '#ff0000' },
+                      },
+                    }}
+                  />
+                ))}
+              </MUI.Box>
+
+              {favoriteChampions.length < 5 && (
+                <MUI.FormControl fullWidth>
+                  <MUI.InputLabel sx={{ color: 'black', '&.Mui-focused': { color: 'black' } }}>
+                    Add Champion
+                  </MUI.InputLabel>
+                  <MUI.Select
+                    value=""
+                    onChange={(e) => handleAddChampion(e.target.value)}
+                    label="Add Champion"
+                    sx={{
+                      bgcolor: 'white',
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: 'black', borderWidth: '2px' },
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'black' },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'black' },
+                    }}
+                  >
+                    {championNames
+                      .filter(name => !favoriteChampions.includes(name))
+                      .map((name) => (
+                        <MUI.MenuItem key={name} value={name}>
+                          {name}
+                        </MUI.MenuItem>
+                      ))}
+                  </MUI.Select>
+                </MUI.FormControl>
+              )}
+            </MUI.Box>
+
+             {/* Favorite Skins Placeholder */}
+             <MUI.Box>
+              <MUI.Typography fontWeight="bold" mb={1} sx={{ color: '#555' }}>
+                Favorite Skins (Coming Soon)
+              </MUI.Typography>
+              <MUI.Typography fontSize="12px" color="#666" fontStyle="italic">
+                Skin selection will be available in a future update.
+              </MUI.Typography>
+            </MUI.Box>
+          
           <MUI.Button
             variant="contained"
-            color="error"
-            onClick={handleSave}
-            disabled={!isFormChanged()}
+              onClick={handleSaveSummonerSettings}
+              disabled={!isSummonerFormChanged()}
+              startIcon={saveStatus.summoner === 'success' ? <CheckCircle /> : <Save />}
             sx={{
-              cursor: 'pointer',
+                bgcolor: saveStatus.summoner === 'success' ? '#4caf50' : '#0AC8B9',
+              color: 'white',
+              fontWeight: '900',
+              fontSize: '14px',
+              padding: '12px 30px',
+              border: '3px solid black',
+              borderRadius: '0px',
+              boxShadow: '5px 5px 0px 0px #000000',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+                alignSelf: 'flex-start',
+              '&:hover': {
+                  bgcolor: saveStatus.summoner === 'success' ? '#45a049' : '#09b0a3',
+                transform: 'translate(2px, 2px)',
+                boxShadow: '3px 3px 0px 0px #000000',
+              },
+              '&:disabled': {
+                bgcolor: '#666',
+                color: '#999',
+                border: '3px solid #444',
+                boxShadow: 'none',
+              },
+              transition: 'all 0.1s ease',
             }}
           >
-            Save Changes
+              {saveStatus.summoner === 'success' ? 'Saved!' : 'Save Settings'}
           </MUI.Button>
         </AccountSettingBox>
+        </MUI.Box>
+
+        {/* 2. Personal Information (Read Only) */}
+        <MUI.Box ref={personalInfoRef}>
+          <AccountSettingBox
+            title="Personal Information"
+            description="Manage your account security (Read Only)"
+          >
+            <SettingTextField
+              label="Email Address"
+              value={email}
+              disabled={true}
+              id="email-input"
+              type="email"
+            />
+            <SettingTextField
+              label="Password"
+              value="********"
+              disabled={true}
+              id="password-input"
+              type="password"
+            />
+             <MUI.Typography fontSize="12px" color="#666" fontStyle="italic">
+                Password change functionality is currently disabled.
+              </MUI.Typography>
+          </AccountSettingBox>
+        </MUI.Box>
+
+        {/* 3. Profile Customization */}
+        <MUI.Box ref={profileCustomRef}>
+        <AccountSettingBox
+          title="Profile Customization"
+            description="Customize your public profile appearance"
+          >
+             <SettingTextField
+              label="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required={true}
+              id="username-input"
+              type="text"
+            />
+            
+            <MUI.Box display="flex" gap="20px" flexWrap="wrap">
+              <MUI.Box flex="1" minWidth="200px">
+                <SettingTextField
+                  label="Age"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                  id="age-input"
+                  type="number"
+                />
+              </MUI.Box>
+              <MUI.Box flex="1" minWidth="200px">
+                <SelectField
+                  label="Sex"
+                  value={sex}
+                  onChange={(e) => setSex(e.target.value)}
+                  options={sexOptions}
+                />
+              </MUI.Box>
+            </MUI.Box>
+            
+            <SelectField
+              label="Home Country"
+              value={homeCountry}
+              onChange={(e) => setHomeCountry(e.target.value)}
+              options={popularCountries}
+            />
+
+          {/* Profile Picture */}
+          <MUI.Box>
+              <MUI.Typography fontWeight="bold" mb={1} sx={{ color: '#555' }}>
+              Profile Picture URL
+            </MUI.Typography>
+            <MUI.Box display="flex" gap="20px" alignItems="center">
+              <SettingTextField
+                label="Image URL"
+                value={profilePictureURL}
+                onChange={(e) => setProfilePictureURL(e.target.value)}
+                id="profile-picture-input"
+                type="text"
+              />
+              {profilePictureURL && (
+                <MUI.Box
+                  sx={{
+                    width: '60px',
+                    height: '60px',
+                    border: '3px solid black',
+                    boxShadow: '3px 3px 0px 0px #000000',
+                    backgroundImage: `url(${profilePictureURL})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    bgcolor: 'white',
+                  }}
+                />
+              )}
+            </MUI.Box>
+          </MUI.Box>
+
+          <MUI.Button
+            variant="contained"
+              onClick={handleSaveProfileCustomization}
+              disabled={!isProfileFormChanged()}
+              startIcon={saveStatus.profile === 'success' ? <CheckCircle /> : <Save />}
+            sx={{
+                bgcolor: saveStatus.profile === 'success' ? '#4caf50' : '#4d79ff',
+              color: 'white',
+              fontWeight: '900',
+              fontSize: '14px',
+              padding: '12px 30px',
+              border: '3px solid black',
+              borderRadius: '0px',
+              boxShadow: '5px 5px 0px 0px #000000',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+                alignSelf: 'flex-start',
+              '&:hover': {
+                  bgcolor: saveStatus.profile === 'success' ? '#45a049' : '#3d69ff',
+                transform: 'translate(2px, 2px)',
+                boxShadow: '3px 3px 0px 0px #000000',
+              },
+              '&:disabled': {
+                bgcolor: '#666',
+                color: '#999',
+                border: '3px solid #444',
+                boxShadow: 'none',
+              },
+              transition: 'all 0.1s ease',
+            }}
+          >
+              {saveStatus.profile === 'success' ? 'Saved!' : 'Save Customization'}
+          </MUI.Button>
+        </AccountSettingBox>
+        </MUI.Box>
+
+        {/* 4. Riot Accounts */}
+        <MUI.Box ref={riotAccountsRef}>
         <AccountSettingBox
           title="Riot Accounts"
-          description="Connect your Riot accounts"
-        />
+          description="Connect your Riot Games accounts (Coming Soon)"
+        >
+          <MUI.Typography color="#999" fontStyle="italic">
+            This feature will allow you to verify and display your Riot accounts.
+          </MUI.Typography>
+        </AccountSettingBox>
+        </MUI.Box>
+
+        {/* 5. Account Actions */}
+        <MUI.Box ref={accountActionsRef}>
         <AccountSettingBox
-          title="Login Management"
-          description="You can Log Out from here"
-        />
-        {[...Array(3)].map((_, index) => (
-          <AccountSettingBox key={index} />
-        ))}
+          title="Account Actions"
+          description="Manage your account security and sessions"
+        >
+          <MUI.Box display="flex" flexDirection="column" gap="15px">
+            <MUI.Button
+              variant="contained"
+              onClick={handleLogout}
+              startIcon={<Logout />}
+              sx={{
+                bgcolor: '#ffa500',
+                color: 'white',
+                fontWeight: '900',
+                fontSize: '14px',
+                padding: '12px 30px',
+                border: '3px solid black',
+                borderRadius: '0px',
+                boxShadow: '5px 5px 0px 0px #000000',
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+                alignSelf: 'flex-start',
+                '&:hover': {
+                  bgcolor: '#ff9500',
+                  transform: 'translate(2px, 2px)',
+                  boxShadow: '3px 3px 0px 0px #000000',
+                },
+                transition: 'all 0.1s ease',
+              }}
+            >
+              Log Out
+            </MUI.Button>
+
+            <MUI.Divider sx={{ bgcolor: '#555', my: 2 }} />
+
+            <MUI.Typography color="#ff6b6b" fontWeight="bold" fontSize="12px">
+              DANGER ZONE
+            </MUI.Typography>
+            <MUI.Button
+              variant="outlined"
+              startIcon={<DeleteForever />}
+              sx={{
+                color: '#ff4d4d',
+                borderColor: '#ff4d4d',
+                fontWeight: '900',
+                fontSize: '12px',
+                padding: '10px 25px',
+                border: '3px solid #ff4d4d',
+                borderRadius: '0px',
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+                alignSelf: 'flex-start',
+                '&:hover': {
+                  bgcolor: 'rgba(255,77,77,0.1)',
+                  borderColor: '#ff0000',
+                  color: '#ff0000',
+                },
+              }}
+            >
+              Delete Account
+            </MUI.Button>
+          </MUI.Box>
+        </AccountSettingBox>
+        </MUI.Box>
       </MUI.Stack>
     </MUI.Box>
   );

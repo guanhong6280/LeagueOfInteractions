@@ -2,6 +2,7 @@ const Skin = require('../../models/Skin');
 const SkinRating = require('../../models/SkinRating');
 const SkinComment = require('../../models/SkinComment');
 const ChampionStats = require('../../models/ChampionStats');
+const { buildSuccess, sendSuccess, sendError } = require('../../utils/response');
 
 // Simple in-memory cache for landing page stats
 let statsCache = {
@@ -88,7 +89,7 @@ const getChampionStats = async (req, res) => {
     });
 
     // Merge in the ChampionStats (new model) data
-    const allChampionStatsDocs = await ChampionStats.find({});
+    const allChampionStatsDocs = await ChampionStats.find({}).lean();
     allChampionStatsDocs.forEach((doc) => {
       // Ensure we have an object for this champion even if pipeline didn't return stats (no skins rated/no skins)
       if (!championStats[doc.championId]) {
@@ -109,11 +110,8 @@ const getChampionStats = async (req, res) => {
 
     console.log(`Aggregation complete. Processed ${results.length} champions.`);
     
-    const responseData = {
-      success: true,
-      data: championStats,
-      timestamp: new Date().toISOString()
-    };
+    const responseData = buildSuccess(championStats, null);
+    responseData.timestamp = new Date().toISOString();
 
     // Update cache
     statsCache = {
@@ -122,14 +120,17 @@ const getChampionStats = async (req, res) => {
       duration: 5 * 60 * 1000
     };
 
-    res.json(responseData);
+    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=120');
+    sendSuccess(res, responseData.data, {
+      extra: { timestamp: responseData.timestamp },
+    });
 
   } catch (error) {
     console.error('Error in champion stats aggregation:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch champion statistics',
-      error: error.message
+    sendError(res, 'Failed to fetch champion statistics', {
+      status: 500,
+      errorCode: 'CHAMPION_STATS_FETCH_FAILED',
+      data: null,
     });
   }
 };
@@ -143,19 +144,19 @@ const getChampionSpecificStats = async (req, res) => {
   try {
     const { championName } = req.params;
     const { include } = req.query; // 'skins' or 'champions' or both (comma separated)
-    
+
     console.log(`Fetching detailed stats for champion: ${championName} (include: ${include || 'all'})`);
-    
+
     // Always fetch basic static data (Title, Roles, Name)
-    const championStatsDoc = await ChampionStats.findOne({ championId: championName });
-    
+    const championStatsDoc = await ChampionStats.findOne({ championId: championName }).lean();
+
     let responseData = {
       // Static Data (Always Included)
       title: championStatsDoc?.title || '',
       roles: championStatsDoc?.roles || [],
       damageType: championStatsDoc?.damageType || '',
       playstyleInfo: championStatsDoc?.playstyleInfo || null,
-      
+
       // Default nulls for optional sections
       totalSkins: 0,
       totalRatings: 0,
@@ -168,119 +169,129 @@ const getChampionSpecificStats = async (req, res) => {
       championRatingStats: null,
     };
 
-    // --- Section 1: Skin Related Data (Expensive Aggregation) ---
-    // Trigger if include contains 'skins' OR if no include param is provided (legacy/default behavior)
-    if (!include || include.includes('skins')) {
-      const skins = await Skin.find({ championId: championName });
-      
+    const includeSkins = !include || include.includes('skins');
+    const includeChampionRatings = !include || include.includes('champions');
+
+    // --- Section 1: Skin Related Data (Aggregated) ---
+    if (includeSkins) {
+      // Fetch skins (lean) for metadata and rarity counts
+      const skins = await Skin.find({ championId: championName }).lean();
       if (skins.length > 0) {
-        const skinIds = skins.map(skin => skin.skinId);
-        
-        // We only need basic ratings/comments counts for the "Skin Section" logic?
-        // Actually, "mostPopularSkin" needs aggregation over ALL ratings.
-        const ratings = await SkinRating.find({ skinId: { $in: skinIds } });
-        const comments = await SkinComment.find({ skinId: { $in: skinIds } });
-        
+        const skinIds = skins.map((skin) => skin.skinId);
         responseData.totalSkins = skins.length;
-        responseData.totalRatings = ratings.length;
-        responseData.totalComments = comments.length;
 
-        // Calculate Average Rating
-        if (ratings.length > 0) {
-            const totalRatingSum = ratings.reduce((sum, r) => sum + (r.splashArtRating + r.inGameModelRating) / 2, 0);
-            responseData.averageRating = Math.round((totalRatingSum / ratings.length) * 10) / 10;
-        }
-
-        // Rarity Distribution
-        responseData.rarityDistribution = {};
-        skins.forEach(skin => {
+        // Rarity distribution from skins themselves (no extra queries)
+        const rarityDistribution = {};
+        skins.forEach((skin) => {
           const rarity = skin.rarity || 'kNoRarity';
-          responseData.rarityDistribution[rarity] = (responseData.rarityDistribution[rarity] || 0) + 1;
+          rarityDistribution[rarity] = (rarityDistribution[rarity] || 0) + 1;
+        });
+        responseData.rarityDistribution = rarityDistribution;
+
+        // Aggregate ratings: count, avg, distribution, most popular, highest rated
+        const ratingsAgg = await SkinRating.aggregate([
+          { $match: { skinId: { $in: skinIds } } },
+          {
+            $group: {
+              _id: '$skinId',
+              ratingCount: { $sum: 1 },
+              avgScore: {
+                $avg: { $divide: [{ $add: ['$splashArtRating', '$inGameModelRating'] }, 2] },
+              },
+              // distribution 1-10
+              dist: {
+                $push: { $round: { $divide: [{ $add: ['$splashArtRating', '$inGameModelRating'] }, 2] } },
+              },
+            },
+          },
+        ]);
+
+        // Aggregate comments count
+        const commentsCount = await SkinComment.countDocuments({ skinId: { $in: skinIds } });
+        responseData.totalComments = commentsCount;
+
+        // Compute totals and distributions without materializing all ratings
+        let totalRatings = 0;
+        let weightedSum = 0;
+        const ratingDistribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0 };
+
+        let mostPopular = null; // { skinId, ratingCount }
+        let highestRated = null; // { skinId, avgScore }
+
+        ratingsAgg.forEach((entry) => {
+          totalRatings += entry.ratingCount;
+          weightedSum += (entry.avgScore || 0) * entry.ratingCount;
+
+          if (!mostPopular || entry.ratingCount > mostPopular.ratingCount) {
+            mostPopular = { skinId: entry._id, ratingCount: entry.ratingCount };
+          }
+
+          if (!highestRated || (entry.avgScore || 0) > (highestRated.avgScore || 0)) {
+            highestRated = { skinId: entry._id, avgScore: entry.avgScore || 0 };
+          }
+
+          // distribution
+          (entry.dist || []).forEach((score) => {
+            if (score >= 1 && score <= 10) {
+              ratingDistribution[score] = (ratingDistribution[score] || 0) + 1;
+            }
+          });
         });
 
-        // Most Popular Skin
-        const skinRatingCounts = {};
-        ratings.forEach(r => skinRatingCounts[r.skinId] = (skinRatingCounts[r.skinId] || 0) + 1);
-        
-        if (Object.keys(skinRatingCounts).length > 0) {
-          const mostPopularSkinId = Object.keys(skinRatingCounts).reduce((a, b) => skinRatingCounts[a] > skinRatingCounts[b] ? a : b);
-          const popularSkin = skins.find(s => s.skinId === parseInt(mostPopularSkinId));
+        responseData.totalRatings = totalRatings;
+        responseData.averageRating = totalRatings > 0 ? Math.round((weightedSum / totalRatings) * 10) / 10 : 0;
+        responseData.ratingDistribution = ratingDistribution;
+
+        if (mostPopular) {
+          const popularSkin = skins.find((s) => s.skinId === mostPopular.skinId);
           if (popularSkin) {
             responseData.mostPopularSkin = {
               name: popularSkin.name,
               skinId: popularSkin.skinId,
-              ratingCount: skinRatingCounts[popularSkin.skinId]
+              ratingCount: mostPopular.ratingCount,
             };
           }
         }
 
-        // Highest Rated Skin
-        const skinAvg = {};
-        ratings.forEach(r => {
-           if (!skinAvg[r.skinId]) skinAvg[r.skinId] = { total: 0, count: 0 };
-           skinAvg[r.skinId].total += (r.splashArtRating + r.inGameModelRating) / 2;
-           skinAvg[r.skinId].count++;
-        });
-        
-        let highestRating = 0;
-        let highestSkin = null;
-        Object.keys(skinAvg).forEach(sId => {
-            const avg = skinAvg[sId].total / skinAvg[sId].count;
-            if (avg > highestRating) {
-                highestRating = avg;
-                highestSkin = skins.find(s => s.skinId === parseInt(sId));
-            }
-        });
-        
-        if (highestSkin) {
+        if (highestRated) {
+          const highestSkin = skins.find((s) => s.skinId === highestRated.skinId);
+          if (highestSkin) {
             responseData.highestRatedSkin = {
-                name: highestSkin.name,
-                skinId: highestSkin.skinId,
-                averageRating: Math.round(highestRating * 10) / 10
+              name: highestSkin.name,
+              skinId: highestSkin.skinId,
+              averageRating: Math.round((highestRated.avgScore || 0) * 10) / 10,
             };
+          }
         }
-        
-        // Rating Distribution (1-10 Scale) - Used in Skin Stats
-        responseData.ratingDistribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0 };
-        ratings.forEach(r => {
-           const avg = Math.round((r.splashArtRating + r.inGameModelRating) / 2);
-           if (avg >= 1 && avg <= 10) responseData.ratingDistribution[avg]++;
-        });
       }
     }
 
     // --- Section 2: Champion Gameplay Ratings (Stats Model) ---
-    // Trigger if include contains 'champions' OR if no include param is provided
-    if (!include || include.includes('champions')) {
-       if (championStatsDoc) {
-         responseData.championRatingStats = {
-            avgFun: championStatsDoc.averageFunRating,
-            avgSkill: championStatsDoc.averageSkillRating,
-            avgSynergy: championStatsDoc.averageSynergyRating,
-            avgLaning: championStatsDoc.averageLaningRating,
-            avgTeamfight: championStatsDoc.averageTeamfightRating,
-            avgOpponentFrustration: championStatsDoc.averageOpponentFrustrationRating,
-            avgTeammateFrustration: championStatsDoc.averageTeammateFrustrationRating,
-            totalRatings: championStatsDoc.totalRatings,
-            totalComments: championStatsDoc.totalComments,
-            summary: championStatsDoc.championSummary,
-         };
-       }
+    if (includeChampionRatings && championStatsDoc) {
+      responseData.championRatingStats = {
+        avgFun: championStatsDoc.averageFunRating,
+        avgSkill: championStatsDoc.averageSkillRating,
+        avgSynergy: championStatsDoc.averageSynergyRating,
+        avgLaning: championStatsDoc.averageLaningRating,
+        avgTeamfight: championStatsDoc.averageTeamfightRating,
+        avgOpponentFrustration: championStatsDoc.averageOpponentFrustrationRating,
+        avgTeammateFrustration: championStatsDoc.averageTeammateFrustrationRating,
+        totalRatings: championStatsDoc.totalRatings,
+        totalComments: championStatsDoc.totalComments,
+        summary: championStatsDoc.championSummary,
+      };
     }
-    
-    // console.log(`Champion specific stats for ${championName}:`, responseData);
-    res.json({
-      success: true,
-      data: responseData,
-      timestamp: new Date().toISOString()
+
+    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=120');
+    sendSuccess(res, responseData, {
+      extra: { timestamp: new Date().toISOString() },
     });
-    
   } catch (error) {
     console.error('Error fetching champion specific stats:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch champion statistics',
-      error: error.message
+    sendError(res, 'Failed to fetch champion statistics', {
+      status: 500,
+      errorCode: 'CHAMPION_STATS_FETCH_FAILED',
+      data: null,
     });
   }
 };

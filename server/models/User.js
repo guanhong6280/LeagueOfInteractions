@@ -16,68 +16,17 @@ const UserSchema = new mongoose.Schema({
   isProfileComplete: { type: Boolean, default: false },
   timeJoinedTheGame: { type: Number, min: 2009, max: new Date().getFullYear() }, // Year value (LoL released in 2009)
   riotAccounts: { type: [String] }, // Array of Riot account names
-
-  // NEW FIELDS FOR SKIN RATING FEATURES
-  recentSkinRatings: {
-    type: [{
-      skinId: { type: String, required: true },
-      dateUpdated: { type: Date, required: true },
-      splashArtRating: { type: Number, required: true },
-      inGameModelRating: { type: Number, required: true },
-    }],
-    validate: {
-      validator: function(arr) {
-        return arr.length <= 10;
-      },
-      message: 'Recent skin ratings cannot exceed 10 items',
-    },
-  },
-  recentSkinComments: {
-    type: [{
-      skinId: { type: String, required: true },
-      dateUpdated: { type: Date, required: true },
-      comment: { type: String, required: true },
-    }],
-    validate: {
-      validator: function(arr) {
-        return arr.length <= 10;
-      },
-      message: 'Recent skin comments cannot exceed 10 items',
-    },
-  },
-  recentChampionComments: {
-    type: [{
-      championId: { type: String, required: true },
-      dateUpdated: { type: Date, required: true },
-      comment: { type: String, required: true },
-    }],
-    validate: {
-      validator: function(arr) {
-        return arr.length <= 10;
-      },
-      message: 'Recent champion comments cannot exceed 10 items',
-    },
-  },
-  recentChampionRatings: {
-    type: [{
-      championId: { type: String, required: true },
-      dateUpdated: { type: Date, required: true },
-      funRating: { type: Number, required: true },
-      skillRating: { type: Number, required: true },
-      synergyRating: { type: Number, required: true },
-      laningRating: { type: Number, required: true },
-      teamfightRating: { type: Number, required: true },
-      opponentFrustrationRating: { type: Number, required: true },
-      teammateFrustrationRating: { type: Number, required: true },
-    }],
-    validate: {
-      validator: function(arr) {
-        return arr.length <= 10;
-      },
-      message: 'Recent champion ratings cannot exceed 10 items',
-    },
-  },
   favoriteSkins: [{ type: Number }], // Array of skin IDs
+  mainRoles: {
+    type: [String],
+    enum: ['Top', 'Jungle', 'Mid', 'Bot', 'Support'],
+    validate: [(val) => val.length <= 2, '{PATH} exceeds the limit of 2']
+  },
+  preferredGameModes: {
+    type: [String],
+    enum: ["Normal","Draft Pick","Ranked Solo/Duo", "Ranked Flex", "ARAM", "Arena", "TFT", "ARAM MAYHEM", "URF"],
+    validate: [(val) => val.length <= 2, '{PATH} exceeds the limit of 2']
+  }
 });
 
 module.exports = mongoose.model('User', UserSchema);

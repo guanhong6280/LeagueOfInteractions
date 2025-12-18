@@ -4,7 +4,6 @@ import {
   DeleteOutline as DeleteIcon
 } from '@mui/icons-material';
 import CommentActions from './CommentActions';
-import { useAuth } from '../../../../AuthProvider';
 
 const CommentItem = memo(({
   comment,

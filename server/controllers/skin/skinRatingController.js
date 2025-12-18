@@ -33,7 +33,6 @@ const ratingService = new RatingService({
   RatingModel: SkinRating,
   EntityModel: Skin,
   entityIdField: 'skinId',
-  userHistoryField: 'recentSkinRatings',
   ratingFields: ['splashArtRating', 'inGameModelRating'],
   updateStatsFn: updateSkinRatingStats,
   idType: 'Number',

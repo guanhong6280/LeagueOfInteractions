@@ -6,7 +6,7 @@ import {
   Reply as ReplyIcon,
   DeleteOutline as DeleteIcon
 } from '@mui/icons-material';
-import { useAuth } from '../../../../AuthProvider';
+import useCurrentUser from '../../../../hooks/useCurrentUser';
 
 // Neo-brutalist View Replies Button Component
 const ViewRepliesButton = memo(({
@@ -76,7 +76,7 @@ const CommentActions = memo(({
   hideViewRepliesButton = false,
   isReply = false
 }) => {
-  const { user } = useAuth();
+  const { user } = useCurrentUser();
   const [likeAnimation, setLikeAnimation] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 

@@ -141,8 +141,18 @@ export const submitSkinComment = async (skinId, commentData) => {
   return response.data;
 };
 
-export const getSkinComments = async (skinId, includeUserDetails = false) => {
-  const response = await api.get(`/api/skins/${skinId}/comments?includeUserDetails=${includeUserDetails}`);
+export const getSkinComments = async (
+  skinId,
+  { includeUserDetails = false, limit, cursor, withCount } = {}
+) => {
+  const params = {
+    includeUserDetails,
+  };
+  if (limit !== undefined) params.limit = limit;
+  if (cursor) params.cursor = cursor;
+  if (withCount !== undefined) params.withCount = withCount;
+
+  const response = await api.get(`/api/skins/${skinId}/comments`, { params });
   return response.data;
 };
 
@@ -174,8 +184,17 @@ export const addReply = async (skinId, commentId, replyData) => {
   return response.data;
 };
 
-export const getRepliesForComment = async (skinId, commentId, includeUserDetails = false) => {
-  const response = await api.get(`/api/skins/${skinId}/comments/${commentId}/replies?includeUserDetails=${includeUserDetails}`);
+export const getRepliesForComment = async (
+  skinId,
+  commentId,
+  { includeUserDetails = false, limit, cursor, withCount } = {}
+) => {
+  const params = { includeUserDetails };
+  if (limit !== undefined) params.limit = limit;
+  if (cursor) params.cursor = cursor;
+  if (withCount !== undefined) params.withCount = withCount;
+
+  const response = await api.get(`/api/skins/${skinId}/comments/${commentId}/replies`, { params });
   return response.data;
 };
 
@@ -213,8 +232,18 @@ export const submitChampionComment = async (championId, commentData) => {
   return response.data;
 };
 
-export const getChampionComments = async (championId, includeUserDetails = false) => {
-  const response = await api.get(`/api/champions/${championId}/comments?includeUserDetails=${includeUserDetails}`);
+export const getChampionComments = async (
+  championId,
+  { includeUserDetails = false, limit, cursor, withCount } = {}
+) => {
+  const params = {
+    includeUserDetails,
+  };
+  if (limit !== undefined) params.limit = limit;
+  if (cursor) params.cursor = cursor;
+  if (withCount !== undefined) params.withCount = withCount;
+
+  const response = await api.get(`/api/champions/${championId}/comments`, { params });
   return response.data;
 };
 
@@ -246,8 +275,17 @@ export const addChampionReply = async (championId, commentId, replyData) => {
   return response.data;
 };
 
-export const getChampionRepliesForComment = async (championId, commentId, includeUserDetails = false) => {
-  const response = await api.get(`/api/champions/${championId}/comments/${commentId}/replies?includeUserDetails=${includeUserDetails}`);
+export const getChampionRepliesForComment = async (
+  championId,
+  commentId,
+  { includeUserDetails = false, limit, cursor, withCount } = {}
+) => {
+  const params = { includeUserDetails };
+  if (limit !== undefined) params.limit = limit;
+  if (cursor) params.cursor = cursor;
+  if (withCount !== undefined) params.withCount = withCount;
+
+  const response = await api.get(`/api/champions/${championId}/comments/${commentId}/replies`, { params });
   return response.data;
 };
 

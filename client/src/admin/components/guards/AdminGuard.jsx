@@ -1,13 +1,13 @@
 import React from 'react';
 import * as MUI from '@mui/material';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../../../AuthProvider';
+import useCurrentUser from '../../../hooks/useCurrentUser';
 
 const AdminGuard = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useCurrentUser();
 
   // Show loading spinner while checking authentication
-  if (loading) {
+  if (isLoading) {
     return (
       <MUI.Box
         display="flex"

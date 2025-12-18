@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { submitChampionRating, getUserChampionRating } from '../../../api/championApi';
-import { useAuth } from '../../../AuthProvider';
 import { toastMessages } from '../../../toast/useToast';
 import { useToast } from '../../../toast/useToast';
+import useCurrentUser from '../../../hooks/useCurrentUser';
 
 const initialRatings = {
   fun: 0,
@@ -15,7 +15,7 @@ const initialRatings = {
 };
 
 const useChampionRatingData = (championName) => {
-  const { user } = useAuth();
+  const { user } = useCurrentUser();
   const [values, setValues] = useState(initialRatings);
   const [userRating, setUserRating] = useState(null);
   const [isLoading, setIsLoading] = useState(true);

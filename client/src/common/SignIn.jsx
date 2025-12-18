@@ -1,15 +1,17 @@
 import React from 'react';
 import * as MUI from '@mui/material';
-import { useAuth } from '../AuthProvider';
 import SignInDialog from './SignInDialog';
 import { Link } from 'react-router-dom';
-import ProfileDropDown from './ProfileDropDown';
-import NavButton from './button/NavButton';
+import useCurrentUser from '../hooks/useCurrentUser';
+import useLogout from '../hooks/useLogout';
+import { redirectToGoogleAuth } from '../api/authApi';
 
 const SignIn = () => {
   const [dialogOpen, setDialogOpen] = React.useState(false);
-  const { user, loading, setLoading, logout } = useAuth();
+  const { user, isLoading } = useCurrentUser();
+  const { mutateAsync: logout } = useLogout();
   const [menuOpen, setMenuOpen] = React.useState(false);
+  const [isSigningIn, setIsSigningIn] = React.useState(false);
   const avatarRef = React.useRef(null);
 
   const handleMouseEnter = () => {
@@ -21,8 +23,11 @@ const SignIn = () => {
   };
 
   const handleSignIn = () => {
-    setLoading(true);
-    window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5174'}/api/auth/google`, '_self');
+    if (isSigningIn) return;
+    setIsSigningIn(true);
+
+    const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    redirectToGoogleAuth({ returnTo });
   };
 
   const openDialog = () => {
@@ -82,8 +87,8 @@ const SignIn = () => {
       >
         Donate
       </MUI.Button>
-      
-      {loading ? (
+
+      {isLoading || isSigningIn ? (
         <MUI.CircularProgress size={30} sx={{ color: 'black' }} />
       ) : user ? (
         <>
@@ -107,8 +112,8 @@ const SignIn = () => {
                 transition: 'all 0.2s ease',
                 boxShadow: '4px 4px 0px black',
                 '&:hover': {
-                   transform: 'translate(-2px, -2px)',
-                   boxShadow: '6px 6px 0px black',
+                  transform: 'translate(-2px, -2px)',
+                  boxShadow: '6px 6px 0px black',
                 },
                 ...(menuOpen && {
                   transform: 'translate(-2px, -2px)',
@@ -152,37 +157,40 @@ const SignIn = () => {
                 }
               }}
             >
-              <MUI.Stack 
-                padding="15px" 
-                alignItems="center" 
-                borderBottom="3px solid black" 
+              <MUI.Stack
+                padding="15px"
+                alignItems="center"
+                borderBottom="3px solid black"
                 bgcolor="#f0f0f0"
               >
                 <MUI.Typography variant="subtitle1" sx={{ fontWeight: 900, textTransform: 'uppercase' }}>
                   {user.username}
                 </MUI.Typography>
               </MUI.Stack>
-              
+
               {user.isAdministrator && (
                 <MUI.MenuItem component={Link} to="/admin/comments">
                   Moderation
                 </MUI.MenuItem>
               )}
-              <MUI.MenuItem component={Link} to="/setting">
+              <MUI.MenuItem component={Link} to="/profile">
+                Profile
+              </MUI.MenuItem>
+              <MUI.MenuItem component={Link} to="/settings">
                 Settings
               </MUI.MenuItem>
               <MUI.MenuItem component={Link} to="/add">
                 Add Interaction
               </MUI.MenuItem>
               <MUI.Divider sx={{ borderBottomWidth: '3px', borderColor: 'black' }} />
-              <MUI.MenuItem onClick={logout} sx={{ color: 'red' }}>
+              <MUI.MenuItem onClick={() => logout()} sx={{ color: 'red' }}>
                 LOGOUT
               </MUI.MenuItem>
             </MUI.Menu>
           </div>
         </>
       ) : (
-        <MUI.Button 
+        <MUI.Button
           onClick={openDialog}
           variant="contained"
           sx={{

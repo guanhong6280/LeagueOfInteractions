@@ -8,12 +8,14 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import axios from 'axios';
 import { toggleVideoLike } from '../../api/championApi';
-import { useAuth } from '../../AuthProvider';
 import SignInDialog from '../SignInDialog';
+import useCurrentUser from '../../hooks/useCurrentUser';
+import { redirectToGoogleAuth } from '../../api/authApi';
 
 const VideoPlayer = ({ videoData, autoplay = false, isLoading, selectionsComplete, currentSelections }) => {
   const navigate = useNavigate();
-  const { user, setLoading } = useAuth();
+  const { user } = useCurrentUser();
+  const [isSigningIn, setIsSigningIn] = useState(false);
   const [hasViewed, setHasViewed] = useState(false);
   const [likes, setLikes] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
@@ -56,8 +58,10 @@ const VideoPlayer = ({ videoData, autoplay = false, isLoading, selectionsComplet
   };
 
   const handleSignIn = () => {
-    setLoading(true);
-    window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5174'}/api/auth/google`, '_self');
+    if (isSigningIn) return;
+    setIsSigningIn(true);
+    const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    redirectToGoogleAuth({ returnTo });
   };
 
   const handleLike = async () => {

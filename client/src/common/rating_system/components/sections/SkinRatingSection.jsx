@@ -5,33 +5,25 @@ import {
   Palette as PaletteIcon,
   ThreeDRotation as ModelIcon
 } from '@mui/icons-material';
-import useRatingData from '../../hooks/useRatingData';
+import useSkinRatingData from '../../hooks/useSkinRatingData';
 import NeoRatingCard from '../common/NeoRatingCard';
 import NeoStatsCard from '../common/NeoStatsCard';
 
-const SkinRatingSection = ({ currentSkinId, championName, skinStats }) => {
+const SkinRatingSection = ({ currentSkinId, skinStats }) => {
   const {
     userRating,
-    isLoading,
     isSubmitting,
     splashArtRating,
     inGameModelRating,
     updateSplashArtRating,
     updateInGameModelRating,
     submitRating,
-  } = useRatingData(currentSkinId);
+  } = useSkinRatingData(currentSkinId);
 
   const handleRatingSubmit = async () => {
     await submitRating();
   };
 
-  if (isLoading) {
-    return (
-      <MUI.Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-        <MUI.CircularProgress size={40} />
-      </MUI.Box>
-    );
-  }
 
   const ratingFields = [
     {

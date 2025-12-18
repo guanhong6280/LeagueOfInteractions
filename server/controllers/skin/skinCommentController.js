@@ -27,7 +27,6 @@ const commentService = new CommentService({
   CommentModel: SkinComment,
   EntityModel: Skin,
   entityIdField: 'skinId',
-  userHistoryField: 'recentSkinComments',
   updateStatsFn: updateSkinCommentStats,
   idType: 'Number'
 });

@@ -1,4 +1,4 @@
-const User = require('../models/User');
+const { sendSuccess, sendError } = require('../utils/response');
 
 class RatingService {
   /**
@@ -6,7 +6,6 @@ class RatingService {
    * @param {Object} config.RatingModel - Mongoose Model for ratings
    * @param {Object} [config.EntityModel] - Mongoose Model for entity validation (optional)
    * @param {String} config.entityIdField - Field name for entity ID (e.g. 'championId', 'skinId')
-   * @param {String} config.userHistoryField - Field name in User model for history
    * @param {Array<String>} config.ratingFields - Array of rating field names to validate/update
    * @param {Function} [config.updateStatsFn] - Function to update aggregated stats
    * @param {String} [config.idType='String'] - Type of ID ('String' or 'Number')
@@ -16,7 +15,6 @@ class RatingService {
     RatingModel,
     EntityModel,
     entityIdField,
-    userHistoryField,
     ratingFields,
     updateStatsFn,
     idType = 'String',
@@ -25,7 +23,6 @@ class RatingService {
     this.RatingModel = RatingModel;
     this.EntityModel = EntityModel;
     this.entityIdField = entityIdField;
-    this.userHistoryField = userHistoryField;
     this.ratingFields = ratingFields;
     this.updateStatsFn = updateStatsFn;
     this.idType = idType;
@@ -49,42 +46,6 @@ class RatingService {
     return true; // If no EntityModel provided, assume valid or validation happens elsewhere
   }
 
-  async updateUserHistory(userId, existingRating, ratingDoc) {
-    try {
-      const historyEntry = {
-        [this.entityIdField]: ratingDoc[this.entityIdField],
-        dateUpdated: ratingDoc.lastUpdated || ratingDoc.dateUpdated || new Date(),
-      };
-      
-      // Copy rating fields
-      this.ratingFields.forEach(field => {
-        historyEntry[field] = ratingDoc[field];
-      });
-
-      // Always remove existing entry first to bring to top
-      if (existingRating) {
-        await User.updateOne({ _id: userId }, { $pull: { [this.userHistoryField]: { [this.entityIdField]: ratingDoc[this.entityIdField] } } });
-      } else {
-         await User.updateOne({ _id: userId }, { $pull: { [this.userHistoryField]: { [this.entityIdField]: ratingDoc[this.entityIdField] } } });
-      }
-
-      await User.updateOne(
-        { _id: userId },
-        {
-          $push: {
-            [this.userHistoryField]: {
-              $each: [historyEntry],
-              $position: 0,
-              $slice: 10,
-            },
-          },
-        }
-      );
-    } catch (err) {
-      console.error('Error updating user rating history:', err);
-    }
-  }
-
   async rateEntity(req, res) {
     try {
       const rawId = req.params[this.entityIdField] || req.params.championId || req.params.skinId;
@@ -93,23 +54,35 @@ class RatingService {
 
       const normalizedId = this.normalizeId(rawId);
       if (normalizedId === null) {
-        return res.status(400).json({ success: false, error: 'Invalid Entity ID.' });
+        return sendError(res, 'Invalid Entity ID.', {
+          status: 400,
+          errorCode: 'INVALID_ENTITY_ID',
+        });
       }
 
       // Validate required fields and values
       for (const field of this.ratingFields) {
         if (ratings[field] === undefined) {
-          return res.status(400).json({ success: false, error: `Missing rating field: ${field}` });
+          return sendError(res, `Missing rating field: ${field}`, {
+            status: 400,
+            errorCode: 'RATING_FIELD_MISSING',
+          });
         }
         const val = Number(ratings[field]);
         if (Number.isNaN(val) || val < this.ratingRange.min || val > this.ratingRange.max) {
-          return res.status(400).json({ success: false, error: `Invalid value for ${field}. Must be ${this.ratingRange.min}-${this.ratingRange.max}.` });
+          return sendError(res, `Invalid value for ${field}. Must be ${this.ratingRange.min}-${this.ratingRange.max}.`, {
+            status: 400,
+            errorCode: 'RATING_VALUE_INVALID',
+          });
         }
       }
 
       const exists = await this.validateEntity(normalizedId);
       if (!exists) {
-        return res.status(404).json({ success: false, error: 'Entity not found.' });
+        return sendError(res, 'Entity not found.', {
+          status: 404,
+          errorCode: 'ENTITY_NOT_FOUND',
+        });
       }
 
       const query = { [this.entityIdField]: normalizedId, userId };
@@ -144,17 +117,16 @@ class RatingService {
         await this.updateStatsFn(normalizedId);
       }
 
-      await this.updateUserHistory(userId, !isNew, ratingDoc);
-
-      res.json({
-        success: true,
+      sendSuccess(res, ratingDoc, {
         message: isNew ? 'Rating submitted successfully.' : 'Rating updated successfully.',
-        data: ratingDoc,
       });
 
     } catch (err) {
       console.error('Error rating entity:', err);
-      res.status(500).json({ success: false, error: 'Failed to submit rating.', message: err.message });
+      sendError(res, 'Failed to submit rating.', {
+        status: 500,
+        errorCode: 'RATING_SUBMIT_FAILED',
+      });
     }
   }
 
@@ -164,10 +136,20 @@ class RatingService {
       const { includeUserDetails = false } = req.query;
 
       const normalizedId = this.normalizeId(rawId);
-      if (normalizedId === null) return res.status(400).json({ success: false, error: 'Invalid ID.' });
+      if (normalizedId === null) {
+        return sendError(res, 'Invalid ID.', {
+          status: 400,
+          errorCode: 'INVALID_ID',
+        });
+      }
 
       const exists = await this.validateEntity(normalizedId);
-      if (!exists) return res.status(404).json({ success: false, error: 'Entity not found.' });
+      if (!exists) {
+        return sendError(res, 'Entity not found.', {
+          status: 404,
+          errorCode: 'ENTITY_NOT_FOUND',
+        });
+      }
 
       let query = this.RatingModel.find({ [this.entityIdField]: normalizedId });
 
@@ -177,14 +159,15 @@ class RatingService {
 
       const ratings = await query.sort({ dateCreated: -1 });
 
-      res.json({
-        success: true,
-        count: ratings.length,
-        data: ratings,
+      sendSuccess(res, ratings, {
+        extra: { count: ratings.length },
       });
     } catch (err) {
       console.error('Error fetching ratings:', err);
-      res.status(500).json({ success: false, error: 'Failed to fetch ratings.', message: err.message });
+      sendError(res, 'Failed to fetch ratings.', {
+        status: 500,
+        errorCode: 'RATINGS_FETCH_FAILED',
+      });
     }
   }
 
@@ -194,20 +177,25 @@ class RatingService {
       const userId = req.user._id;
 
       const normalizedId = this.normalizeId(rawId);
-      if (normalizedId === null) return res.status(400).json({ success: false, error: 'Invalid ID.' });
+      if (normalizedId === null) {
+        return sendError(res, 'Invalid ID.', {
+          status: 400,
+          errorCode: 'INVALID_ID',
+        });
+      }
 
       const rating = await this.RatingModel.findOne({
         [this.entityIdField]: normalizedId,
         userId,
       });
 
-      res.json({
-        success: true,
-        data: rating || null,
-      });
+      sendSuccess(res, rating || null);
     } catch (err) {
       console.error('Error fetching user rating:', err);
-      res.status(500).json({ success: false, error: 'Failed to fetch user rating.', message: err.message });
+      sendError(res, 'Failed to fetch user rating.', {
+        status: 500,
+        errorCode: 'USER_RATING_FETCH_FAILED',
+      });
     }
   }
 }

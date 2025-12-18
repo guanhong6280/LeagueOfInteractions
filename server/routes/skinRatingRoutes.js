@@ -10,6 +10,10 @@ const moderateComment = require('../middleware/moderateComment');
 // Example: GET /api/skins?championId=Annie&skinLineId=110
 router.get('/', skinController.getAllSkins);
 
+// GET /api/skins/batch - Get multiple skins by IDs
+// Example: GET /api/skins/batch?ids=1,2,3,4,5
+router.get('/batch', skinController.getSkinsByIds);
+
 // POST /api/skins/sync - Manual trigger for skin synchronization
 router.post('/sync', ensureApiAuthenticated, ensureApiAdmin, skinController.syncSkins);
 

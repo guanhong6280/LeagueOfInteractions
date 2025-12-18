@@ -6,12 +6,14 @@ import GavelOutlinedIcon from '@mui/icons-material/GavelOutlined';
 import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { NavLink } from 'react-router-dom';
-import { useAuth } from '../../AuthProvider.jsx';
 import Logo from '../../common/Logo';
+import useCurrentUser from '../../hooks/useCurrentUser';
+import useLogout from '../../hooks/useLogout';
 
 
 export default function AdminNav() {
-  const { user } = useAuth() ?? {};
+  const { user } = useCurrentUser();
+  const { mutateAsync: logout } = useLogout();
   const email = user?.email || 'admin@example.com';
 
   const moderationLinks = [
@@ -41,7 +43,7 @@ export default function AdminNav() {
     },
     {
       label: 'Logout',
-      to: '/admin/logout',
+      to: null,
       icon: LogoutIcon,
       helper: 'Logout of the admin panel.',
     },
@@ -78,10 +80,11 @@ export default function AdminNav() {
         {moderationLinks.map(({ label, to, icon: Icon, helper }) => (
           <Box key={label}>
             <MUI.Button
-              component={NavLink}
-              to={to}
+              component={to ? NavLink : 'button'}
+              to={to || undefined}
               variant="text"
               startIcon={<Icon />}
+              onClick={label === 'Logout' ? () => logout() : undefined}
               sx={{
                 justifyContent: 'flex-start',
                 // textColor: 'navigation_text',

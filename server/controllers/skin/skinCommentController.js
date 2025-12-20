@@ -9,12 +9,15 @@ const CommentService = require('../../services/CommentService');
  */
 async function updateSkinCommentStats(skinId) {
   try {
-    const comments = await SkinComment.find({ skinId });
+    // OPTIMIZATION: Use .countDocuments() instead of .find()
+    // This returns just the number (e.g., 5000) without fetching the actual data.
+    const count = await SkinComment.countDocuments({ skinId });
+    
     await Skin.updateOne(
       { skinId },
       {
         $set: {
-          totalNumberOfComments: comments.length,
+          totalNumberOfComments: count, // Use the count directly
         },
       }
     );

@@ -38,7 +38,6 @@ const useUserProfile = (username = null) => {
   });
 
   const profileUser = profileData?.user;
-  console.log('profileUser', profileUser);
 
   // Query 2: Fetch favorite skins (dependent on profile data)
   const {

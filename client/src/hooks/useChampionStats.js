@@ -13,7 +13,7 @@ const useChampionStats = () => {
     queryFn: async () => {
       // The API now returns a normalized envelope { success, data }
       const response = await fetchChampionStats();
-      console.log(response);
+      console.log('response from useChampionStats', response);
       if (!response.success) {
         throw new Error(response.message || 'Failed to fetch champion stats');
       }

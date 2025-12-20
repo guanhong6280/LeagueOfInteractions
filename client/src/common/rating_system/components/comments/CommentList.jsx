@@ -69,12 +69,12 @@ const CommentList = memo(({
     
     // Search through all comments and their replies
     for (const comment of comments) {
-      if (comment._id === replyingTo) {
+      if (comment.id === replyingTo) {
         return comment;
       }
       // Check replies too
       if (comment.replies) {
-        const reply = comment.replies.find(r => r._id === replyingTo);
+        const reply = comment.replies.find(r => r.id === replyingTo);
         if (reply) return reply;
       }
     }

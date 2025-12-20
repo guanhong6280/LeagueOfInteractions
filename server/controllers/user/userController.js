@@ -111,7 +111,7 @@ exports.getUserProfileByUsername = async (req, res) => {
   try {
     const { username } = req.params;
     
-    const user = await User.findOne({ username }).select('-email -googleId -isAdministrator').lean();
+    const user = await User.findOne({ username }).select('-email -googleId -isAdministrator')
     
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });

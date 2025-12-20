@@ -33,7 +33,7 @@ const CommentItems = memo(({
     <>
       {comments.map((comment) => (
         <CommentItem
-          key={comment._id}
+          key={comment.id}
           comment={comment}
           onToggleLike={onToggleLike}
           onStartReply={onStartReply}
@@ -41,9 +41,9 @@ const CommentItems = memo(({
           onSubmitReply={onSubmitReply}
           onToggleReplies={onToggleReplies}
           isReplyingTo={replyingTo}
-          showReplies={expandedReplies.has(comment._id)}
+          showReplies={expandedReplies.has(comment.id)}
           isSubmittingReply={isSubmittingReply}
-          isLoadingReplies={loadingReplies.has(comment._id)}
+          isLoadingReplies={loadingReplies.has(comment.id)}
           onDeleteComment={onDeleteComment}
           onDeleteReply={onDeleteReply}
         />

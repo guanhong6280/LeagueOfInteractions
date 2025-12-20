@@ -49,7 +49,7 @@ const useCommentData = (currentSkinId) => {
     queryKey: queryKeys.comments(currentSkinId),
     queryFn: async () => {
       const response = await getSkinComments(currentSkinId, true);
-      console.log('response', response);
+      console.log('response from useSkinCommentData', response);
       return response.success ? response.data : [];
     },
     enabled: !!currentSkinId,
@@ -69,7 +69,7 @@ const useCommentData = (currentSkinId) => {
 
   // 2. Fetch user's comment (inherits global React Query config)
   const { data: userComment } = useQuery({
-    queryKey: queryKeys.userComment(currentSkinId, user?._id),
+    queryKey: queryKeys.userComment(currentSkinId, user?.id),
     queryFn: async () => {
       const response = await getUserSkinComment(currentSkinId);
       return response.success ? response.data : null;
@@ -81,7 +81,7 @@ const useCommentData = (currentSkinId) => {
 
   // Helper function to create optimistic user data
   const createOptimisticUser = useCallback(() => ({
-    _id: user._id,
+    id: user.id,
     username: user.username,
     profilePictureURL: user.profilePictureURL,
   }), [user]);
@@ -95,9 +95,9 @@ const useCommentData = (currentSkinId) => {
       const previousComments = queryClient.getQueryData(queryKeys.comments(currentSkinId));
 
       const optimisticComment = {
-        _id: `temp-${Date.now()}`,
+        id: `temp-${Date.now()}`,
         comment: commentText.trim(),
-        userId: user._id,
+        userId: user.id,
         username: user.username,
         user: createOptimisticUser(),
         createdAt: new Date().toISOString(),
@@ -106,11 +106,15 @@ const useCommentData = (currentSkinId) => {
         isEdited: false,
         status: 'approved',
         displayText: commentText.trim(),
-        skinId: currentSkinId
+        skinId: currentSkinId,
+        capabilities: {
+          canDelete: true,
+          canEdit: true
+        }
       };
 
       queryClient.setQueryData(queryKeys.comments(currentSkinId), (oldData = []) => {
-        const existingIndex = oldData.findIndex(c => c.userId === user._id);
+        const existingIndex = oldData.findIndex(c => c.userId === user.id);
         const isUpdate = existingIndex !== -1;
 
         if (isUpdate) {
@@ -119,7 +123,7 @@ const useCommentData = (currentSkinId) => {
           newList[existingIndex] = {
             ...oldData[existingIndex],
             ...optimisticComment,
-            _id: oldData[existingIndex]._id,
+            id: oldData[existingIndex].id,
             createdAt: oldData[existingIndex].createdAt,
             isEdited: true
           };
@@ -148,18 +152,18 @@ const useCommentData = (currentSkinId) => {
       queryClient.setQueryData(queryKeys.comments(currentSkinId), (oldData = []) => {
         let foundTemp = false;
         const updatedComments = oldData.map(comment => {
-          if (comment._id.startsWith('temp-')) {
+          if (comment.id.startsWith('temp-')) {
             foundTemp = true;
             return commentForList;
           }
-          if (comment._id === commentForList._id) {
+          if (comment.id === commentForList.id) {
             return commentForList;
           }
           return comment;
         });
 
         // Handle edge case: temp comment missing
-        if (!foundTemp && !oldData.some(c => c._id === commentForList._id)) {
+        if (!foundTemp && !oldData.some(c => c.id === commentForList.id)) {
           return [commentForList, ...updatedComments];
         }
 
@@ -236,12 +240,12 @@ const useCommentData = (currentSkinId) => {
 
       queryClient.setQueryData(queryKeys.comments(currentSkinId), (oldData = []) =>
         oldData.map(comment =>
-          comment._id === commentId
+          comment.id === commentId
             ? {
               ...comment,
               likedBy: isCurrentlyLiked
-                ? comment.likedBy.filter(id => id !== user._id)
-                : [...comment.likedBy, user._id]
+                ? comment.likedBy.filter(id => id !== user.id)
+                : [...comment.likedBy, user.id]
             }
             : comment
         )
@@ -286,7 +290,7 @@ const useCommentData = (currentSkinId) => {
   const loadReplies = useCallback(async (commentId) => {
     // Check cache directly to avoid dependency on comments
     const currentComments = queryClient.getQueryData(queryKeys.comments(currentSkinId)) || [];
-    const comment = currentComments.find(c => c._id === commentId);
+    const comment = currentComments.find(c => c.id === commentId);
 
     // Skip if already loading or loaded
     if (loadingReplies.has(commentId) || (comment?.replies && comment.replies.length > 0)) {
@@ -305,16 +309,16 @@ const useCommentData = (currentSkinId) => {
 
         queryClient.setQueryData(queryKeys.comments(currentSkinId), (oldData = []) =>
           oldData.map(comment => {
-            if (comment._id !== commentId) return comment;
+            if (comment.id !== commentId) return comment;
 
             // Preserve temp replies
             const existingReplies = comment.replies || [];
-            const tempReplies = existingReplies.filter(r => r._id.startsWith('temp-reply-'));
+            const tempReplies = existingReplies.filter(r => r.id.startsWith('temp-reply-'));
             
             // Merge with server data, avoiding duplicates
             const mergedReplies = [...transformedReplies];
             tempReplies.forEach(temp => {
-              if (!mergedReplies.some(r => r._id === temp._id)) {
+              if (!mergedReplies.some(r => r.id === temp.id)) {
                 mergedReplies.push(temp);
               }
             });
@@ -347,7 +351,7 @@ const useCommentData = (currentSkinId) => {
     } else {
       // Check if replies need to be loaded
       const currentComments = queryClient.getQueryData(queryKeys.comments(currentSkinId)) || [];
-      const comment = currentComments.find(c => c._id === commentId);
+      const comment = currentComments.find(c => c.id === commentId);
 
       if (!comment?.replies || comment.replies.length === 0) {
         await loadReplies(commentId);
@@ -376,20 +380,26 @@ const useCommentData = (currentSkinId) => {
       const previousComments = queryClient.getQueryData(queryKeys.comments(currentSkinId));
 
       const optimisticReply = {
-        _id: `temp-reply-${Date.now()}`,
-        userId: user._id,
+        id: `temp-reply-${Date.now()}`,
+        userId: user.id,
         username: user.username,
         comment: replyText.trim(),
         createdAt: new Date().toISOString(),
         likedBy: [],
+
         isEdited: false,
         status: 'approved',
         displayText: replyText.trim(),
+        user: createOptimisticUser(),
+        capabilities: {
+          canDelete: true,
+          canEdit: true
+        }
       };
 
       queryClient.setQueryData(queryKeys.comments(currentSkinId), (oldData = []) =>
         oldData.map(comment =>
-          comment._id === commentId
+          comment.id === commentId
             ? { ...comment, replies: [...(comment.replies || []), optimisticReply] }
             : comment
         )
@@ -409,24 +419,24 @@ const useCommentData = (currentSkinId) => {
 
       queryClient.setQueryData(queryKeys.comments(currentSkinId), (oldData = []) =>
         oldData.map(comment => {
-          if (comment._id !== commentId) return comment;
+          if (comment.id !== commentId) return comment;
 
           const existingReplies = comment.replies || [];
           let foundTemp = false;
           
           const updatedReplies = existingReplies.map(reply => {
-            if (reply._id.startsWith('temp-reply-')) {
+            if (reply.id.startsWith('temp-reply-')) {
               foundTemp = true;
               return newReply;
             }
-            if (reply._id === newReply._id) {
+            if (reply.id === newReply.id) {
               return newReply;
             }
             return reply;
           });
 
           // Handle edge case: temp reply missing
-          if (!foundTemp && !existingReplies.some(r => r._id === newReply._id)) {
+          if (!foundTemp && !existingReplies.some(r => r.id === newReply.id)) {
             updatedReplies.push(newReply);
           }
 
@@ -486,7 +496,7 @@ const useCommentData = (currentSkinId) => {
 
       // Optimistically remove the comment
       queryClient.setQueryData(queryKeys.comments(currentSkinId), (oldData = []) =>
-        oldData.filter(comment => comment._id !== commentId)
+        oldData.filter(comment => comment.id !== commentId)
       );
 
       return { previousComments };
@@ -524,10 +534,10 @@ const useCommentData = (currentSkinId) => {
       // Optimistically remove the reply
       queryClient.setQueryData(queryKeys.comments(currentSkinId), (oldData = []) =>
         oldData.map(comment => {
-          if (comment._id !== commentId) return comment;
+          if (comment.id !== commentId) return comment;
           return {
             ...comment,
-            replies: (comment.replies || []).filter(reply => reply._id !== replyId)
+            replies: (comment.replies || []).filter(reply => reply.id !== replyId)
           };
         })
       );

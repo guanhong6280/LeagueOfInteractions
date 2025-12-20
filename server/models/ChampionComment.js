@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 // Sub-schema for replies
 const ReplySchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  username: { type: String, required: true },
+  
   comment: {
     type: String,
     required: true,
@@ -28,7 +28,6 @@ const ReplySchema = new mongoose.Schema({
 const ChampionCommentSchema = new mongoose.Schema({
   championId: { type: String, required: true },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  username: { type: String, required: true },
 
   comment: {
     type: String,

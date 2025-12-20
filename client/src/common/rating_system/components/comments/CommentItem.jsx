@@ -1,8 +1,5 @@
-import React, { memo, useState } from 'react';
+import React, { memo } from 'react';
 import * as MUI from '@mui/material';
-import {
-  DeleteOutline as DeleteIcon
-} from '@mui/icons-material';
 import CommentActions from './CommentActions';
 
 const CommentItem = memo(({
@@ -134,9 +131,9 @@ const CommentItem = memo(({
             onToggleLike={onToggleLike}
             onStartReply={onStartReply}
             onCancelReply={onCancelReply}
-            isReplyingTo={isReplyingTo === comment._id}
+            isReplyingTo={isReplyingTo === comment.id}
             showReplies={showReplies}
-            onToggleReplies={() => onToggleReplies(comment._id)}
+            onToggleReplies={() => onToggleReplies(comment.id)}
             isSubmittingReply={isSubmittingReply}
             isLoadingReplies={isLoadingReplies}
             onDeleteComment={onDeleteComment}
@@ -152,10 +149,10 @@ const CommentItem = memo(({
           <MUI.Box sx={{ mt: 1, pl: { xs: 0, sm: 7 } }}>
             {comment.replies.map((reply, index) => (
               <ReplyItem
-                key={reply._id || index}
+                key={reply.id || index}
                 reply={reply}
-                commentId={comment._id}
-                onToggleLike={onToggleLike}
+                commentId={comment.id}
+                onToggleLike={onToggleLike} 
                 onDeleteReply={onDeleteReply}
                 isLast={index === comment.replies.length - 1}
               />

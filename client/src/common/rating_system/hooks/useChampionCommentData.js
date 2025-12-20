@@ -13,13 +13,11 @@ import {
 } from '../../../api/championApi';
 import useCurrentUser from '../../../hooks/useCurrentUser';
 
-// Query key factory to prevent typos and centralize key management
 const queryKeys = {
   comments: (championId) => ['champion-comments', championId],
   userComment: (championId, userId) => ['user-champion-comment', championId, userId],
 };
 
-// Configuration constants
 const COMMENT_MAX_LENGTH = 1000;
 const REPLY_MAX_LENGTH = 500;
 
@@ -34,12 +32,10 @@ const useChampionCommentData = (championId) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
   
-  // Debounce map for like operations (prevents spam clicking)
   const likeDebounceMap = useRef(new Map());
 
   // ==================== QUERIES ====================
   
-  // 1. Fetch comments (inherits global React Query config from QueryProvider)
   const {
     data: comments = [],
     isLoading,
@@ -48,27 +44,26 @@ const useChampionCommentData = (championId) => {
   } = useQuery({
     queryKey: queryKeys.comments(championId),
     queryFn: async () => {
-      const response = await getChampionComments(championId, true);
+      // ✅ Correct: Passing object per your API definition
+      const response = await getChampionComments(championId, { includeUserDetails: true });
+      console.log('response from useChampionCommentData', response);
       return response.success ? response.data : [];
     },
     enabled: !!championId,
-    staleTime: 30000, // Consider data fresh for 30 seconds
+    staleTime: 30000, 
   });
 
-  // Transform comments only when needed (add displayText for backward compatibility)
   const transformedComments = useMemo(() => {
     return comments.map(comment => ({
       ...comment,
-      displayText: comment.comment, // Backward compatibility
-      // Calculate replyCount from replies array when available (more accurate after optimistic updates)
-      // Fall back to server's replyCount if replies haven't been loaded yet
+      displayText: comment.comment, 
+      // Ensure we use the server's replyCount if available, or the array length
       replyCount: comment.replies?.length ?? comment.replyCount ?? 0,
     }));
   }, [comments]);
 
-  // 2. Fetch user's comment (inherits global React Query config)
   const { data: userComment } = useQuery({
-    queryKey: queryKeys.userComment(championId, user?._id),
+    queryKey: queryKeys.userComment(championId, user?.id),
     queryFn: async () => {
       const response = await getUserChampionComment(championId);
       return response.success ? response.data : null;
@@ -78,14 +73,13 @@ const useChampionCommentData = (championId) => {
 
   // ==================== MUTATIONS ====================
 
-  // Helper function to create optimistic user data
+  // Helper to create the nested user object for optimistic updates
   const createOptimisticUser = useCallback(() => ({
-    _id: user._id,
     username: user.username,
     profilePictureURL: user.profilePictureURL,
   }), [user]);
 
-  // 3. Submit/Update Comment Mutation
+  // 1. Submit Comment Mutation
   const submitCommentMutation = useMutation({
     mutationFn: (commentText) => submitChampionComment(championId, { comment: commentText.trim() }),
 
@@ -94,37 +88,39 @@ const useChampionCommentData = (championId) => {
       const previousComments = queryClient.getQueryData(queryKeys.comments(championId));
 
       const optimisticComment = {
-        _id: `temp-${Date.now()}`,
+        id: `temp-${Date.now()}`,  
         comment: commentText.trim(),
-        userId: user._id,
-        username: user.username,
+        userId: user.id,
         user: createOptimisticUser(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         likedBy: [],
         isEdited: false,
-        status: 'approved',
+        status: 'approved', // Optimistically assume approved
         displayText: commentText.trim(),
-        championId: championId
+        championId: championId,
+        // ✅ FIX 2: Add capabilities so "Delete" button appears immediately
+        capabilities: {
+          canDelete: true,
+          canEdit: true
+        }
       };
 
       queryClient.setQueryData(queryKeys.comments(championId), (oldData = []) => {
-        const existingIndex = oldData.findIndex(c => c.userId === user._id);
+        const existingIndex = oldData.findIndex(c => c.userId === user.id);
         const isUpdate = existingIndex !== -1;
 
         if (isUpdate) {
-          // Update existing comment
           const newList = [...oldData];
           newList[existingIndex] = {
             ...oldData[existingIndex],
             ...optimisticComment,
-            _id: oldData[existingIndex]._id,
+            id: oldData[existingIndex].id,
             createdAt: oldData[existingIndex].createdAt,
             isEdited: true
           };
           return newList;
         } else {
-          // Prepend new comment
           return [optimisticComment, ...oldData];
         }
       });
@@ -136,32 +132,30 @@ const useChampionCommentData = (championId) => {
       if (!response?.success || !response?.data) return;
 
       const submittedComment = response.data;
-
-      // Replace optimistic with real data
       const commentForList = {
         ...submittedComment,
         displayText: submittedComment.comment,
-        user: createOptimisticUser()
+        // Ensure user object is present (sometimes backend might just return userId if populate failed)
+        user: submittedComment.user || createOptimisticUser() 
       };
 
       queryClient.setQueryData(queryKeys.comments(championId), (oldData = []) => {
+        // ... (Same replacement logic as before) ...
         let foundTemp = false;
         const updatedComments = oldData.map(comment => {
-          if (comment._id.startsWith('temp-')) {
+          if (comment.id.startsWith('temp-')) {
             foundTemp = true;
             return commentForList;
           }
-          if (comment._id === commentForList._id) {
+          if (comment.id === commentForList.id) {
             return commentForList;
           }
           return comment;
         });
 
-        // Handle edge case: temp comment missing
-        if (!foundTemp && !oldData.some(c => c._id === commentForList._id)) {
+        if (!foundTemp && !oldData.some(c => c.id === commentForList.id)) {
           return [commentForList, ...updatedComments];
         }
-
         return updatedComments;
       });
     },
@@ -175,54 +169,33 @@ const useChampionCommentData = (championId) => {
     }
   });
 
-  // Wrapper function with validation
   const submitComment = useCallback(async (commentText) => {
-    if (!user) {
-      return { success: false, message: 'Please sign in to comment' };
-    }
+    if (!user) return { success: false, message: 'Please sign in to comment' };
 
     const trimmedText = commentText.trim();
-    if (!trimmedText) {
-      return { success: false, message: 'Comment cannot be empty' };
-    }
-
-    if (trimmedText.length > COMMENT_MAX_LENGTH) {
-      return { success: false, message: `Comment cannot exceed ${COMMENT_MAX_LENGTH} characters` };
-    }
+    if (!trimmedText) return { success: false, message: 'Comment cannot be empty' };
+    if (trimmedText.length > COMMENT_MAX_LENGTH) return { success: false, message: `Comment cannot exceed ${COMMENT_MAX_LENGTH} characters` };
 
     try {
       const result = await submitCommentMutation.mutateAsync(commentText);
-
-      if (!result.success) {
-        return { success: false, message: result.message || 'Failed to submit comment' };
-      }
+      if (!result.success) return { success: false, message: result.message || 'Failed to submit comment' };
 
       const submittedComment = result.data;
-
       if (submittedComment.status === 'rejected') {
-        return {
-          success: false,
-          message: 'Your comment was rejected due to inappropriate content. Please revise and try again.',
-          status: 'rejected'
-        };
+        return { success: false, message: 'Your comment was rejected.', status: 'rejected' };
       }
 
       const successMessage = submittedComment.status === 'needsReview'
-        ? 'Your comment will be reviewed before being displayed.'
+        ? 'Your comment will be reviewed.'
         : userComment ? 'Comment updated successfully.' : 'Comment submitted successfully.';
 
-      return {
-        success: true,
-        message: successMessage,
-        status: submittedComment.status
-      };
+      return { success: true, message: successMessage, status: submittedComment.status };
     } catch (err) {
-      const errorMessage = err.response?.data?.error || 'Failed to submit comment';
-      return { success: false, message: errorMessage };
+      return { success: false, message: err.response?.data?.error || 'Failed to submit comment' };
     }
-  }, [user, submitCommentMutation, userComment, createOptimisticUser]);
+  }, [user, submitCommentMutation, userComment]);
 
-  // 4. Like/Unlike Comment Mutation
+  // 2. Like/Unlike Mutation (Logic remains same, checking likedBy array)
   const toggleCommentLikeMutation = useMutation({
     mutationFn: ({ commentId, isCurrentlyLiked }) =>
       isCurrentlyLiked
@@ -235,37 +208,27 @@ const useChampionCommentData = (championId) => {
 
       queryClient.setQueryData(queryKeys.comments(championId), (oldData = []) =>
         oldData.map(comment =>
-          comment._id === commentId
+          (comment.id === commentId)
             ? {
               ...comment,
               likedBy: isCurrentlyLiked
-                ? comment.likedBy.filter(id => id !== user._id)
-                : [...comment.likedBy, user._id]
+                ? comment.likedBy.filter(id => id !== user.id)
+                : [...(comment.likedBy || []), user.id]
             }
             : comment
         )
       );
-
       return { previousComments };
     },
-
     onError: (err, variables, context) => {
-      if (context?.previousComments) {
-        queryClient.setQueryData(queryKeys.comments(championId), context.previousComments);
-      }
+      if (context?.previousComments) queryClient.setQueryData(queryKeys.comments(championId), context.previousComments);
     }
   });
 
   const toggleCommentLike = useCallback(async (commentId, isCurrentlyLiked) => {
     if (!user) return;
+    if (likeDebounceMap.current.has(commentId)) clearTimeout(likeDebounceMap.current.get(commentId));
 
-    // Clear existing debounce timeout for this comment
-    if (likeDebounceMap.current.has(commentId)) {
-      clearTimeout(likeDebounceMap.current.get(commentId));
-    }
-
-    // The optimistic UI update happens immediately in onMutate
-    // We just debounce the actual server request to prevent spam
     const timeoutId = setTimeout(async () => {
       try {
         await toggleCommentLikeMutation.mutateAsync({ commentId, isCurrentlyLiked });
@@ -274,28 +237,25 @@ const useChampionCommentData = (championId) => {
       } finally {
         likeDebounceMap.current.delete(commentId);
       }
-    }, 300); // 300ms debounce - UI is still instant!
+    }, 300);
 
     likeDebounceMap.current.set(commentId, timeoutId);
   }, [user, toggleCommentLikeMutation]);
 
   // ==================== REPLIES ====================
 
-  // Load replies (optimized to not depend on comments array)
   const loadReplies = useCallback(async (commentId) => {
-    // Check cache directly to avoid dependency on comments
     const currentComments = queryClient.getQueryData(queryKeys.comments(championId)) || [];
-    const comment = currentComments.find(c => c._id === commentId);
+    const comment = currentComments.find(c => c.id === commentId);
 
-    // Skip if already loading or loaded
-    if (loadingReplies.has(commentId) || (comment?.replies && comment.replies.length > 0)) {
-      return;
-    }
+    if (loadingReplies.has(commentId) || (comment?.replies && comment.replies.length > 0)) return;
 
     setLoadingReplies(prev => new Set([...prev, commentId]));
 
     try {
-      const response = await getChampionRepliesForComment(championId, commentId, true);
+      // ✅ Correct: Passing object for options
+      const response = await getChampionRepliesForComment(championId, commentId, { includeUserDetails: true });
+      console.log('response from loadReplies', response);
       if (response.success) {
         const transformedReplies = response.data.map(reply => ({
           ...reply,
@@ -303,22 +263,22 @@ const useChampionCommentData = (championId) => {
         }));
 
         queryClient.setQueryData(queryKeys.comments(championId), (oldData = []) =>
-          oldData.map(comment => {
-            if (comment._id !== commentId) return comment;
+          oldData.map(c => {
+            if (c.id !== commentId) return c;
 
-            // Preserve temp replies
-            const existingReplies = comment.replies || [];
-            const tempReplies = existingReplies.filter(r => r._id.startsWith('temp-reply-'));
+            // Preserve temp replies during load
+            const existingReplies = c.replies || [];
+            const tempReplies = existingReplies.filter(r => r.id?.startsWith('temp-reply-'));
             
-            // Merge with server data, avoiding duplicates
+            // Merge logic
             const mergedReplies = [...transformedReplies];
             tempReplies.forEach(temp => {
-              if (!mergedReplies.some(r => r._id === temp._id)) {
+              if (!mergedReplies.some(r => r.id === temp.id)) {
                 mergedReplies.push(temp);
               }
             });
 
-            return { ...comment, replies: mergedReplies };
+            return { ...c, replies: mergedReplies };
           })
         );
       }
@@ -333,10 +293,8 @@ const useChampionCommentData = (championId) => {
     }
   }, [championId, loadingReplies, queryClient]);
 
-  // Toggle reply expansion
   const toggleReplies = useCallback(async (commentId) => {
     const isCurrentlyExpanded = expandedReplies.has(commentId);
-
     if (isCurrentlyExpanded) {
       setExpandedReplies(prev => {
         const newSet = new Set(prev);
@@ -344,28 +302,20 @@ const useChampionCommentData = (championId) => {
         return newSet;
       });
     } else {
-      // Check if replies need to be loaded
       const currentComments = queryClient.getQueryData(queryKeys.comments(championId)) || [];
-      const comment = currentComments.find(c => c._id === commentId);
+      const comment = currentComments.find(c => c.id === commentId);
 
       if (!comment?.replies || comment.replies.length === 0) {
         await loadReplies(commentId);
       }
-
       setExpandedReplies(prev => new Set([...prev, commentId]));
     }
   }, [expandedReplies, championId, loadReplies, queryClient]);
 
-  // Start/stop replying
-  const startReply = useCallback((commentId) => {
-    setReplyingTo(commentId);
-  }, []);
+  const startReply = useCallback((commentId) => setReplyingTo(commentId), []);
+  const cancelReply = useCallback(() => setReplyingTo(null), []);
 
-  const cancelReply = useCallback(() => {
-    setReplyingTo(null);
-  }, []);
-
-  // 5. Submit Reply Mutation
+  // 3. Submit Reply Mutation
   const submitReplyMutation = useMutation({
     mutationFn: ({ commentId, replyText }) =>
       addChampionReply(championId, commentId, { comment: replyText.trim() }),
@@ -375,20 +325,25 @@ const useChampionCommentData = (championId) => {
       const previousComments = queryClient.getQueryData(queryKeys.comments(championId));
 
       const optimisticReply = {
-        _id: `temp-reply-${Date.now()}`,
-        userId: user._id,
-        username: user.username,
+        id: `temp-reply-${Date.now()}`,
+        userId: user.id,
+        user: createOptimisticUser(), 
         comment: replyText.trim(),
         createdAt: new Date().toISOString(),
         likedBy: [],
         isEdited: false,
         status: 'approved',
         displayText: replyText.trim(),
+        // ✅ FIX 4: Add capabilities
+        capabilities: {
+          canDelete: true,
+          canEdit: true
+        }
       };
 
       queryClient.setQueryData(queryKeys.comments(championId), (oldData = []) =>
         oldData.map(comment =>
-          comment._id === commentId
+          (comment.id === commentId)
             ? { ...comment, replies: [...(comment.replies || []), optimisticReply] }
             : comment
         )
@@ -403,29 +358,28 @@ const useChampionCommentData = (championId) => {
       const newReply = {
         ...response.data,
         displayText: response.data.comment,
-        user: createOptimisticUser()
+        user: createOptimisticUser() // Ensure we have local user data if server didn't send it back fully populated
       };
 
       queryClient.setQueryData(queryKeys.comments(championId), (oldData = []) =>
         oldData.map(comment => {
-          if (comment._id !== commentId) return comment;
+          if (comment.id !== commentId) return comment;
 
           const existingReplies = comment.replies || [];
           let foundTemp = false;
           
           const updatedReplies = existingReplies.map(reply => {
-            if (reply._id.startsWith('temp-reply-')) {
+            if (reply.id?.startsWith('temp-reply-')) {
               foundTemp = true;
               return newReply;
             }
-            if (reply._id === newReply._id) {
+            if (reply.id === newReply.id) {
               return newReply;
             }
             return reply;
           });
 
-          // Handle edge case: temp reply missing
-          if (!foundTemp && !existingReplies.some(r => r._id === newReply._id)) {
+          if (!foundTemp && !existingReplies.some(r => r.id === newReply.id)) {
             updatedReplies.push(newReply);
           }
 
@@ -433,186 +387,116 @@ const useChampionCommentData = (championId) => {
         })
       );
 
-      // Expand replies and cancel reply mode
       setExpandedReplies(prev => new Set([...prev, commentId]));
       setReplyingTo(null);
     },
-
     onError: (err, variables, context) => {
-      if (context?.previousComments) {
-        queryClient.setQueryData(queryKeys.comments(championId), context.previousComments);
-      }
+      if (context?.previousComments) queryClient.setQueryData(queryKeys.comments(championId), context.previousComments);
     }
   });
 
   const submitReply = useCallback(async (commentId, replyText) => {
-    if (!user) {
-      return { success: false, message: 'Please sign in to reply' };
-    }
-
+    if (!user) return { success: false, message: 'Please sign in to reply' };
     const trimmedText = replyText.trim();
-    if (!trimmedText) {
-      return { success: false, message: 'Reply cannot be empty' };
-    }
-
-    if (trimmedText.length > REPLY_MAX_LENGTH) {
-      return { success: false, message: `Reply cannot exceed ${REPLY_MAX_LENGTH} characters` };
-    }
+    if (!trimmedText) return { success: false, message: 'Reply cannot be empty' };
+    if (trimmedText.length > REPLY_MAX_LENGTH) return { success: false, message: `Reply cannot exceed ${REPLY_MAX_LENGTH} characters` };
 
     try {
       const result = await submitReplyMutation.mutateAsync({ commentId, replyText });
-
-      const successMessage = result.data?.status === 'needsReview'
-        ? 'Your reply will be reviewed before being displayed.'
-        : 'Reply submitted successfully.';
-
+      const successMessage = result.data?.status === 'needsReview' ? 'Your reply will be reviewed.' : 'Reply submitted successfully.';
       return { success: true, message: successMessage };
     } catch (err) {
-      const errorMessage = err.response?.data?.error || 'Failed to submit reply';
-      return { success: false, message: errorMessage };
+      return { success: false, message: err.response?.data?.error || 'Failed to submit reply' };
     }
   }, [user, submitReplyMutation]);
 
-  // ==================== DELETE ====================
-
-  // 6. Delete Comment Mutation
   const deleteCommentMutation = useMutation({
     mutationFn: (commentId) => deleteChampionComment(championId, commentId),
-
     onMutate: async (commentId) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.comments(championId) });
       const previousComments = queryClient.getQueryData(queryKeys.comments(championId));
-
-      // Optimistically remove the comment
       queryClient.setQueryData(queryKeys.comments(championId), (oldData = []) =>
-        oldData.filter(comment => comment._id !== commentId)
+        oldData.filter(comment => comment.id !== commentId)
       );
-
       return { previousComments };
     },
-
     onError: (err, variables, context) => {
-      if (context?.previousComments) {
-        queryClient.setQueryData(queryKeys.comments(championId), context.previousComments);
-      }
+      if (context?.previousComments) queryClient.setQueryData(queryKeys.comments(championId), context.previousComments);
     }
   });
 
   const deleteComment = useCallback(async (commentId) => {
-    if (!user) {
-      return { success: false, message: 'Please sign in to delete comments' };
-    }
-
+    if (!user) return { success: false, message: 'Please sign in' };
     try {
-      const result = await deleteCommentMutation.mutateAsync(commentId);
-      return { success: true, message: 'Comment deleted successfully' };
+      await deleteCommentMutation.mutateAsync(commentId);
+      return { success: true, message: 'Comment deleted' };
     } catch (err) {
-      const errorMessage = err.response?.data?.error || 'Failed to delete comment';
-      return { success: false, message: errorMessage };
+      return { success: false, message: err.response?.data?.error || 'Failed to delete' };
     }
   }, [user, deleteCommentMutation]);
 
-  // 7. Delete Reply Mutation
   const deleteReplyMutation = useMutation({
     mutationFn: ({ commentId, replyId }) => deleteChampionReply(championId, commentId, replyId),
-
     onMutate: async ({ commentId, replyId }) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.comments(championId) });
       const previousComments = queryClient.getQueryData(queryKeys.comments(championId));
-
-      // Optimistically remove the reply
       queryClient.setQueryData(queryKeys.comments(championId), (oldData = []) =>
         oldData.map(comment => {
-          if (comment._id !== commentId) return comment;
+          if (comment.id !== commentId) return comment;
           return {
             ...comment,
-            replies: (comment.replies || []).filter(reply => reply._id !== replyId)
+            replies: (comment.replies || []).filter(reply => reply.id !== replyId)
           };
         })
       );
-
       return { previousComments };
     },
-
     onError: (err, variables, context) => {
-      if (context?.previousComments) {
-        queryClient.setQueryData(queryKeys.comments(championId), context.previousComments);
-      }
+      if (context?.previousComments) queryClient.setQueryData(queryKeys.comments(championId), context.previousComments);
     }
   });
 
   const deleteReply = useCallback(async (commentId, replyId) => {
-    if (!user) {
-      return { success: false, message: 'Please sign in to delete replies' };
-    }
-
+    if (!user) return { success: false, message: 'Please sign in' };
     try {
-      const result = await deleteReplyMutation.mutateAsync({ commentId, replyId });
-      return { success: true, message: 'Reply deleted successfully' };
+      await deleteReplyMutation.mutateAsync({ commentId, replyId });
+      return { success: true, message: 'Reply deleted' };
     } catch (err) {
-      const errorMessage = err.response?.data?.error || 'Failed to delete reply';
-      return { success: false, message: errorMessage };
+      return { success: false, message: err.response?.data?.error || 'Failed to delete reply' };
     }
   }, [user, deleteReplyMutation]);
 
-  // ==================== REFRESH ====================
-
-  // Handle refresh with full UI state reset and rate limiting
   const handleRefresh = useCallback(async () => {
-    const COOLDOWN_PERIOD = 5000; // 5 seconds cooldown
+    const COOLDOWN_PERIOD = 5000;
     const now = Date.now();
-    
-    // Prevent refresh if still in cooldown period
-    if (now - lastRefreshTime < COOLDOWN_PERIOD) {
-      console.log('Refresh on cooldown. Please wait.');
-      return { success: false, message: 'Please wait before refreshing again' };
-    }
-    
-    // Prevent multiple simultaneous refreshes
-    if (isRefreshing) {
-      return { success: false, message: 'Refresh already in progress' };
-    }
+    if (now - lastRefreshTime < COOLDOWN_PERIOD) return { success: false, message: 'Please wait' };
+    if (isRefreshing) return { success: false, message: 'In progress' };
     
     try {
       setIsRefreshing(true);
       setLastRefreshTime(now);
-      
-      // Reset all UI state
       setExpandedReplies(new Set());
       setReplyingTo(null);
       setLoadingReplies(new Set());
-      
-      // Refetch comments from server
       await refreshComments();
-      
       return { success: true };
     } catch (error) {
-      console.error('Refresh failed:', error);
-      return { success: false, message: 'Refresh failed' };
+      return { success: false, message: 'Failed' };
     } finally {
       setIsRefreshing(false);
     }
   }, [refreshComments, lastRefreshTime, isRefreshing]);
 
-  // ==================== RETURN ====================
-
   return {
-    // Data
     comments: transformedComments,
     userComment,
-
-    // Loading states
     isLoading,
     isSubmitting: submitCommentMutation.isPending || submitReplyMutation.isPending,
     isRefreshing,
     error: commentsError?.message || null,
-
-    // UI state
     expandedReplies,
     replyingTo,
     loadingReplies,
-
-    // Actions
     submitComment,
     toggleCommentLike,
     toggleReplies,

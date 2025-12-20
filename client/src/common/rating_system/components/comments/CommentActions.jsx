@@ -80,13 +80,14 @@ const CommentActions = memo(({
   const [likeAnimation, setLikeAnimation] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const isLiked = user && comment.likedBy?.includes(user._id);
+  const isLiked = user && comment.likedBy?.includes(user.id);
+
   const likeCount = comment.likedBy?.length || 0;
   const replyCount = comment.replyCount || 0;
   // Disable interactions for rejected or pending comments
   const isDisabled = comment.status === 'rejected' || comment.status === 'needsReview';
   // Check if current user is the comment author
-  const isAuthor = user && comment.userId === user._id;
+  const canDelete = comment.capabilities?.canDelete || false;
 
   const handleLikeClick = async () => {
     if (!user || isDisabled) return;
@@ -95,7 +96,7 @@ const CommentActions = memo(({
     setLikeAnimation(true);
     setTimeout(() => setLikeAnimation(false), 300);
 
-    await onToggleLike(comment._id, isLiked);
+    await onToggleLike(comment.id, isLiked);
   };
 
   const handleReplyClick = () => {
@@ -104,7 +105,7 @@ const CommentActions = memo(({
     if (isReplyingTo) {
       onCancelReply();
     } else {
-      onStartReply(comment._id);
+      onStartReply(comment.id);
     }
   };
 
@@ -115,7 +116,7 @@ const CommentActions = memo(({
   const handleConfirmDelete = async () => {
     setShowDeleteDialog(false);
     if (onDeleteComment) {
-      await onDeleteComment(comment._id);
+      await onDeleteComment(comment.id);
     }
   };
 
@@ -234,7 +235,7 @@ const CommentActions = memo(({
         <MUI.Box sx={{ flex: 1 }} />
 
         {/* Delete Button - Only show for comment author */}
-        {isAuthor && (
+        {canDelete && (
           <MUI.Button
             onClick={handleDeleteClick}
             disabled={!user}

@@ -83,7 +83,7 @@ const UserProfile = () => {
         <ProfileHeroCard user={profileUser} isOwnProfile={isOwnProfile} />
 
         {/* Recent Activity */}
-        <ActivityTimeline userId={profileUser._id} />
+        <ActivityTimeline userId={profileUser.id} />
       </MUI.Box>
     </MUI.Box>
   );

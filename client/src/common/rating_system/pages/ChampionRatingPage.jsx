@@ -5,7 +5,7 @@ import { useParams } from 'react-router-dom';
 import { ReturnButton } from '../components/common';
 import { useVersion } from '../../../contextProvider/VersionProvider';
 import { getChampionSquareAssetUrl } from '../../../utils/championNameUtils';
-import { useChampionRatingSectionData } from '../../../hooks/useChampionRatingSectionData'; // Reusable Hook
+import { useRatingSectionData } from '../../../hooks/useRatingSectionData'; // Reusable Hook
 import PlaystyleRadarChart from '../components/stats/PlaystyleRadarChart';
 import AIChipsSection from '../components/stats/AIChipsSection';
 import ChampionCommentSection from '../components/sections/ChampionCommentSection';
@@ -21,7 +21,7 @@ const ChampionRatingPage = () => {
   const { version } = useVersion();
 
   // Use the reusable hook, requesting only rating stats
-  const { data: statsData, loading } = useChampionRatingSectionData(championName, { include: 'champions' });
+  const { data: statsData } = useRatingSectionData(championName, { include: 'champions' });
 
   // Transform hook data to match existing component structure if needed
   // or simply use statsData directly.
@@ -31,12 +31,6 @@ const ChampionRatingPage = () => {
     roles: statsData.roles,
     stats: statsData
   } : null;
-
-  if (loading) return (
-    <MUI.Box display="flex" justifyContent="center" mt={10}>
-      <MUI.CircularProgress sx={{ color: 'black' }} size={60} thickness={5} />
-    </MUI.Box>
-  );
 
   const stats = championData?.stats?.championRatingStats || {};
 

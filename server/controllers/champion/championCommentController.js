@@ -19,7 +19,8 @@ async function ensureChampionExists(championId) {
 const commentService = new CommentService({
   CommentModel: ChampionComment,
   entityIdField: 'championId',
-  validateEntityFn: ensureChampionExists
+  validateEntityFn: ensureChampionExists,
+  idType: 'String'
 });
 
 exports.commentOnChampion = (req, res) => commentService.commentOnEntity(req, res);

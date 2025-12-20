@@ -41,21 +41,40 @@ class CommentService {
    * @param {Object} comment - Comment object to transform
    * @returns {Object} Transformed comment
    */
-  transformCommentForResponse(comment) {
-    const transformed = { ...comment };
+  // Backend: transformCommentForResponse
+  transformCommentForResponse(commentObj, requestingUser) {
+    // 1. Define the Business Rule HERE (Single Source of Truth)
+    const isAuthor = requestingUser && commentObj.userId.toString() === requestingUser._id.toString();
+    const isAdmin = requestingUser && requestingUser.isAdministrator;
+    // 2. Calculate Capabilities
+    const canDelete = isAuthor || isAdmin;
+    const canEdit = isAuthor; // Maybe only authors can edit text, not admins
 
-    // Replace comment text for moderated content
-    if (transformed.status === 'rejected') {
-      transformed.comment = "This comment was rejected due to inappropriate content. Please revise and try again.";
-    } else if (transformed.status === 'needsReview') {
-      transformed.comment = "This comment is under review";
-    }
+    return {
+      id: commentObj._id,
+      comment: commentObj.comment,
+      userId: commentObj.userId,
+      user: commentObj.user ? {
+        username: commentObj.user.username,
+        profilePictureURL: commentObj.user.profilePictureURL,
+      } : {
+        username: 'Deleted User', // Fallback for deleted accounts
+        profilePictureURL: null
+      },
 
-    // Remove sensitive moderation data from response
-    delete transformed.toxicityScore;
-    delete transformed.spamScore;
-
-    return transformed;
+      createdAt: commentObj.createdAt,
+      updatedAt: commentObj.updatedAt,
+      status: commentObj.status,
+      likedBy: commentObj.likedBy,
+      isEdited: commentObj.isEdited,
+      replyCount: commentObj.replyCount || 0,
+      moderatedBy: commentObj.moderatedBy,
+      // 3. Send the Capabilities to the Frontend
+      capabilities: {
+        canDelete: canDelete,
+        canEdit: canEdit
+      }
+    };
   }
 
   /**
@@ -96,108 +115,89 @@ class CommentService {
       const { comment } = req.body;
 
       if (!comment || typeof comment !== 'string') {
-        return sendError(res, 'Comment text is required.', {
-          status: 400,
-          errorCode: 'COMMENT_REQUIRED',
-        });
+        return sendError(res, 'Comment text is required.', { status: 400, errorCode: 'COMMENT_REQUIRED' });
       }
 
       const normalizedId = this.normalizeId(rawId);
-      if (normalizedId === null) {
-        return sendError(res, 'Invalid Entity ID.', {
-          status: 400,
-          errorCode: 'INVALID_ENTITY_ID',
-        });
-      }
+      if (!normalizedId) return sendError(res, 'Invalid Entity ID.', { status: 400, errorCode: 'INVALID_ENTITY_ID' });
 
       const exists = await this.validateEntity(normalizedId);
-      if (!exists) {
-        return sendError(res, 'Entity not found.', {
-          status: 404,
-          errorCode: 'ENTITY_NOT_FOUND',
-        });
-      }
+      if (!exists) return sendError(res, 'Entity not found.', { status: 404, errorCode: 'ENTITY_NOT_FOUND' });
 
+      // Check for existing comment
       const query = { [this.entityIdField]: normalizedId, userId };
-      const existingComment = await this.CommentModel.findOne(query);
+      let commentDoc = await this.CommentModel.findOne(query);
 
-      let commentData;
-      if (existingComment) {
-        existingComment.comment = comment.trim();
-        existingComment.toxicityScore = req.body.toxicityScore || 0;
-        existingComment.spamScore = req.body.spamScore || 0;
-        existingComment.status = req.body.status || 'approved';
-        existingComment.isEdited = true;
-        await existingComment.save();
-        commentData = existingComment;
+      if (commentDoc) {
+        // Update existing
+        commentDoc.comment = comment.trim();
+        commentDoc.isEdited = true;
+        // Reset status if needed based on your moderation rules
+        commentDoc.status = req.body.status || 'approved';
+        await commentDoc.save();
       } else {
-        const user = await User.findById(userId).select('username');
-        if (!user) {
-          return sendError(res, 'User not found.', {
-            status: 404,
-            errorCode: 'USER_NOT_FOUND',
-          });
-        }
-
-        commentData = await this.CommentModel.create({
+        // Create new
+        // NOTICE: We removed 'username: user.username' here!
+        commentDoc = await this.CommentModel.create({
           [this.entityIdField]: normalizedId,
           userId,
-          username: user.username,
           comment: comment.trim(),
           isEdited: false,
+          status: req.body.status || 'approved',
           toxicityScore: req.body.toxicityScore || 0,
           spamScore: req.body.spamScore || 0,
-          status: req.body.status || 'approved',
         });
       }
 
-      if (this.updateStatsFn) {
-        await this.updateStatsFn(normalizedId);
-      }
+      // Update stats hook
+      if (this.updateStatsFn) await this.updateStatsFn(normalizedId);
 
-      let message;
-      if (commentData.status === 'rejected') message = 'Your comment was rejected due to inappropriate content.';
-      else if (commentData.status === 'needsReview') message = 'Your comment will be reviewed before being displayed.';
-      else message = existingComment ? 'Comment updated successfully.' : 'Comment submitted successfully.';
+      // CRITICAL: We must populate the user before returning, 
+      // otherwise the frontend receives { user: null }
+      await commentDoc.populate({ path: 'user', select: 'username profilePictureURL' });
 
-      // Transform comment text for response
-      const responseData = this.transformCommentForResponse(commentData.toObject ? commentData.toObject() : commentData);
+      // Transform
+      const responseData = this.transformCommentForResponse(
+        commentDoc.toObject({ virtuals: true }),
+        req.user
+      );
 
-      sendSuccess(res, responseData, {
-        message,
-        extra: {
-          moderation: {
-            status: commentData.status,
-            toxicityScore: commentData.toxicityScore,
-            spamScore: commentData.spamScore,
-          },
-        },
-      });
+      let message = 'Comment submitted successfully.';
+      if (commentDoc.status === 'rejected') message = 'Your comment was rejected.';
+      else if (commentDoc.status === 'needsReview') message = 'Your comment is pending review.';
+
+      sendSuccess(res, responseData, { message });
+
     } catch (err) {
       console.error('Error commenting:', err);
-      sendError(res, 'Failed to submit comment.', {
-        status: 500,
-        errorCode: 'COMMENT_SUBMIT_FAILED',
-      });
+      sendError(res, 'Failed to submit comment.', { status: 500 });
     }
   }
 
+  /**
+   * Fetches comments for a specific entity with cursor-based pagination.
+   * Enforces visibility rules: Users see all approved comments, plus their own non-approved ones.
+   */
   async getComments(req, res) {
     try {
-      const rawId = req.params[this.entityIdField] || req.params.championId || req.params.skinId;
+      // 1. Parameter Extraction & Defaults
+      // We use explicit defaults to avoid 'undefined' behavior
       const {
-        includeUserDetails = false,
+        includeUserDetails = 'true',
         cursor,
-        limit: limitParam,
+        limit: limitParam = 20,
         withCount = 'false',
       } = req.query;
-      const requestingUserId = req.user?._id; // Get requesting user ID for filtering
 
+      const rawId = req.params[this.entityIdField] || req.params.championId || req.params.skinId;
+      const requestingUserId = req.user?._id;
+
+      // 2. Validation (Fail Fast Principle)
       const normalizedId = this.normalizeId(rawId);
-      if (normalizedId === null) {
-        return sendError(res, 'Invalid ID.', {
+      if (!normalizedId) {
+        return sendError(res, 'Invalid Entity ID provided.', {
           status: 400,
-          errorCode: 'INVALID_ID',
+          errorCode: 'INVALID_ID'
         });
       }
 
@@ -205,105 +205,120 @@ class CommentService {
       if (!exists) {
         return sendError(res, 'Entity not found.', {
           status: 404,
-          errorCode: 'ENTITY_NOT_FOUND',
+          errorCode: 'ENTITY_NOT_FOUND'
         });
       }
 
-      // Pagination setup
-      const limit = Math.max(1, Math.min(Number(limitParam) || 20, 100));
-      let cursorFilter = {};
-      if (cursor) {
-        // cursor format: `${createdAtISO}:${_id}`
-        const [createdAtStr, id] = cursor.split(':');
-        const createdAtDate = new Date(createdAtStr);
-        if (!id || Number.isNaN(createdAtDate.getTime())) {
-          return sendError(res, 'Invalid cursor.', {
-            status: 400,
-            errorCode: 'INVALID_CURSOR',
-          });
-        }
-        cursorFilter = {
-          $or: [
-            { createdAt: { $lt: createdAtDate } },
-            { createdAt: createdAtDate, _id: { $lt: id } },
-          ],
-        };
-      }
+      // 3. Construct the Security Filter (The "Engine Room")
+      // This $or query ensures strict data isolation at the database level.
+      const visibilityFilter = {
+        $or: [
+          { status: 'approved' },
+          // Only add this condition if a user is actually logged in
+          ...(requestingUserId ? [{ userId: requestingUserId }] : [])
+        ]
+      };
 
-      // Base query
       const baseQuery = {
         [this.entityIdField]: normalizedId,
-        ...cursorFilter,
+        ...visibilityFilter,
       };
 
-      // Projection: only necessary fields
+      // 4. Cursor Logic (Pagination)
+      if (cursor) {
+        const [createdAtStr, id] = cursor.split(':');
+        const cursorDate = new Date(createdAtStr);
+
+        if (!id || isNaN(cursorDate.getTime())) {
+          return sendError(res, 'Invalid cursor format.', { status: 400 });
+        }
+
+        // We use $and to ensure cursor logic doesn't override the visibility filter
+        baseQuery.$and = [
+          {
+            $or: [
+              { createdAt: { $lt: cursorDate } },
+              { createdAt: cursorDate, _id: { $lt: id } },
+            ],
+          }
+        ];
+      }
+
+      // Clamp limit to prevent abuse (e.g. asking for 1 million records)
+      const limit = Math.max(1, Math.min(Number(limitParam), 100));
+
+      // 5. Projection (Optimization)
+      // Select only what we need. We DO NOT select 'username' here because 
+      // we rely on the populated 'user' object for identity.
       const projection = {
         comment: 1,
-        userId: 1,
-        username: 1,
-        likedBy: 1,
-        status: 1,
-        isEdited: 1,
+        userId: 1,       // Required for ownership check
+        status: 1,       // Required for UI badges (e.g. "Pending Review")
         createdAt: 1,
-        dateCreated: 1,
-        replies: 1, // temporarily to compute replyCount, will drop from output
-        toxicityScore: 1,
-        spamScore: 1,
+        replies: 1,      // Required for virtual replyCount
+        likedBy: 1,
+        isEdited: 1,
       };
 
-      // Fetch limit+1 to detect nextCursor
-      const docs = await this.CommentModel.find(baseQuery, projection)
+      // 6. Execution
+      // Fetch limit + 1 to proactively detect if there is a next page
+      let query = this.CommentModel.find(baseQuery, projection)
         .sort({ createdAt: -1, _id: -1 })
         .limit(limit + 1);
 
-      // Compute total count only if requested
-      let totalCount = undefined;
-      if (withCount === 'true') {
-        totalCount = await this.CommentModel.countDocuments({ [this.entityIdField]: normalizedId });
-      }
-
-      const items = docs
-        .map((commentDoc) => {
-          const commentObj = commentDoc.toObject({ virtuals: true });
-          commentObj.replyCount = commentDoc.replies ? commentDoc.replies.length : 0;
-          delete commentObj.replies; // Don't return full replies here
-          return commentObj;
-        })
-        .filter((comment) => this.shouldShowComment(comment, requestingUserId))
-        .map((comment) => this.transformCommentForResponse(comment));
-
-      let processedItems = items;
       if (includeUserDetails === 'true') {
-        processedItems = await this.CommentModel.populate(items, {
+        // Efficiently join user data
+        query.populate({
           path: 'user',
-          select: 'username profilePictureURL',
+          select: 'username profilePictureURL' // Security: Limit fields
         });
       }
 
-      // Determine nextCursor
+      const docs = await query;
+
+      // 7. Transformation Pipeline
+      const items = docs.map((doc) => {
+        // .toObject({ virtuals: true }) triggers the Virtual Populate & Getters
+        const obj = doc.toObject({ virtuals: true });
+
+        // Remove heavy internal data not needed by the client
+        delete obj.replies;
+
+        // Transform for API contract
+        return this.transformCommentForResponse(obj, requestingUserId);
+      });
+
+      // 8. Pagination Metadata
       let nextCursor = null;
-      if (processedItems.length > limit) {
-        const last = processedItems[limit - 1];
-        nextCursor = `${new Date(last.createdAt).toISOString()}:${last._id}`;
-        processedItems = processedItems.slice(0, limit);
-      } else if (docs.length > limit) {
-        // Safety: in case filtering reduced items, still use raw docs for cursor
-        const lastDoc = docs[limit - 1];
-        nextCursor = `${new Date(lastDoc.createdAt).toISOString()}:${lastDoc._id}`;
+      let responseItems = items;
+
+      if (items.length > limit) {
+        const lastItem = items[limit - 1];
+        nextCursor = `${new Date(lastItem.createdAt).toISOString()}:${lastItem._id}`;
+        // Remove the extra item we fetched
+        responseItems = items.slice(0, limit);
       }
 
-      sendSuccess(res, processedItems, {
+      // 9. Optional: Total Count (Expensive, so conditional)
+      let totalCount;
+      if (withCount === 'true') {
+        // Must use same query to count only what user is ALLOWED to see
+        totalCount = await this.CommentModel.countDocuments(baseQuery);
+      }
+
+      return sendSuccess(res, responseItems, {
         extra: {
-          count: processedItems.length,
+          count: responseItems.length,
           nextCursor,
           totalCount,
         },
       });
+
     } catch (err) {
-      console.error('Error fetching comments:', err);
-      sendError(res, 'Failed to fetch comments.', {
+      console.error('[CommentController] getComments failed:', err);
+      return sendError(res, 'Internal Server Error', {
         status: 500,
-        errorCode: 'COMMENTS_FETCH_FAILED',
+        errorCode: 'INTERNAL_ERROR'
       });
     }
   }
@@ -314,32 +329,31 @@ class CommentService {
       const userId = req.user._id;
 
       const normalizedId = this.normalizeId(rawId);
-      if (normalizedId === null) {
-        return sendError(res, 'Invalid ID.', {
-          status: 400,
-          errorCode: 'INVALID_ID',
-        });
-      }
+      if (!normalizedId) return sendError(res, 'Invalid ID.', { status: 400, errorCode: 'INVALID_ID' });
 
+      // FIX: Chain .populate() here so the Virtual 'user' is filled
       const comment = await this.CommentModel.findOne({
         [this.entityIdField]: normalizedId,
         userId,
+      }).populate({
+        path: 'user', 
+        select: 'username profilePictureURL'
       });
 
       if (!comment) {
         return sendSuccess(res, null);
       }
 
-      // Transform user's own comment (show rejection message if rejected)
-      const transformed = this.transformCommentForResponse(comment.toObject());
+      // Pass req.user for capability calculation
+      const transformed = this.transformCommentForResponse(
+        comment.toObject({ virtuals: true }), 
+        req.user
+      );
 
       sendSuccess(res, transformed);
     } catch (err) {
       console.error('Error fetching user comment:', err);
-      sendError(res, 'Failed to fetch user comment.', {
-        status: 500,
-        errorCode: 'USER_COMMENT_FETCH_FAILED',
-      });
+      sendError(res, 'Failed to fetch user comment.', { status: 500 });
     }
   }
 
@@ -411,149 +425,114 @@ class CommentService {
       const { comment } = req.body;
 
       const normalizedId = this.normalizeId(rawId);
-      if (normalizedId === null) {
-        return sendError(res, 'Invalid ID.', {
-          status: 400,
-          errorCode: 'INVALID_ID',
-        });
-      }
+      if (!normalizedId) return sendError(res, 'Invalid ID.', { status: 400, errorCode: 'INVALID_ID' });
 
       const parentComment = await this.CommentModel.findById(commentId);
-      if (!parentComment) {
-        return sendError(res, 'Parent comment not found.', {
-          status: 404,
-          errorCode: 'COMMENT_NOT_FOUND',
-        });
-      }
+      if (!parentComment) return sendError(res, 'Parent comment not found.', { status: 404 });
 
+      // Integrity Check
       if (parentComment[this.entityIdField] !== normalizedId) {
-        return sendError(res, 'Comment does not belong to the specified entity.', {
-          status: 400,
-          errorCode: 'COMMENT_ENTITY_MISMATCH',
-        });
+        return sendError(res, 'Comment entity mismatch.', { status: 400, errorCode: 'COMMENT_ENTITY_MISMATCH' });
       }
 
+      // Check Duplicates
       const existingReply = parentComment.replies.find(r => r.userId.toString() === userId.toString());
-      if (existingReply) {
-        return sendError(res, 'You have already replied to this comment.', {
-          status: 400,
-          errorCode: 'REPLY_ALREADY_EXISTS',
-        });
-      }
+      if (existingReply) return sendError(res, 'You have already replied.', { status: 400 });
 
-      const user = await User.findById(userId).select('username');
-      if (!user) {
-        return sendError(res, 'User not found.', {
-          status: 404,
-          errorCode: 'USER_NOT_FOUND',
-        });
-      }
-
+      // 1. Create Reply WITHOUT fetching User manually
+      // We rely on the Virtual 'user' to link to the User collection later
       const newReply = {
         userId,
-        username: user.username,
         comment: comment.trim(),
         isEdited: false,
+        status: req.body.status || 'approved',
         toxicityScore: req.body.toxicityScore || 0,
         spamScore: req.body.spamScore || 0,
-        status: req.body.status || 'approved',
         likedBy: [],
       };
 
       parentComment.replies.push(newReply);
       await parentComment.save();
 
-      // Retrieve the newly added reply (it will have an _id now)
+      // 2. Retrieve the new reply (last one in array)
       const addedReply = parentComment.replies[parentComment.replies.length - 1];
 
-      let message;
-      if (newReply.status === 'rejected') message = 'Your reply was rejected due to inappropriate content.';
-      else if (newReply.status === 'needsReview') message = 'Your reply will be reviewed before being displayed.';
-      else message = 'Reply added successfully.';
+      // 3. Populate the 'user' virtual specifically for the replies
+      // This fills 'replies.user' with data from the User collection
+      await parentComment.populate({ 
+        path: 'replies.user', 
+        select: 'username profilePictureURL' 
+      });
 
-      const responseData = this.transformCommentForResponse(addedReply.toObject());
+      // 4. Get the hydrated object
+      const populatedReply = parentComment.replies.id(addedReply._id);
+
+      let message = 'Reply added successfully.';
+      if (newReply.status === 'rejected') message = 'Your reply was rejected.';
+      else if (newReply.status === 'needsReview') message = 'Your reply is pending review.';
+
+      const responseData = this.transformCommentForResponse(
+        populatedReply.toObject({ virtuals: true }), 
+        req.user
+      );
 
       sendSuccess(res, responseData, {
         message,
         extra: {
-          moderation: {
-            status: newReply.status,
-            toxicityScore: newReply.toxicityScore,
-            spamScore: newReply.spamScore,
-          },
+          moderation: { status: newReply.status }
         },
       });
     } catch (err) {
       console.error('Error adding reply:', err);
-      sendError(res, 'Failed to add reply.', {
-        status: 500,
-        errorCode: 'REPLY_ADD_FAILED',
-      });
+      sendError(res, 'Failed to add reply.', { status: 500 });
     }
   }
 
-  async getReplies(req, res) {
+async getReplies(req, res) {
     try {
       const rawId = req.params[this.entityIdField] || req.params.championId || req.params.skinId;
       const { commentId } = req.params;
-      const { includeUserDetails = false } = req.query;
-      const requestingUserId = req.user?._id; // Get requesting user ID for filtering
+      // Robust boolean check
+      const { includeUserDetails = 'true' } = req.query; 
+      const requestingUserId = req.user?._id;
 
       const normalizedId = this.normalizeId(rawId);
-      if (normalizedId === null) {
-        return sendError(res, 'Invalid ID.', {
-          status: 400,
-          errorCode: 'INVALID_ID',
+      if (!normalizedId) return sendError(res, 'Invalid ID.', { status: 400, errorCode: 'INVALID_ID' });
+
+      // 1. Prepare Query
+      const query = this.CommentModel.findById(commentId);
+
+      // 2. Efficient Populate (The "Google Standard")
+      if (String(includeUserDetails) === 'true') {
+        query.populate({
+          path: 'replies.user',
+          select: 'username profilePictureURL'
         });
       }
 
-      const parentComment = await this.CommentModel.findById(commentId);
-      if (!parentComment) {
-        return sendError(res, 'Parent comment not found.', {
-          status: 404,
-          errorCode: 'COMMENT_NOT_FOUND',
-        });
-      }
+      const parentComment = await query;
+      if (!parentComment) return sendError(res, 'Comment not found.', { status: 404 });
 
       if (parentComment[this.entityIdField] !== normalizedId) {
-        return sendError(res, 'Comment does not belong to the specified entity.', {
-          status: 400,
-          errorCode: 'COMMENT_ENTITY_MISMATCH',
-        });
+        return sendError(res, 'Comment entity mismatch.', { status: 400 });
       }
 
-      // Convert replies to plain objects
-      let replies = parentComment.replies.map(r => r.toObject ? r.toObject() : r);
-
-      // SERVER-SIDE FILTERING: Only show approved replies or user's own rejected/needsReview replies
-      replies = replies.filter(reply => this.shouldShowComment(reply, requestingUserId));
-
-      if (includeUserDetails === 'true') {
-        const userIds = [...new Set(replies.map(reply => reply.userId))];
-        const users = await User.find({ _id: { $in: userIds } }).select('username profilePictureURL');
-        const userMap = new Map(users.map(u => [u._id.toString(), u]));
-
-        replies = replies.map(reply => ({
-          ...reply,
-          user: userMap.get(reply.userId.toString()) || null
-        }));
-      }
-
-      // Transform comment text based on status
-      replies = replies.map(reply => this.transformCommentForResponse(reply));
+      // 3. Filter & Transform
+      // Since replies are a sub-array, we filter them in memory using standard array methods.
+      // This replaces your manual User map logic entirely.
+      const replies = parentComment.replies
+        .map(r => r.toObject({ virtuals: true })) // Enable virtuals
+        .filter(reply => this.shouldShowComment(reply, requestingUserId)) // Security Filter
+        .map(reply => this.transformCommentForResponse(reply, req.user)); // UI Transformation
 
       sendSuccess(res, replies, {
         extra: { count: replies.length },
       });
     } catch (err) {
       console.error('Error fetching replies:', err);
-      sendError(res, 'Failed to fetch replies.', {
-        status: 500,
-        errorCode: 'REPLIES_FETCH_FAILED',
-      });
+      sendError(res, 'Failed to fetch replies.', { status: 500 });
     }
   }
-
   async likeReply(req, res) {
     try {
       const userId = req.user._id;
@@ -627,7 +606,7 @@ class CommentService {
 
       // Find the comment first to verify ownership
       const comment = await this.CommentModel.findById(commentId);
-      
+
       if (!comment) {
         return sendError(res, 'Comment not found.', {
           status: 404,
@@ -678,7 +657,7 @@ class CommentService {
 
       // Find the parent comment
       const comment = await this.CommentModel.findById(commentId);
-      
+
       if (!comment) {
         return sendError(res, 'Parent comment not found.', {
           status: 404,
@@ -688,7 +667,7 @@ class CommentService {
 
       // Find the specific reply
       const reply = comment.replies.id(replyId);
-      
+
       if (!reply) {
         return sendError(res, 'Reply not found.', {
           status: 404,

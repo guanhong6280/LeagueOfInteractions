@@ -236,9 +236,7 @@ export const getChampionComments = async (
   championId,
   { includeUserDetails = false, limit, cursor, withCount } = {}
 ) => {
-  const params = {
-    includeUserDetails,
-  };
+  const params = { includeUserDetails, };
   if (limit !== undefined) params.limit = limit;
   if (cursor) params.cursor = cursor;
   if (withCount !== undefined) params.withCount = withCount;

@@ -27,6 +27,24 @@ const UserSchema = new mongoose.Schema({
     enum: ["Normal","Draft Pick","Ranked Solo/Duo", "Ranked Flex", "ARAM", "Arena", "TFT", "ARAM MAYHEM", "URF"],
     validate: [(val) => val.length <= 2, '{PATH} exceeds the limit of 2']
   }
+}, {
+  toObject: { virtuals: true },
+  toJSON: { virtuals: true },
+  timestamps: true
+});
+
+UserSchema.virtual('id').get(function() {
+  return this._id.toHexString();
+});
+
+UserSchema.set('toJSON', {
+  virtuals: true,
+  versionKey: false,
+  transform: function (doc, ret) {
+    delete ret._id;  // Remove raw '_id'
+    delete ret.password; // Security: Always remove passwords!
+    delete ret.googleId; // Optional: Hide OAuth IDs if not needed
+  }
 });
 
 module.exports = mongoose.model('User', UserSchema);

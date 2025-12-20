@@ -7,7 +7,7 @@ import { SkinRatingSection, SkinCommentSection } from '../components/sections';
 import { getChampionSquareAssetUrl } from '../../../utils/championNameUtils';
 import { useVersion } from '../../../contextProvider/VersionProvider';
 import { ReturnButton } from '../components/common';
-import { useChampionRatingSectionData } from '../../../hooks/useChampionRatingSectionData'; // Use reusable hook
+import { useRatingSectionData } from '../../../hooks/useRatingSectionData'; // Use reusable hook
 import { NeoCard } from '../components/design/NeoComponents';
 
 const ChampionSkinRatingPage = () => {
@@ -19,20 +19,19 @@ const ChampionSkinRatingPage = () => {
   // Unified data management with query params for 'skins'
   const {
     data: stats,
-    loading: isLoading,
     error,
-    currentSkin,
-    updateCurrentSkin
-  } = useChampionRatingSectionData(championName, { include: 'skins' });
+  } = useRatingSectionData(championName, { include: 'skins' });
+
+  const [currentSkin, setCurrentSkin] = useState(null);
 
   // Handle skin selection change
   const handleSkinChange = useCallback((skin) => {
-    updateCurrentSkin(skin);
+    setCurrentSkin(skin);
     // Update URL parameter without reloading page
     if (skin?.skinId) {
       setSearchParams({ skinId: skin.skinId }, { replace: true });
     }
-  }, [updateCurrentSkin, setSearchParams]);
+  }, [setSearchParams]);
 
   // Initialize skin from URL if present
   useEffect(() => {
@@ -40,10 +39,10 @@ const ChampionSkinRatingPage = () => {
     if (stats?.skins && skinIdFromUrl && !currentSkin) {
       const skinFromUrl = stats.skins.find(s => s.skinId === skinIdFromUrl);
       if (skinFromUrl) {
-        updateCurrentSkin(skinFromUrl);
+        setCurrentSkin(skinFromUrl);
       }
     }
-  }, [stats, searchParams, currentSkin, updateCurrentSkin]);
+  }, [stats, searchParams, currentSkin]);
 
   // Construct details from stats if available
   const championDetails = stats ? {

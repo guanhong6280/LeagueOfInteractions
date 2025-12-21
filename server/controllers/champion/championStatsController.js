@@ -100,6 +100,8 @@ const getChampionStats = async (req, res) => {
       // Only include fields needed for Landing Page
       championStats[doc.championId] = {
         ...championStats[doc.championId],
+        // Add stable ID for future-proofing (surrogate key)
+        id: doc._id?.toString() || null,
         roles: doc.roles,
         damageType: doc.damageType,
         championRatingStats: {
@@ -151,6 +153,11 @@ const getChampionSpecificStats = async (req, res) => {
     const championStatsDoc = await ChampionStats.findOne({ championId: championName }).lean();
 
     let responseData = {
+      // Stable ID for future-proofing (surrogate key)
+      id: championStatsDoc?._id?.toString() || null,
+      // Keep championName for URL/display logic (natural key)
+      championName: championName,
+      
       // Static Data (Always Included)
       title: championStatsDoc?.title || '',
       roles: championStatsDoc?.roles || [],

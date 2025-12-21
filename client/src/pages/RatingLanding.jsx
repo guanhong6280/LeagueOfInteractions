@@ -109,7 +109,7 @@ const VersionTag = React.memo(({ count }) => (
     </MUI.Typography>
 ));
 
-const ChampionGrid = React.memo(({ champions, stats, loading, onReset }) => {
+const ChampionGrid = React.memo(({ championNames, stats, loading, onReset }) => {
     if (loading) {
         return (
             <MUI.Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
@@ -118,7 +118,7 @@ const ChampionGrid = React.memo(({ champions, stats, loading, onReset }) => {
         );
     }
 
-    if (!champions || champions.length === 0) {
+    if (!championNames || championNames.length === 0) {
         return (
             <MUI.Box display="flex" justifyContent="center" minHeight="400px">
                 <NeoCard sx={{ bgcolor: '#FF9A8B' }}>
@@ -154,16 +154,16 @@ const ChampionGrid = React.memo(({ champions, stats, loading, onReset }) => {
                 gap={3}
                 width="100%"
             >
-                {champions.map((champion, index) => (
+                {championNames.map((championName) => (
                     <MUI.Box
-                        key={`${champion}-${index}`}
+                        key={stats[championName].id}
                         display="flex"
                         justifyContent="center"
                         width="100%"
                     >
                         <ChampionPreviewCard
-                            championName={champion}
-                            stats={stats[champion]}
+                            championName={championName}
+                            stats={stats[championName]}
                         />
                     </MUI.Box>
                 ))}
@@ -193,7 +193,7 @@ const RatingLanding = () => {
     };
 
     // Filter Logic
-    const filteredChampions = useMemo(() => {
+    const filteredChampionNames = useMemo(() => {
         if (!stats) return [];
         let names = Object.keys(stats);
 
@@ -375,7 +375,7 @@ const RatingLanding = () => {
             </MUI.Box>
 
             <ChampionGrid 
-                champions={filteredChampions} 
+                championNames={filteredChampionNames} 
                 stats={stats} 
                 loading={statsLoading} 
                 onReset={handleReset}
@@ -388,7 +388,7 @@ const RatingLanding = () => {
                     fontFamily="monospace"
                     sx={{ bgcolor: 'black', color: 'white', px: 2, py: 1 }}
                 >
-                    TOTAL_ENTRIES: {filteredChampions.length} // END_OF_FILE
+                    TOTAL_ENTRIES: {filteredChampionNames.length} // END_OF_FILE
                 </MUI.Typography>
             </MUI.Box>
 

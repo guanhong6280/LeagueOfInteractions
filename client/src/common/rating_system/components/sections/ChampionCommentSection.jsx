@@ -3,7 +3,7 @@ import * as MUI from '@mui/material';
 import useChampionCommentData from '../../hooks/useChampionCommentData';
 import { CommentList } from '../comments';
 
-const ChampionCommentSection = memo(({ championName }) => {
+const ChampionCommentSection = memo(({ championId }) => {
   const {
     // Data
     comments,
@@ -13,7 +13,6 @@ const ChampionCommentSection = memo(({ championName }) => {
     isLoading,
     isSubmitting,
     isRefreshing,
-    error,
 
     // UI state
     expandedReplies,
@@ -29,9 +28,9 @@ const ChampionCommentSection = memo(({ championName }) => {
     submitReply,
     deleteComment,
     deleteReply,
-    clearError,
+
     refreshComments,
-  } = useChampionCommentData(championName);
+  } = useChampionCommentData(championId);
 
   return (
     <MUI.Box
@@ -53,8 +52,6 @@ const ChampionCommentSection = memo(({ championName }) => {
         onSubmitComment={submitComment}
         onRefreshComments={refreshComments}
         isRefreshing={isRefreshing}
-        error={error}
-        onClearError={clearError}
         enableFloatingForm={false}
         onDeleteComment={deleteComment}
         onDeleteReply={deleteReply}

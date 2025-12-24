@@ -5,7 +5,7 @@ class RatingService {
    * @param {Object} config
    * @param {Object} config.RatingModel - Mongoose Model for ratings
    * @param {Object} [config.EntityModel] - Mongoose Model for entity validation (optional)
-   * @param {String} config.entityIdField - Field name for entity ID (e.g. 'championId', 'skinId')
+   * @param {String} config.entityIdField - Field name for entity ID (e.g. 'championName', 'skinId')
    * @param {Array<String>} config.ratingFields - Array of rating field names to validate/update
    * @param {Function} [config.updateStatsFn] - Function to update aggregated stats
    * @param {String} [config.idType='String'] - Type of ID ('String' or 'Number')
@@ -48,7 +48,7 @@ class RatingService {
 
   async rateEntity(req, res) {
     try {
-      const rawId = req.params[this.entityIdField] || req.params.championId || req.params.skinId;
+      const rawId = req.params[this.entityIdField] || req.params.championName || req.params.skinId;
       const userId = req.user._id;
       const ratings = req.body;
 
@@ -132,7 +132,7 @@ class RatingService {
 
   async getRatings(req, res) {
     try {
-      const rawId = req.params[this.entityIdField] || req.params.championId || req.params.skinId;
+      const rawId = req.params[this.entityIdField] || req.params.championName || req.params.skinId;
       const { includeUserDetails = false } = req.query;
 
       const normalizedId = this.normalizeId(rawId);
@@ -173,7 +173,7 @@ class RatingService {
 
   async getUserRating(req, res) {
     try {
-      const rawId = req.params[this.entityIdField] || req.params.championId || req.params.skinId;
+      const rawId = req.params[this.entityIdField] || req.params.championName || req.params.skinId;
       const userId = req.user._id;
 
       const normalizedId = this.normalizeId(rawId);

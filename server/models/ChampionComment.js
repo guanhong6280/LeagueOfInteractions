@@ -26,7 +26,7 @@ const ReplySchema = new mongoose.Schema({
 });
 
 const ChampionCommentSchema = new mongoose.Schema({
-  championId: { type: String, required: true },
+  championName: { type: String, required: true },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 
   comment: {
@@ -82,10 +82,10 @@ ChampionCommentSchema.set('toObject', { virtuals: true });
 ReplySchema.set('toJSON', { virtuals: true });
 ReplySchema.set('toObject', { virtuals: true });
 
-ChampionCommentSchema.index({ championId: 1, createdAt: -1 });
+ChampionCommentSchema.index({ championName: 1, createdAt: -1 });
 ChampionCommentSchema.index({ userId: 1 });
 ChampionCommentSchema.index({ likedBy: 1 });
-ChampionCommentSchema.index({ championId: 1, userId: 1 }, { unique: true });
+ChampionCommentSchema.index({ championName: 1, userId: 1 }, { unique: true });
 
 module.exports = mongoose.model('ChampionComment', ChampionCommentSchema);
 

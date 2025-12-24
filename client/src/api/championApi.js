@@ -57,21 +57,15 @@ export const fetchChampionDetails = async (championName) => {
   }
 };
 
-export const fetchChampionSkins = async (championName) => {
-  const response = await api.get(`/api/championData/${championName}/skins`);
-  return response.data;
-};
-
 export const fetchSkinDetails = async (skinId) => {
   const response = await api.get(`/api/skins/${skinId}`);
   return response.data;
 };
 
-export const fetchChampionSkinsFromAPI = async (championName) => {
-  const response = await api.get(`/api/skins?championId=${encodeURIComponent(championName)}`);
+export const fetchChampionSkins = async (championName) => {
+  const response = await api.get(`/api/skins?championName=${encodeURIComponent(championName)}`);
   return response.data;
 };
-
 // Video API functions
 export const fetchVideoData = async (params) => {
   try {
@@ -148,6 +142,8 @@ export const getSkinComments = async (
   const params = {
     includeUserDetails,
   };
+  console.log("params in getSkinComments", params);
+  console.log("skinId in getSkinComments", skinId);
   if (limit !== undefined) params.limit = limit;
   if (cursor) params.cursor = cursor;
   if (withCount !== undefined) params.withCount = withCount;
@@ -220,9 +216,9 @@ export const fetchChampionStats = async () => {
   return response.data;
 };
 
-export const fetchChampionSpecificStats = async (championName, include) => {
+export const fetchChampionSpecificStats = async (championId, include) => {
   const queryParams = include ? `?include=${include}` : '';
-  const response = await api.get(`/api/champion-stats/${encodeURIComponent(championName)}/stats${queryParams}`);
+  const response = await api.get(`/api/champion-stats/${championId}/stats${queryParams}`);
   return response.data;
 };
 

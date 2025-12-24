@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 const ActivityCard = ({ activity }) => {
   const navigate = useNavigate();
-  const { type, date, championId, skinId, skinName, data } = activity;
+  const { type, date, championName, championId, skinId, skinName, data } = activity;
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -22,7 +22,7 @@ const ActivityCard = ({ activity }) => {
   };
 
   const getImageUrl = () => {
-    if (championId) {
+    if (championName) {
       // Use Data Dragon for champion/skin images
       // Format: https://ddragon.leagueoflegends.com/cdn/img/champion/tiles/Ashe_0.jpg
       // For specific skins, we need the skin number (e.g. 1001 for skin 1).
@@ -34,26 +34,26 @@ const ActivityCard = ({ activity }) => {
       // But resolving actual skin splash from skinId without metadata is tricky.
       // Safe default: use champion tile.
       
-      return `https://ddragon.leagueoflegends.com/cdn/img/champion/tiles/${championId}_0.jpg`;
+      return `https://ddragon.leagueoflegends.com/cdn/img/champion/tiles/${championName}_0.jpg`;
     }
     return ''; // Fallback handled by CSS/Box
   };
 
   const getTitle = () => {
-    return skinName || championId || (skinId ? `Skin #${skinId}` : 'Unknown');
+    return skinName || championName || (skinId ? `Skin #${skinId}` : 'Unknown');
   };
 
   const handleClick = () => {
     // Prefer championId from top-level or data
-    const safeChampId = championId || data?.championId; 
+    const safeChampName = championName || data?.championName; 
     
     if (type.includes('skin')) {
-      if (safeChampId) {
-        navigate(`/champion-skin-details/${safeChampId}`, { state: { skinId } });
+      if (safeChampName) {
+        navigate(`/champion-skin-details/${championId}`, { state: { skinId } });
       }
     } else {
-      if (safeChampId) {
-        navigate(`/champion-rating/${safeChampId}`);
+      if (safeChampName) {
+        navigate(`/champion-rating/${championId}`);
       }
     }
   };

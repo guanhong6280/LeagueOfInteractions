@@ -47,8 +47,8 @@ createRoot(document.getElementById('root')).render(
                   <Route path="contact" element={<Contact />} />
                   <Route path="toast-test" element={<ToastTest />} />
                   <Route path="settings" element={<AccountManagement />} />
-                  <Route path="/champion-skin-details/:championName" element={<ChampionSkinRatingPage />} />
-                  <Route path="/champion-rating/:championName" element={<ChampionRatingPage />} />
+                  <Route path="/champion-skin-details/:id" element={<ChampionSkinRatingPage />} />
+                  <Route path="/champion-rating/:id" element={<ChampionRatingPage />} />
                 </Route>
                 
                 {/* Admin Routes - Protected by AdminGuard */}

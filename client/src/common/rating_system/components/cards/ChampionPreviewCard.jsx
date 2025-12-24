@@ -44,6 +44,7 @@ const RoleBadge = ({ roles }) => {
 const ChampionPreviewCard = React.memo(({ championName, stats }) => {
   const navigate = useNavigate();
   const imageUrl = getChampionLoadingUrl(championName);
+  const championId = stats.id;
 
   // Neo-Brutalist Button Style
   const ActionButton = ({ label, onClick, color }) => (
@@ -128,12 +129,12 @@ const ChampionPreviewCard = React.memo(({ championName, stats }) => {
           <ActionButton
             label="Champion"
             color="#FFEB3B" // Yellow
-            onClick={() => navigate(`/champion-rating/${encodeURIComponent(championName)}`)}
+            onClick={() => navigate(`/champion-rating/${championId}`)}
           />
           <ActionButton
             label="Skins"
             color="#00E5FF" // Cyan
-            onClick={() => navigate(`/champion-skin-details/${encodeURIComponent(championName)}`)}
+            onClick={() => navigate(`/champion-skin-details/${championId}`)}
           />
         </MUI.Box>
       </MUI.Box>

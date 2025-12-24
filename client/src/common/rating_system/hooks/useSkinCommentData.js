@@ -12,20 +12,20 @@ import {
   deleteSkinReply,
 } from '../../../api/championApi';
 import useCurrentUser from '../../../hooks/useCurrentUser';
+import { toastMessages, useToast } from '../../../toast/useToast';// ✅ Import Toast
 
-// Query key factory to prevent typos and centralize key management
 const queryKeys = {
   comments: (skinId) => ['skin-comments', skinId],
   userComment: (skinId, userId) => ['user-skin-comment', skinId, userId],
 };
 
-// Configuration constants
 const COMMENT_MAX_LENGTH = 1000;
 const REPLY_MAX_LENGTH = 500;
 
-const useCommentData = (currentSkinId) => {
+const useSkinCommentData = (currentSkinId) => {
   const { user } = useCurrentUser();
   const queryClient = useQueryClient();
+  const { success, error, info } = useToast(); // ✅ Initialize Toast
 
   // UI state
   const [expandedReplies, setExpandedReplies] = useState(new Set());
@@ -34,12 +34,10 @@ const useCommentData = (currentSkinId) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
   
-  // Debounce map for like operations (prevents spam clicking)
   const likeDebounceMap = useRef(new Map());
 
   // ==================== QUERIES ====================
   
-  // 1. Fetch comments (inherits global React Query config from QueryProvider)
   const {
     data: comments = [],
     isLoading,
@@ -48,26 +46,21 @@ const useCommentData = (currentSkinId) => {
   } = useQuery({
     queryKey: queryKeys.comments(currentSkinId),
     queryFn: async () => {
-      const response = await getSkinComments(currentSkinId, true);
-      console.log('response from useSkinCommentData', response);
+      const response = await getSkinComments(currentSkinId, { includeUserDetails: true });
       return response.success ? response.data : [];
     },
     enabled: !!currentSkinId,
-    staleTime: 30000, // Consider data fresh for 30 seconds
+    staleTime: 30000, 
   });
 
-  // Transform comments only when needed (add displayText for backward compatibility)
   const transformedComments = useMemo(() => {
     return comments.map(comment => ({
       ...comment,
-      displayText: comment.comment, // Backward compatibility
-      // Calculate replyCount from replies array when available (more accurate after optimistic updates)
-      // Fall back to server's replyCount if replies haven't been loaded yet
+      displayText: comment.comment,
       replyCount: comment.replies?.length ?? comment.replyCount ?? 0,
     }));
   }, [comments]);
 
-  // 2. Fetch user's comment (inherits global React Query config)
   const { data: userComment } = useQuery({
     queryKey: queryKeys.userComment(currentSkinId, user?.id),
     queryFn: async () => {
@@ -79,14 +72,13 @@ const useCommentData = (currentSkinId) => {
 
   // ==================== MUTATIONS ====================
 
-  // Helper function to create optimistic user data
   const createOptimisticUser = useCallback(() => ({
     id: user.id,
     username: user.username,
     profilePictureURL: user.profilePictureURL,
   }), [user]);
 
-  // 3. Submit/Update Comment Mutation
+  // 1. Submit Comment Mutation
   const submitCommentMutation = useMutation({
     mutationFn: (commentText) => submitSkinComment(currentSkinId, { comment: commentText.trim() }),
 
@@ -107,10 +99,7 @@ const useCommentData = (currentSkinId) => {
         status: 'approved',
         displayText: commentText.trim(),
         skinId: currentSkinId,
-        capabilities: {
-          canDelete: true,
-          canEdit: true
-        }
+        capabilities: { canDelete: true, canEdit: true }
       };
 
       queryClient.setQueryData(queryKeys.comments(currentSkinId), (oldData = []) => {
@@ -118,7 +107,6 @@ const useCommentData = (currentSkinId) => {
         const isUpdate = existingIndex !== -1;
 
         if (isUpdate) {
-          // Update existing comment
           const newList = [...oldData];
           newList[existingIndex] = {
             ...oldData[existingIndex],
@@ -129,7 +117,6 @@ const useCommentData = (currentSkinId) => {
           };
           return newList;
         } else {
-          // Prepend new comment
           return [optimisticComment, ...oldData];
         }
       });
@@ -141,8 +128,6 @@ const useCommentData = (currentSkinId) => {
       if (!response?.success || !response?.data) return;
 
       const submittedComment = response.data;
-
-      // Replace optimistic with real data
       const commentForList = {
         ...submittedComment,
         displayText: submittedComment.comment,
@@ -162,13 +147,20 @@ const useCommentData = (currentSkinId) => {
           return comment;
         });
 
-        // Handle edge case: temp comment missing
         if (!foundTemp && !oldData.some(c => c.id === commentForList.id)) {
           return [commentForList, ...updatedComments];
         }
-
         return updatedComments;
       });
+
+      // ✅ TOAST LOGIC
+      if (submittedComment.status === 'rejected') {
+        error('Your comment was rejected due to content guidelines.');
+      } else if (submittedComment.status === 'needsReview') {
+        info('Your comment is pending review.');
+      } else {
+        success(toastMessages.comment.success);
+      }
     },
 
     onError: (err, variables, context) => {
@@ -177,57 +169,37 @@ const useCommentData = (currentSkinId) => {
       } else {
         queryClient.invalidateQueries({ queryKey: queryKeys.comments(currentSkinId) });
       }
+      // ✅ TOAST LOGIC
+      error(err.response?.data?.error || toastMessages.comment.error);
     }
   });
 
-  // Wrapper function with validation
   const submitComment = useCallback(async (commentText) => {
     if (!user) {
-      return { success: false, message: 'Please sign in to comment' };
+      info(toastMessages.signIn.info);
+      return false;
     }
 
     const trimmedText = commentText.trim();
     if (!trimmedText) {
-      return { success: false, message: 'Comment cannot be empty' };
+      info('Comment cannot be empty');
+      return false;
     }
 
     if (trimmedText.length > COMMENT_MAX_LENGTH) {
-      return { success: false, message: `Comment cannot exceed ${COMMENT_MAX_LENGTH} characters` };
+      info(`Comment cannot exceed ${COMMENT_MAX_LENGTH} characters`);
+      return false;
     }
 
     try {
-      const result = await submitCommentMutation.mutateAsync(commentText);
-
-      if (!result.success) {
-        return { success: false, message: result.message || 'Failed to submit comment' };
-      }
-
-      const submittedComment = result.data;
-
-      if (submittedComment.status === 'rejected') {
-        return {
-          success: false,
-          message: 'Your comment was rejected due to inappropriate content. Please revise and try again.',
-          status: 'rejected'
-        };
-      }
-
-      const successMessage = submittedComment.status === 'needsReview'
-        ? 'Your comment will be reviewed before being displayed.'
-        : userComment ? 'Comment updated successfully.' : 'Comment submitted successfully.';
-
-      return {
-        success: true,
-        message: successMessage,
-        status: submittedComment.status
-      };
+      await submitCommentMutation.mutateAsync(commentText);
+      return true; // Return true to clear the form
     } catch (err) {
-      const errorMessage = err.response?.data?.error || 'Failed to submit comment';
-      return { success: false, message: errorMessage };
+      return false; // Return false to keep input
     }
-  }, [user, submitCommentMutation, userComment, createOptimisticUser]);
+  }, [user, submitCommentMutation, info]);
 
-  // 4. Like/Unlike Comment Mutation
+  // 4. Like/Unlike Mutation
   const toggleCommentLikeMutation = useMutation({
     mutationFn: ({ commentId, isCurrentlyLiked }) =>
       isCurrentlyLiked
@@ -250,7 +222,6 @@ const useCommentData = (currentSkinId) => {
             : comment
         )
       );
-
       return { previousComments };
     },
 
@@ -263,14 +234,8 @@ const useCommentData = (currentSkinId) => {
 
   const toggleCommentLike = useCallback(async (commentId, isCurrentlyLiked) => {
     if (!user) return;
+    if (likeDebounceMap.current.has(commentId)) clearTimeout(likeDebounceMap.current.get(commentId));
 
-    // Clear existing debounce timeout for this comment
-    if (likeDebounceMap.current.has(commentId)) {
-      clearTimeout(likeDebounceMap.current.get(commentId));
-    }
-
-    // The optimistic UI update happens immediately in onMutate
-    // We just debounce the actual server request to prevent spam
     const timeoutId = setTimeout(async () => {
       try {
         await toggleCommentLikeMutation.mutateAsync({ commentId, isCurrentlyLiked });
@@ -279,50 +244,41 @@ const useCommentData = (currentSkinId) => {
       } finally {
         likeDebounceMap.current.delete(commentId);
       }
-    }, 300); // 300ms debounce - UI is still instant!
+    }, 300);
 
     likeDebounceMap.current.set(commentId, timeoutId);
   }, [user, toggleCommentLikeMutation]);
 
   // ==================== REPLIES ====================
 
-  // Load replies (optimized to not depend on comments array)
   const loadReplies = useCallback(async (commentId) => {
-    // Check cache directly to avoid dependency on comments
     const currentComments = queryClient.getQueryData(queryKeys.comments(currentSkinId)) || [];
     const comment = currentComments.find(c => c.id === commentId);
 
-    // Skip if already loading or loaded
-    if (loadingReplies.has(commentId) || (comment?.replies && comment.replies.length > 0)) {
-      return;
-    }
+    if (loadingReplies.has(commentId) || (comment?.replies && comment.replies.length > 0)) return;
 
     setLoadingReplies(prev => new Set([...prev, commentId]));
 
     try {
-      const response = await getRepliesForComment(currentSkinId, commentId, true);
+      const response = await getRepliesForComment(currentSkinId, commentId, { includeUserDetails: true });
       if (response.success) {
         const transformedReplies = response.data.map(reply => ({
           ...reply,
           displayText: reply.comment,
         }));
+        console.log('transformedReplies', transformedReplies);
 
         queryClient.setQueryData(queryKeys.comments(currentSkinId), (oldData = []) =>
           oldData.map(comment => {
             if (comment.id !== commentId) return comment;
-
-            // Preserve temp replies
             const existingReplies = comment.replies || [];
             const tempReplies = existingReplies.filter(r => r.id.startsWith('temp-reply-'));
-            
-            // Merge with server data, avoiding duplicates
             const mergedReplies = [...transformedReplies];
             tempReplies.forEach(temp => {
               if (!mergedReplies.some(r => r.id === temp.id)) {
                 mergedReplies.push(temp);
               }
             });
-
             return { ...comment, replies: mergedReplies };
           })
         );
@@ -338,10 +294,8 @@ const useCommentData = (currentSkinId) => {
     }
   }, [currentSkinId, loadingReplies, queryClient]);
 
-  // Toggle reply expansion
   const toggleReplies = useCallback(async (commentId) => {
     const isCurrentlyExpanded = expandedReplies.has(commentId);
-
     if (isCurrentlyExpanded) {
       setExpandedReplies(prev => {
         const newSet = new Set(prev);
@@ -349,26 +303,17 @@ const useCommentData = (currentSkinId) => {
         return newSet;
       });
     } else {
-      // Check if replies need to be loaded
       const currentComments = queryClient.getQueryData(queryKeys.comments(currentSkinId)) || [];
       const comment = currentComments.find(c => c.id === commentId);
-
       if (!comment?.replies || comment.replies.length === 0) {
         await loadReplies(commentId);
       }
-
       setExpandedReplies(prev => new Set([...prev, commentId]));
     }
   }, [expandedReplies, currentSkinId, loadReplies, queryClient]);
 
-  // Start/stop replying
-  const startReply = useCallback((commentId) => {
-    setReplyingTo(commentId);
-  }, []);
-
-  const cancelReply = useCallback(() => {
-    setReplyingTo(null);
-  }, []);
+  const startReply = useCallback((commentId) => setReplyingTo(commentId), []);
+  const cancelReply = useCallback(() => setReplyingTo(null), []);
 
   // 5. Submit Reply Mutation
   const submitReplyMutation = useMutation({
@@ -386,15 +331,11 @@ const useCommentData = (currentSkinId) => {
         comment: replyText.trim(),
         createdAt: new Date().toISOString(),
         likedBy: [],
-
         isEdited: false,
         status: 'approved',
         displayText: replyText.trim(),
         user: createOptimisticUser(),
-        capabilities: {
-          canDelete: true,
-          canEdit: true
-        }
+        capabilities: { canDelete: true, canEdit: true }
       };
 
       queryClient.setQueryData(queryKeys.comments(currentSkinId), (oldData = []) =>
@@ -420,10 +361,8 @@ const useCommentData = (currentSkinId) => {
       queryClient.setQueryData(queryKeys.comments(currentSkinId), (oldData = []) =>
         oldData.map(comment => {
           if (comment.id !== commentId) return comment;
-
           const existingReplies = comment.replies || [];
           let foundTemp = false;
-          
           const updatedReplies = existingReplies.map(reply => {
             if (reply.id.startsWith('temp-reply-')) {
               foundTemp = true;
@@ -434,55 +373,57 @@ const useCommentData = (currentSkinId) => {
             }
             return reply;
           });
-
-          // Handle edge case: temp reply missing
           if (!foundTemp && !existingReplies.some(r => r.id === newReply.id)) {
             updatedReplies.push(newReply);
           }
-
           return { ...comment, replies: updatedReplies };
         })
       );
 
-      // Expand replies and cancel reply mode
       setExpandedReplies(prev => new Set([...prev, commentId]));
       setReplyingTo(null);
+
+      // ✅ TOAST LOGIC
+      if (response.data.status === 'needsReview') {
+        info('Your reply is pending review.');
+      } else {
+        success(toastMessages.reply.success);
+      }
     },
 
     onError: (err, variables, context) => {
       if (context?.previousComments) {
         queryClient.setQueryData(queryKeys.comments(currentSkinId), context.previousComments);
       }
+      // ✅ TOAST LOGIC
+      error(toastMessages.reply.error);
     }
   });
 
   const submitReply = useCallback(async (commentId, replyText) => {
     if (!user) {
-      return { success: false, message: 'Please sign in to reply' };
+      info(toastMessages.signIn.info);
+      return false;
     }
 
     const trimmedText = replyText.trim();
     if (!trimmedText) {
-      return { success: false, message: 'Reply cannot be empty' };
+      info('Reply cannot be empty');
+      return false;
     }
 
     if (trimmedText.length > REPLY_MAX_LENGTH) {
-      return { success: false, message: `Reply cannot exceed ${REPLY_MAX_LENGTH} characters` };
+      info(`Reply cannot exceed ${REPLY_MAX_LENGTH} characters`);
+      return false;
     }
 
     try {
-      const result = await submitReplyMutation.mutateAsync({ commentId, replyText });
-
-      const successMessage = result.data?.status === 'needsReview'
-        ? 'Your reply will be reviewed before being displayed.'
-        : 'Reply submitted successfully.';
-
-      return { success: true, message: successMessage };
+      await submitReplyMutation.mutateAsync({ commentId, replyText });
+      return true; // Success
     } catch (err) {
-      const errorMessage = err.response?.data?.error || 'Failed to submit reply';
-      return { success: false, message: errorMessage };
+      return false; // Failure
     }
-  }, [user, submitReplyMutation]);
+  }, [user, submitReplyMutation, info]);
 
   // ==================== DELETE ====================
 
@@ -493,35 +434,36 @@ const useCommentData = (currentSkinId) => {
     onMutate: async (commentId) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.comments(currentSkinId) });
       const previousComments = queryClient.getQueryData(queryKeys.comments(currentSkinId));
-
-      // Optimistically remove the comment
       queryClient.setQueryData(queryKeys.comments(currentSkinId), (oldData = []) =>
         oldData.filter(comment => comment.id !== commentId)
       );
-
       return { previousComments };
+    },
+
+    onSuccess: () => {
+      success('Comment deleted.');
     },
 
     onError: (err, variables, context) => {
       if (context?.previousComments) {
         queryClient.setQueryData(queryKeys.comments(currentSkinId), context.previousComments);
       }
+      error(err.response?.data?.error || 'Failed to delete comment');
     }
   });
 
   const deleteComment = useCallback(async (commentId) => {
     if (!user) {
-      return { success: false, message: 'Please sign in to delete comments' };
+      info(toastMessages.signIn.info);
+      return false;
     }
-
     try {
-      const result = await deleteCommentMutation.mutateAsync(commentId);
-      return { success: true, message: 'Comment deleted successfully' };
+      await deleteCommentMutation.mutateAsync(commentId);
+      return true;
     } catch (err) {
-      const errorMessage = err.response?.data?.error || 'Failed to delete comment';
-      return { success: false, message: errorMessage };
+      return false;
     }
-  }, [user, deleteCommentMutation]);
+  }, [user, deleteCommentMutation, info]);
 
   // 7. Delete Reply Mutation
   const deleteReplyMutation = useMutation({
@@ -530,8 +472,6 @@ const useCommentData = (currentSkinId) => {
     onMutate: async ({ commentId, replyId }) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.comments(currentSkinId) });
       const previousComments = queryClient.getQueryData(queryKeys.comments(currentSkinId));
-
-      // Optimistically remove the reply
       queryClient.setQueryData(queryKeys.comments(currentSkinId), (oldData = []) =>
         oldData.map(comment => {
           if (comment.id !== commentId) return comment;
@@ -541,89 +481,74 @@ const useCommentData = (currentSkinId) => {
           };
         })
       );
-
       return { previousComments };
+    },
+
+    onSuccess: () => {
+      success('Reply deleted.');
     },
 
     onError: (err, variables, context) => {
       if (context?.previousComments) {
         queryClient.setQueryData(queryKeys.comments(currentSkinId), context.previousComments);
       }
+      error(err.response?.data?.error || 'Failed to delete reply');
     }
   });
 
   const deleteReply = useCallback(async (commentId, replyId) => {
     if (!user) {
-      return { success: false, message: 'Please sign in to delete replies' };
+      info(toastMessages.signIn.info);
+      return false;
     }
-
     try {
-      const result = await deleteReplyMutation.mutateAsync({ commentId, replyId });
-      return { success: true, message: 'Reply deleted successfully' };
+      await deleteReplyMutation.mutateAsync({ commentId, replyId });
+      return true;
     } catch (err) {
-      const errorMessage = err.response?.data?.error || 'Failed to delete reply';
-      return { success: false, message: errorMessage };
+      return false;
     }
-  }, [user, deleteReplyMutation]);
+  }, [user, deleteReplyMutation, info]);
 
   // ==================== REFRESH ====================
 
-  // Handle refresh with full UI state reset and rate limiting
   const handleRefresh = useCallback(async () => {
-    const COOLDOWN_PERIOD = 5000; // 5 seconds cooldown
+    const COOLDOWN_PERIOD = 5000;
     const now = Date.now();
-    
-    // Prevent refresh if still in cooldown period
     if (now - lastRefreshTime < COOLDOWN_PERIOD) {
-      console.log('Refresh on cooldown. Please wait.');
-      return { success: false, message: 'Please wait before refreshing again' };
+      info('Please wait before refreshing again');
+      return { success: false };
     }
-    
-    // Prevent multiple simultaneous refreshes
-    if (isRefreshing) {
-      return { success: false, message: 'Refresh already in progress' };
-    }
+    if (isRefreshing) return { success: false };
     
     try {
       setIsRefreshing(true);
       setLastRefreshTime(now);
-      
-      // Reset all UI state
       setExpandedReplies(new Set());
       setReplyingTo(null);
       setLoadingReplies(new Set());
-      
-      // Refetch comments from server
       await refreshComments();
-      
+      success('Comments refreshed');
       return { success: true };
     } catch (error) {
-      console.error('Refresh failed:', error);
-      return { success: false, message: 'Refresh failed' };
+      return { success: false };
     } finally {
       setIsRefreshing(false);
     }
-  }, [refreshComments, lastRefreshTime, isRefreshing]);
+  }, [refreshComments, lastRefreshTime, isRefreshing, info, success]);
 
   // ==================== RETURN ====================
 
   return {
-    // Data
     comments: transformedComments,
     userComment,
-
-    // Loading states
     isLoading,
     isSubmitting: submitCommentMutation.isPending || submitReplyMutation.isPending,
     isRefreshing,
-    error: commentsError?.message || null,
 
-    // UI state
+    error: commentsError?.message || null,
     expandedReplies,
     replyingTo,
     loadingReplies,
-
-    // Actions
     submitComment,
     toggleCommentLike,
     toggleReplies,
@@ -636,4 +561,4 @@ const useCommentData = (currentSkinId) => {
   };
 };
 
-export default useCommentData;
+export default useSkinCommentData;

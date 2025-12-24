@@ -5,6 +5,7 @@ const ChampionComment = require('../../models/ChampionComment');
 const SkinRating = require('../../models/SkinRating');
 const SkinComment = require('../../models/SkinComment');
 const Skin = require('../../models/Skin');
+const ChampionStats = require('../../models/ChampionStats');
 
 // Register a new user
 exports.registerUser = async (req, res) => {
@@ -124,16 +125,41 @@ exports.getUserProfileByUsername = async (req, res) => {
   }
 };
 
+/**
+ * NEW HELPER: Batch resolves Champion Names -> Champion IDs
+ * This bridges the gap between your Name-based data and ID-based routing.
+ */
+async function populateChampionIds(activities) {
+  if (!activities.length) return activities;
+
+  // 1. Extract unique names
+  const names = [...new Set(activities.map(a => a.championName).filter(Boolean))];
+
+  // 2. Lookup IDs in ChampionStats
+  const statsDocs = await ChampionStats.find({ championName: { $in: names } })
+    .select('_id championName')
+    .lean();
+
+  // 3. Create Map: "Aatrox" -> "671c..."
+  const nameToIdMap = new Map(statsDocs.map(doc => [doc.championName, doc._id.toString()]));
+
+  // 4. Attach ID to each activity
+  return activities.map(activity => ({
+    ...activity,
+    championId: nameToIdMap.get(activity.championName) || null
+  }));
+}
+
 // Helper function: Get champion ratings
 async function getChampionRatings(userId, limit) {
   const ratings = await ChampionRating.find({ userId })
     .sort({ lastUpdated: -1 })
     .limit(limit)
     .lean();
-    
+
   return ratings.map(r => ({
     type: 'championRating',
-    championId: r.championId,
+    championName: r.championName,
     date: r.lastUpdated,
     data: r
   }));
@@ -149,7 +175,7 @@ async function getSkinRatings(userId, limit) {
   // Batch-resolve skin names (avoid N+1 queries)
   const skinIds = [...new Set(ratings.map(r => r.skinId))];
   const skins = skinIds.length
-    ? await Skin.find({ skinId: { $in: skinIds } }).select('skinId name championId').lean()
+    ? await Skin.find({ skinId: { $in: skinIds } }).select('skinId name championName').lean()
     : [];
   const skinById = new Map(skins.map(s => [s.skinId, s]));
 
@@ -159,7 +185,7 @@ async function getSkinRatings(userId, limit) {
     type: 'skinRating',
     skinId: r.skinId,
     skinName: skin?.name,
-    championId: skin?.championId,
+    championName: skin?.championName,
     date: r.dateUpdated,
     data: r
     });
@@ -175,25 +201,46 @@ async function getChampionComments(userId, limit) {
     
   return comments.map(c => ({
     type: 'championComment',
-    championId: c.championId,
+    championName: c.championName,
     date: c.updatedAt,
     data: c
   }));
 }
 
-// Helper function: Get skin comments
+// Helper function: Get skin comments with Skin Details
 async function getSkinComments(userId, limit) {
+  // 1. Fetch the raw comments
   const comments = await SkinComment.find({ userId, status: 'approved' })
     .sort({ updatedAt: -1 })
     .limit(limit)
     .lean();
+
+  if (!comments.length) return [];
+
+  // 2. Batch-resolve skin names (Just like you did for Ratings!)
+  const skinIds = [...new Set(comments.map(c => c.skinId))];
+  
+  const skins = await Skin.find({ skinId: { $in: skinIds } })
+    .select('skinId name championName') // Get the Name and Champion
+    .lean();
     
-  return comments.map(c => ({
-    type: 'skinComment',
-    skinId: c.skinId,
-    date: c.updatedAt,
-    data: c
-  }));
+  // Create a quick lookup map: skinId -> Skin Object
+  const skinById = new Map(skins.map(s => [s.skinId, s]));
+    
+  // 3. Merge and Return
+  return comments.map(c => {
+    const skin = skinById.get(c.skinId);
+    
+    return {
+      type: 'skinComment',
+      skinId: c.skinId,
+      // ✅ Now the frontend has what it needs:
+      skinName: skin?.name || 'Unknown Skin',
+      championName: skin?.championName || '',
+      date: c.updatedAt,
+      data: c
+    };
+  });
 }
 
 // Helper function: Get all activities combined
@@ -286,12 +333,15 @@ exports.getUserActivity = async (req, res) => {
         activities = await getAllActivities(userId, safeLimit);
         break;
     }
+
+    const activitiesWithChampionIds = await populateChampionIds(activities);
     
+    console.log("activities in getUserActivity", activities);
     res.json({
       success: true,
       type,
-      count: activities.length,
-      data: activities
+      count: activitiesWithChampionIds.length,
+      data: activitiesWithChampionIds
     });
     
   } catch (error) {

@@ -14,6 +14,6 @@ router.get('/stats', championStatsController.getChampionStats);
  * Get detailed statistics for a specific champion
  * Returns champion-specific stats including rating distribution, popular skins, etc.
  */
-router.get('/:championName/stats', championStatsController.getChampionSpecificStats);
+router.get('/:id/stats', championStatsController.getChampionSpecificStats);
 
 module.exports = router; 

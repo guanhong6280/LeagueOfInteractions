@@ -8,12 +8,12 @@ const skinManager = require('../../utils/skinManager');
  */
 exports.getAllSkins = async (req, res) => {
   try {
-    const { championId, skinLineId } = req.query;
+    const { championName, skinLineId } = req.query;
     const filter = {};
 
     // Add filters if provided
-    if (championId) {
-      filter.championId = championId;
+    if (championName) {
+      filter.championName = championName;
     }
     if (skinLineId) {
       filter.skinLineId = Number(skinLineId);

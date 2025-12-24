@@ -13,7 +13,7 @@ import NeoRatingCard from '../common/NeoRatingCard';
 import NeoStatsCard from '../common/NeoStatsCard';
 import useChampionRatingData from '../../hooks/useChampionRatingData';
 
-const ChampionRatingSection = ({ championName, championStats }) => {
+const ChampionRatingSection = ({ championId, championStats }) => {
   const {
     values,
     updateRatingValue,
@@ -21,7 +21,7 @@ const ChampionRatingSection = ({ championName, championStats }) => {
     isLoading,
     isSubmitting,
     hasExistingRating,
-  } = useChampionRatingData(championName);
+  } = useChampionRatingData(championId);
 
   if (isLoading) {
     return (

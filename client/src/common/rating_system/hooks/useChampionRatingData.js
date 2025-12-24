@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { submitChampionRating, getUserChampionRating } from '../../../api/championApi';
-import { toastMessages } from '../../../toast/useToast';
-import { useToast } from '../../../toast/useToast';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { submitChampionRating, getUserChampionRating } from "../../../api/championApi";
+import { toastMessages, useToast } from '../../../toast/useToast';
 import useCurrentUser from '../../../hooks/useCurrentUser';
 
 const initialRatings = {
@@ -14,116 +14,114 @@ const initialRatings = {
   teammateFrustration: 0,
 };
 
-const useChampionRatingData = (championName) => {
+const queryKeys = {
+  userRating: (championId, userId) => ['user-champion-rating', championId, userId],
+  // You might want a key for aggregate stats if you refetch those too
+  stats: (championId) => ['champion-specific-rating-stats', championId], 
+};
+
+const useChampionRatingData = (championId) => {
   const { user } = useCurrentUser();
-  const [values, setValues] = useState(initialRatings);
-  const [userRating, setUserRating] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const queryClient = useQueryClient();
   const { success, error, info } = useToast();
 
-  const loadRatingData = useCallback(async () => {
-    if (!championName) {
-      setValues(initialRatings);
-      setUserRating(null);
-      setIsLoading(false);
-      return;
-    }
+  // Local state for the form inputs
+  const [values, setValues] = useState(initialRatings);
 
-    if (!user) {
-      setValues(initialRatings);
-      setUserRating(null);
-      setIsLoading(false);
-      return;
-    }
+  // 1. QUERY: Fetch existing user rating
+  const { 
+    data: existingRating, 
+    isLoading 
+  } = useQuery({
+    queryKey: queryKeys.userRating(championId, user?.id),
+    queryFn: async () => {
+      const response = await getUserChampionRating(championId);
+      return response.success ? response.data : null;
+    },
+    enabled: !!championId && !!user, // Only run if logged in
+    staleTime: 5 * 60 * 1000, // Keep fresh for 5 mins
+  });
 
-    try {
-      // setIsLoading(true);
-
-      const response = await getUserChampionRating(championName);
-
-      if (response.success && response.data) {
-        setUserRating(response.data);
-        setValues({
-          fun: response.data.funRating || 0,
-          skill: response.data.skillRating || 0,
-          synergy: response.data.synergyRating || 0,
-          laning: response.data.laningRating || 0,
-          teamfight: response.data.teamfightRating || 0,
-          opponentFrustration: response.data.opponentFrustrationRating || 0,
-          teammateFrustration: response.data.teammateFrustrationRating || 0,
-        });
-      } else {
-        setUserRating(null);
-        setValues(initialRatings);
-      }
-    } catch (err) {
-      error(toastMessages.rating.failed_to_load);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [championName, user]);
-
+  // 2. EFFECT: Sync fetched data to form values
   useEffect(() => {
-    loadRatingData();
-  }, [loadRatingData]);
+    if (existingRating) {
+      setValues({
+        fun: existingRating.funRating || 0,
+        skill: existingRating.skillRating || 0,
+        synergy: existingRating.synergyRating || 0,
+        laning: existingRating.laningRating || 0,
+        teamfight: existingRating.teamfightRating || 0,
+        opponentFrustration: existingRating.opponentFrustrationRating || 0,
+        teammateFrustration: existingRating.teammateFrustrationRating || 0,
+      });
+    } else {
+      // Reset if no rating found (or user logged out)
+      setValues(initialRatings);
+    }
+  }, [existingRating]);
 
-  const submitRating = async () => {
+  // 3. MUTATION: Submit Rating
+  const mutation = useMutation({
+    mutationFn: (payload) => submitChampionRating(championId, payload),
+    
+    onSuccess: (response) => {
+      if (response.success) {
+        success(toastMessages.rating.champion.success);
+        
+        // Invalidate queries to refresh data
+        queryClient.invalidateQueries({ queryKey: queryKeys.userRating(championId, user?.id) });
+        
+        // Also refresh the main stats so the user sees the average change immediately!
+        queryClient.invalidateQueries({ queryKey: ['champion-specific-stats', championId] });
+      } else {
+        error(response.error || toastMessages.rating.champion.error);
+      }
+    },
+    onError: () => {
+      error(toastMessages.rating.champion.error);
+    }
+  });
+
+  // 4. HANDLERS
+  const updateRatingValue = useCallback((id, val) => {
+    setValues((prev) => ({ ...prev, [id]: val }));
+  }, []);
+
+  const submitRating = useCallback(async () => {
     if (!user) {
       error(toastMessages.signIn.info);
-      return false;
+      return;
     }
 
+    // Validation: Check for 0 values
     const hasMissing = Object.values(values).some((val) => !val || val < 1);
     if (hasMissing) {
       info(toastMessages.rating.has_missing);
-      return false; 
+      return;
     }
 
-    try {
-      setIsSubmitting(true);
+    // Map form values to API payload keys
+    const payload = {
+      funRating: values.fun,
+      skillRating: values.skill,
+      synergyRating: values.synergy,
+      laningRating: values.laning,
+      teamfightRating: values.teamfight,
+      opponentFrustrationRating: values.opponentFrustration,
+      teammateFrustrationRating: values.teammateFrustration,
+    };
 
-      const payload = {
-        funRating: values.fun,
-        skillRating: values.skill,
-        synergyRating: values.synergy,
-        laningRating: values.laning,
-        teamfightRating: values.teamfight,
-        opponentFrustrationRating: values.opponentFrustration,
-        teammateFrustrationRating: values.teammateFrustration,
-      };
-
-      const response = await submitChampionRating(championName, payload);
-
-      if (response.success) {
-        success(toastMessages.rating.champion.success);
-        await loadRatingData();
-        return true;
-      }
-
-      error(response.error || toastMessages.rating.champion.error);
-      return false;
-    } catch (err) {
-      error(toastMessages.rating.champion.error);
-      return false;
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const updateRatingValue = (id, val) => {
-    setValues((prev) => ({ ...prev, [id]: val }));
-  };
+    mutation.mutate(payload);
+  }, [user, values, mutation, error, info]);
 
   return {
     values,
     updateRatingValue,
     submitRating,
     isLoading,
-    isSubmitting,
-    hasExistingRating: !!userRating,
+    isSubmitting: mutation.isPending,
+    hasExistingRating: !!existingRating,
   };
 };
 
 export default useChampionRatingData;
-

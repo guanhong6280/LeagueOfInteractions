@@ -6,7 +6,7 @@ class CommentService {
    * @param {Object} config
    * @param {Object} config.CommentModel - Mongoose Model for comments
    * @param {Object} [config.EntityModel] - Mongoose Model for entity validation (optional)
-   * @param {String} config.entityIdField - Field name for entity ID (e.g. 'championId', 'skinId')
+   * @param {String} config.entityIdField - Field name for entity ID (e.g. 'championName', 'skinId')
    * @param {Function} [config.validateEntityFn] - Custom validation function returning boolean
    * @param {Function} [config.updateStatsFn] - Function to update entity stats after comment
    * @param {String} [config.idType='String'] - Type of ID ('String' or 'Number')
@@ -110,7 +110,7 @@ class CommentService {
 
   async commentOnEntity(req, res) {
     try {
-      const rawId = req.params[this.entityIdField] || req.params.championId || req.params.skinId;
+      const rawId = req.params[this.entityIdField] || req.params.championName || req.params.skinId;
       const userId = req.user._id;
       const { comment } = req.body;
 
@@ -189,7 +189,8 @@ class CommentService {
         withCount = 'false',
       } = req.query;
 
-      const rawId = req.params[this.entityIdField] || req.params.championId || req.params.skinId;
+      const rawId = req.params[this.entityIdField] || req.params.championName || req.params.skinId;
+      console.log("rawId", rawId);
       const requestingUserId = req.user?._id;
 
       // 2. Validation (Fail Fast Principle)
@@ -285,7 +286,7 @@ class CommentService {
         delete obj.replies;
 
         // Transform for API contract
-        return this.transformCommentForResponse(obj, requestingUserId);
+        return this.transformCommentForResponse(obj, req.user);
       });
 
       // 8. Pagination Metadata
@@ -325,7 +326,7 @@ class CommentService {
 
   async getUserComment(req, res) {
     try {
-      const rawId = req.params[this.entityIdField] || req.params.championId || req.params.skinId;
+      const rawId = req.params[this.entityIdField] || req.params.championName || req.params.skinId;
       const userId = req.user._id;
 
       const normalizedId = this.normalizeId(rawId);
@@ -419,7 +420,7 @@ class CommentService {
 
   async addReply(req, res) {
     try {
-      const rawId = req.params[this.entityIdField] || req.params.championId || req.params.skinId;
+      const rawId = req.params[this.entityIdField] || req.params.championName || req.params.skinId;
       const { commentId } = req.params;
       const userId = req.user._id;
       const { comment } = req.body;
@@ -490,8 +491,10 @@ class CommentService {
 
 async getReplies(req, res) {
     try {
-      const rawId = req.params[this.entityIdField] || req.params.championId || req.params.skinId;
+      const rawId = req.params[this.entityIdField] || req.params.championName || req.params.skinId;
       const { commentId } = req.params;
+      console.log("rawId in getReplies", rawId);
+      console.log("commentId in getReplies", commentId);
       // Robust boolean check
       const { includeUserDetails = 'true' } = req.query; 
       const requestingUserId = req.user?._id;

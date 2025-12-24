@@ -17,21 +17,24 @@ import { LocalFireDepartment as FireIcon, Psychology as BrainIcon } from '@mui/i
 // --- Main Component ---
 
 const ChampionRatingPage = () => {
-  const { championName } = useParams();
+  const { id } = useParams();
   const { version } = useVersion();
 
   // Use the reusable hook, requesting only rating stats
-  const { data: statsData } = useRatingSectionData(championName, { include: 'champions' });
+  const { data: statsData } = useRatingSectionData(id, { include: 'champions' });
 
-  // Transform hook data to match existing component structure if needed
-  // or simply use statsData directly.
-  const championData = statsData ? {
-    name: championName,
-    title: statsData.title,
-    roles: statsData.roles,
-    stats: statsData
-  } : null;
 
+  const championData = React.useMemo(() => {
+    if (!statsData) return null;
+    return {
+      name: statsData.championName, // The unified "Name"
+      title: statsData.title,
+      roles: statsData.roles,
+      stats: statsData // The raw stats if needed
+    };
+  }, [statsData]);
+
+  const championName = championData?.name || '';
   const stats = championData?.stats?.championRatingStats || {};
 
   return (
@@ -189,12 +192,16 @@ const ChampionRatingPage = () => {
       </MUI.Box>
 
       {/* --- PLAYER RATINGS SECTION --- */}
-      <ChampionRatingSection championName={championName} championStats={stats} />
+      <ChampionRatingSection
+        championName={championName}
+        championStats={stats}
+        championId={id}
+      />
 
       {/* --- BOTTOM: COMMENTS --- */}
       <MUI.Box mt={6}>
         <NeoCard bgcolor="#E1BEE7">
-          <ChampionCommentSection championName={championName} />
+          <ChampionCommentSection championId={id} />
         </NeoCard>
       </MUI.Box>
 

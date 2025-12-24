@@ -20,7 +20,6 @@ const InlineCommentForm = memo(({
 }) => {
   const { user } = useCurrentUser();
   const [commentText, setCommentText] = useState('');
-  const [showSuccessMessage, setShowSuccessMessage] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,16 +27,12 @@ const InlineCommentForm = memo(({
     if (!commentText.trim()) return;
 
     // Call onSubmit with appropriate signature based on mode
-    const result = isReplyMode 
+    const isSuccess = isReplyMode 
       ? await onSubmit(parentCommentId, commentText)
       : await onSubmit(commentText);
     
-    if (result?.success) {
+    if (isSuccess) {
       setCommentText('');
-      setShowSuccessMessage(result.message);
-      
-      // Clear success message after 2 seconds
-      setTimeout(() => setShowSuccessMessage(''), 2000);
     }
   };
 
@@ -64,27 +59,6 @@ const InlineCommentForm = memo(({
 
   return (
     <MUI.Box sx={{ mt: isReplyMode ? 2 : 0 }}>
-      {/* Success Message */}
-      {showSuccessMessage && (
-        <MUI.Alert 
-          severity="success" 
-          sx={{ mb: 2 }} 
-          onClose={() => setShowSuccessMessage('')}
-        >
-          {showSuccessMessage}
-        </MUI.Alert>
-      )}
-
-      {/* Error Message */}
-      {error && (
-        <MUI.Alert 
-          severity="error" 
-          sx={{ mb: 2 }} 
-          onClose={onClearError}
-        >
-          {error}
-        </MUI.Alert>
-      )}
 
       {/* Inline Comment Form */}
       <MUI.Paper 

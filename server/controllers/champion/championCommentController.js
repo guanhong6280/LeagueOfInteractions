@@ -1,36 +1,75 @@
+const mongoose = require('mongoose');
 const ChampionComment = require('../../models/ChampionComment');
-const Skin = require('../../models/Skin');
+const ChampionStats = require('../../models/ChampionStats');
 const CommentService = require('../../services/CommentService');
+const { sendError } = require('../../utils/response');
 
-// Custom validation function (Original Logic)
-async function ensureChampionExists(championId) {
-  if (!championId || typeof championId !== 'string') {
-    return false;
-  }
-  const normalizedId = championId.trim();
-  if (!normalizedId) {
-    return false;
-  }
-  // We check if ANY skin exists for this champion to verify the champion exists
-  const championSkin = await Skin.exists({ championId: normalizedId });
-  return !!championSkin;
-}
+// --- THE CACHE LAYER ---
+// Since we only have ~168 champions, this takes up negligible RAM (kilobytes).
+const idToNameCache = new Map();
 
+/**
+ * Resolver Middleware with Caching
+ * 1. Checks memory first (0ms latency).
+ * 2. Fallback to DB if missing (only happens once per server restart).
+ */
+const withChampionName = (serviceFn) => async (req, res) => {
+  try {
+    console.log("withChampionName", req.params);
+    const { championId } = req.params;
+
+    // 1. Validation
+    if (!mongoose.Types.ObjectId.isValid(championId)) {
+      return sendError(res, 'Invalid Champion ID format', { status: 400 });
+    }
+
+    // 2. CACHE HIT: Check if we already know this ID
+    if (idToNameCache.has(championId)) {
+      req.params.championName = idToNameCache.get(championId);
+      console.log("championName from cache", req.params.championName);
+      return serviceFn(req, res); // ⚡️ INSTANT RETURN
+    }
+
+    // 3. CACHE MISS: Look it up in the DB
+    console.log(`[Cache Miss] resolving name for ID: ${championId}`);
+    const champ = await ChampionStats.findById(championId).select('championName').lean();
+    console.log("champ", champ);
+    
+    if (!champ) {
+      return sendError(res, 'Champion not found', { status: 404 });
+    }
+
+    // 4. WRITE TO CACHE
+    idToNameCache.set(championId, champ.championName);
+
+    // 5. Execute Service
+    req.params.championName = champ.championName;
+    return serviceFn(req, res);
+
+  } catch (error) {
+    console.error('Error resolving champion name:', error);
+    return sendError(res, 'Server error resolving champion', { status: 500 });
+  }
+};
+
+// ... Rest of your Service Setup is exactly the same ...
 const commentService = new CommentService({
   CommentModel: ChampionComment,
-  entityIdField: 'championId',
-  validateEntityFn: ensureChampionExists,
+  entityIdField: 'championName', 
+  validateEntityFn: async () => true, 
   idType: 'String'
 });
 
-exports.commentOnChampion = (req, res) => commentService.commentOnEntity(req, res);
-exports.getCommentsForChampion = (req, res) => commentService.getComments(req, res);
-exports.getUserCommentForChampion = (req, res) => commentService.getUserComment(req, res);
-exports.likeComment = (req, res) => commentService.likeComment(req, res);
-exports.unlikeComment = (req, res) => commentService.unlikeComment(req, res);
-exports.deleteComment = (req, res) => commentService.deleteComment(req, res);
-exports.likeReply = (req, res) => commentService.likeReply(req, res);
-exports.unlikeReply = (req, res) => commentService.unlikeReply(req, res);
-exports.addReply = (req, res) => commentService.addReply(req, res);
-exports.deleteReply = (req, res) => commentService.deleteReply(req, res);
-exports.getRepliesForComment = (req, res) => commentService.getReplies(req, res);
+// Exports
+exports.commentOnChampion = withChampionName((req, res) => commentService.commentOnEntity(req, res));
+exports.getCommentsForChampion = withChampionName((req, res) => commentService.getComments(req, res));
+exports.getUserCommentForChampion = withChampionName((req, res) => commentService.getUserComment(req, res));
+// ... wrap the others too ...
+exports.likeComment = withChampionName((req, res) => commentService.likeComment(req, res));
+exports.unlikeComment = withChampionName((req, res) => commentService.unlikeComment(req, res));
+exports.deleteComment = withChampionName((req, res) => commentService.deleteComment(req, res));
+exports.likeReply = withChampionName((req, res) => commentService.likeReply(req, res));
+exports.unlikeReply = withChampionName((req, res) => commentService.unlikeReply(req, res));
+exports.addReply = withChampionName((req, res) => commentService.addReply(req, res));
+exports.deleteReply = withChampionName((req, res) => commentService.deleteReply(req, res));
+exports.getRepliesForComment = withChampionName((req, res) => commentService.getReplies(req, res));

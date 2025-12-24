@@ -39,6 +39,10 @@ export const toastMessages = {
     success: 'Comment Submitted Successfully!',
     error: 'Could not submit comment.',
   },
+  reply: {
+    success: 'Reply Submitted Successfully!',
+    error: 'Could not submit reply.',
+  },
   signIn: {
     success: 'Signed in successfully!',
     info: 'Please sign in to continue.',

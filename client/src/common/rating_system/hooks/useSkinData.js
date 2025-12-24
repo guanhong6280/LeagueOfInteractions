@@ -1,31 +1,60 @@
+// hooks/useSkinData.js
 import { useState, useEffect, useCallback } from 'react';
-import { fetchChampionSkinsFromAPI } from '../../../api/championApi';
+import { useQuery } from '@tanstack/react-query';
+import { fetchChampionSkins } from '../../../api/championApi';
 import { getSkinImageUrl as buildSkinImageUrl } from '../utils/getSkinImageUrl';
 
 const useSkinData = (championName) => {
-  const [skins, setSkins] = useState([]);
+  // UI State (Local state is fine for this)
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [imageLoadingStates, setImageLoadingStates] = useState({});
   const [preloadedImages, setPreloadedImages] = useState(new Set());
 
-  // Function for generating Community Dragon CDN URL
+  // 1. REACT QUERY FETCH
+  const { 
+    data: skins = [], 
+    isLoading, 
+    error,
+    isPlaceholderData 
+  } = useQuery({
+    queryKey: ['champion-skins', championName],
+    queryFn: async () => {
+      const response = await fetchChampionSkins(championName);
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to fetch skins');
+      }
+      console.log("response in useSkinData", response);
+      return response.data || [];
+    },
+    // Only fetch if we have a name
+    enabled: !!championName,
+    // Skins don't change often, keep them fresh in cache "forever" during the session
+    staleTime: Infinity,
+    // If we switch champions, don't show the previous champion's skins while loading
+    keepPreviousData: false, 
+  });
+
+  // 2. IMAGE HELPERS
   const getSkinImageUrl = useCallback((skin) => buildSkinImageUrl(skin), []);
 
-  // Legacy function for backward compatibility
-  const communityDragonUrl = useCallback(
-    (splashPath) => getSkinImageUrl({ splashPath }),
-    [getSkinImageUrl]
-  );
+  // 3. PRELOAD EFFECT
+  // We use useEffect here because preloading is a "Side Effect" of data arriving
+  useEffect(() => {
+    if (!skins || skins.length === 0) return;
 
-  // Preload images for better performance
-  const preloadImages = useCallback((skinsData) => {
-    skinsData.forEach((skin, index) => {
+    // Reset loading states when skins change
+    setImageLoadingStates({});
+    
+    // Reset index when champion changes (React Query handles data change, we handle UI reset)
+    setCurrentIndex(0);
+
+    skins.forEach((skin, index) => {
       const imageUrl = getSkinImageUrl(skin);
       if (imageUrl) {
+        // Mark as loading initially
+        setImageLoadingStates(prev => ({ ...prev, [index]: 'loading' }));
+
         const img = new Image();
-        
         img.onload = () => {
           setPreloadedImages(prev => {
             const newSet = new Set(prev);
@@ -34,56 +63,22 @@ const useSkinData = (championName) => {
           });
           setImageLoadingStates(prev => ({ ...prev, [index]: 'loaded' }));
         };
-        
         img.onerror = () => {
           setImageLoadingStates(prev => ({ ...prev, [index]: 'error' }));
         };
-        
-        // Set loading state first
-        setImageLoadingStates(prev => ({ ...prev, [index]: 'loading' }));
         img.src = imageUrl;
       }
     });
-  }, [getSkinImageUrl]);
+  }, [skins, getSkinImageUrl, championName]); // Add championName dependency to trigger reset
 
-  useEffect(() => {
-    const loadSkins = async () => {
-      if (!championName) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        setError(null);
-        setCurrentIndex(0); // Reset index when loading new champion
-        
-        const response = await fetchChampionSkinsFromAPI(championName);
-        
-        if (response.success && response.data) {
-          setSkins(response.data);
-          // Preload images after skins are loaded
-          preloadImages(response.data);
-        } else {
-          setError('Failed to load skins');
-          setSkins([]);
-        }
-      } catch (err) {
-        setError(`Failed to load skins: ${err.message}`);
-        setSkins([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadSkins();
-  }, [championName, preloadImages]);
-
+  // 4. NAVIGATION LOGIC
   const goToNext = useCallback(() => {
+    if (skins.length === 0) return;
     setCurrentIndex(prev => (prev + 1) % skins.length);
   }, [skins.length]);
 
   const goToPrevious = useCallback(() => {
+    if (skins.length === 0) return;
     setCurrentIndex(prev => (prev - 1 + skins.length) % skins.length);
   }, [skins.length]);
 
@@ -100,7 +95,7 @@ const useSkinData = (championName) => {
     currentSkin,
     currentIndex,
     isLoading,
-    error,
+    error: error ? error.message : null,
     imageLoadingStates,
     preloadedImages,
     goToNext,
@@ -109,4 +104,4 @@ const useSkinData = (championName) => {
   };
 };
 
-export default useSkinData; 
+export default useSkinData;

@@ -3,7 +3,7 @@ import * as MUI from '@mui/material';
 import useSkinCommentData from '../../hooks/useSkinCommentData';
 import { CommentList } from '../comments';
 
-const SkinCommentSection = memo(({ currentSkinId, championName }) => {
+const SkinCommentSection = memo(({ currentSkinId }) => {
   const {
     // Data
     comments,

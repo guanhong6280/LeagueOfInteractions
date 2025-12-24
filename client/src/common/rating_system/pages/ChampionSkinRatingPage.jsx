@@ -11,16 +11,29 @@ import { useRatingSectionData } from '../../../hooks/useRatingSectionData'; // U
 import { NeoCard } from '../components/design/NeoComponents';
 
 const ChampionSkinRatingPage = () => {
-  const { championName } = useParams();
+  const { id } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeSection, setActiveSection] = useState('rating');
   const { version } = useVersion();
 
   // Unified data management with query params for 'skins'
   const {
-    data: stats,
+    data: statsData,
     error,
-  } = useRatingSectionData(championName, { include: 'skins' });
+  } = useRatingSectionData(id, { include: 'skins' });
+
+  const championData = React.useMemo(() => { 
+    if (!statsData) return null;
+    return {
+      name: statsData.championName,
+      title: statsData.title,
+      roles: statsData.roles,
+      stats: statsData, 
+    };
+  }, [statsData]);
+
+  const championName = championData?.name || '';
+  const stats = championData?.stats || {};
 
   const [currentSkin, setCurrentSkin] = useState(null);
 
@@ -32,24 +45,6 @@ const ChampionSkinRatingPage = () => {
       setSearchParams({ skinId: skin.skinId }, { replace: true });
     }
   }, [setSearchParams]);
-
-  // Initialize skin from URL if present
-  useEffect(() => {
-    const skinIdFromUrl = searchParams.get('skinId');
-    if (stats?.skins && skinIdFromUrl && !currentSkin) {
-      const skinFromUrl = stats.skins.find(s => s.skinId === skinIdFromUrl);
-      if (skinFromUrl) {
-        setCurrentSkin(skinFromUrl);
-      }
-    }
-  }, [stats, searchParams, currentSkin]);
-
-  // Construct details from stats if available
-  const championDetails = stats ? {
-    name: championName,
-    title: stats.title,
-    tags: stats.roles || stats.tags,
-  } : null;
 
   return (
     <MUI.Container
@@ -65,8 +60,8 @@ const ChampionSkinRatingPage = () => {
       <MUI.Box sx={{ mb: 4 }}>
         <ChampionSkinStatsSection
           championImageUrl={getChampionSquareAssetUrl(championName, version)}
-          championName={championDetails?.name || championName}
-          championTitle={championDetails?.title || ''}
+          championName={championName}
+          championTitle={championData?.title || ''}
           stats={stats}
           error={error}
           onRetry={() => window.location.reload()}
@@ -140,7 +135,6 @@ const ChampionSkinRatingPage = () => {
           <MUI.Box id="rating-section">
             <SkinRatingSection
               currentSkinId={currentSkin?.skinId}
-              championName={championName}
               skinStats={currentSkin}
             />
           </MUI.Box>
@@ -149,7 +143,6 @@ const ChampionSkinRatingPage = () => {
             <NeoCard bgcolor="#E1BEE7">
               <SkinCommentSection
                 currentSkinId={currentSkin?.skinId}
-                championName={championName}
               />
             </NeoCard>
           </MUI.Box>

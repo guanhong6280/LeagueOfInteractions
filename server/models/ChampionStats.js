@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const ChampionStatsSchema = new mongoose.Schema({
-  championId: { type: String, required: true, unique: true },
+  championName: { type: String, required: true, unique: true },
 
   // Metadata from Community Dragon
   title: { type: String, default: '' },
@@ -39,6 +39,6 @@ const ChampionStatsSchema = new mongoose.Schema({
 });
 
 // Index for looking up stats by champion
-ChampionStatsSchema.index({ championId: 1 });
+ChampionStatsSchema.index({ championName: 1 });
 
 module.exports = mongoose.model('ChampionStats', ChampionStatsSchema);

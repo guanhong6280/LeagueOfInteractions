@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const ChampionRatingSchema = new mongoose.Schema({
-  championId: { type: String, required: true },
+  championName: { type: String, required: true },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 
   // Rating Dimensions (1-10 scale)
@@ -18,8 +18,8 @@ const ChampionRatingSchema = new mongoose.Schema({
 });
 
 // Indexes
-ChampionRatingSchema.index({ championId: 1, userId: 1 }, { unique: true }); // One rating per user per champion
-ChampionRatingSchema.index({ championId: 1 }); // For aggregation queries
+ChampionRatingSchema.index({ championName: 1, userId: 1 }, { unique: true }); // One rating per user per champion
+ChampionRatingSchema.index({ championName: 1 }); // For aggregation queries
 
 module.exports = mongoose.model('ChampionRating', ChampionRatingSchema);
 

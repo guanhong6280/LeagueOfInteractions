@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const SkinSchema = new mongoose.Schema({
-  championId: { type: String, required: true },
+  championName: { type: String, required: true },
   skinId: { type: Number, required: true, unique: true },
   name: { type: String, required: true },
   rarity: { type: String, default: 'kNoRarity' },
@@ -26,7 +26,7 @@ const SkinSchema = new mongoose.Schema({
 });
 
 // Create indexes for faster querying
-SkinSchema.index({ championId: 1, skinId: 1 });
+SkinSchema.index({ championName: 1, skinId: 1 });
 SkinSchema.index({ skinId: 1 }, { unique: true });
 SkinSchema.index({ skinLineId: 1 }); // For skin line analytics
 

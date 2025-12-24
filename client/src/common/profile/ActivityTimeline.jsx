@@ -235,8 +235,8 @@ const ActivityTimeline = ({ userId }) => {
               transition: 'opacity 0.15s ease'
             }}
           >
-            {activities.map((activity, index) => (
-              <ActivityCard key={index} activity={activity} />
+            {activities.map((activity) => (
+              <ActivityCard key={activity.data._id} activity={activity} />
             ))}
           </MUI.Box>
         )}

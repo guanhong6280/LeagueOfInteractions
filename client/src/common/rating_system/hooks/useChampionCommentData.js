@@ -1,8 +1,8 @@
 import { useState, useCallback, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  getChampionComments, 
-  getUserChampionComment, 
+import {
+  getChampionComments,
+  getUserChampionComment,
   submitChampionComment,
   likeChampionComment,
   unlikeChampionComment,
@@ -12,6 +12,8 @@ import {
   deleteChampionReply,
 } from '../../../api/championApi';
 import useCurrentUser from '../../../hooks/useCurrentUser';
+
+import { toastMessages, useToast } from '../../../toast/useToast';
 
 const queryKeys = {
   comments: (championId) => ['champion-comments', championId],
@@ -24,6 +26,7 @@ const REPLY_MAX_LENGTH = 500;
 const useChampionCommentData = (championId) => {
   const { user } = useCurrentUser();
   const queryClient = useQueryClient();
+  const { success, error, info } = useToast();
 
   // UI state
   const [expandedReplies, setExpandedReplies] = useState(new Set());
@@ -31,11 +34,11 @@ const useChampionCommentData = (championId) => {
   const [loadingReplies, setLoadingReplies] = useState(new Set());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
-  
+
   const likeDebounceMap = useRef(new Map());
 
   // ==================== QUERIES ====================
-  
+
   const {
     data: comments = [],
     isLoading,
@@ -50,13 +53,13 @@ const useChampionCommentData = (championId) => {
       return response.success ? response.data : [];
     },
     enabled: !!championId,
-    staleTime: 30000, 
+    staleTime: 30000,
   });
 
   const transformedComments = useMemo(() => {
     return comments.map(comment => ({
       ...comment,
-      displayText: comment.comment, 
+      displayText: comment.comment,
       // Ensure we use the server's replyCount if available, or the array length
       replyCount: comment.replies?.length ?? comment.replyCount ?? 0,
     }));
@@ -88,7 +91,7 @@ const useChampionCommentData = (championId) => {
       const previousComments = queryClient.getQueryData(queryKeys.comments(championId));
 
       const optimisticComment = {
-        id: `temp-${Date.now()}`,  
+        id: `temp-${Date.now()}`,
         comment: commentText.trim(),
         userId: user.id,
         user: createOptimisticUser(),
@@ -136,7 +139,7 @@ const useChampionCommentData = (championId) => {
         ...submittedComment,
         displayText: submittedComment.comment,
         // Ensure user object is present (sometimes backend might just return userId if populate failed)
-        user: submittedComment.user || createOptimisticUser() 
+        user: submittedComment.user || createOptimisticUser()
       };
 
       queryClient.setQueryData(queryKeys.comments(championId), (oldData = []) => {
@@ -158,6 +161,14 @@ const useChampionCommentData = (championId) => {
         }
         return updatedComments;
       });
+
+      if (submittedComment.status === 'rejected') {
+        error('Your comment was rejected due to content guidelines.');
+      } else if (submittedComment.status === 'needsReview') {
+        info('Your comment is pending review.');
+      } else {
+        success(toastMessages.comment.success);
+      }
     },
 
     onError: (err, variables, context) => {
@@ -169,32 +180,30 @@ const useChampionCommentData = (championId) => {
     }
   });
 
+  // Updated Wrapper: Returns TRUE on success, FALSE on failure
   const submitComment = useCallback(async (commentText) => {
-    if (!user) return { success: false, message: 'Please sign in to comment' };
+    if (!user) {
+      info(toastMessages.signIn.info);
+      return false;
+    }
 
     const trimmedText = commentText.trim();
-    if (!trimmedText) return { success: false, message: 'Comment cannot be empty' };
-    if (trimmedText.length > COMMENT_MAX_LENGTH) return { success: false, message: `Comment cannot exceed ${COMMENT_MAX_LENGTH} characters` };
+    if (!trimmedText) {
+      info('Comment cannot be empty');
+      return false;
+    }
+    if (trimmedText.length > COMMENT_MAX_LENGTH) {
+      info(`Comment cannot exceed ${COMMENT_MAX_LENGTH} characters`);
+      return false;
+    }
 
     try {
-      const result = await submitCommentMutation.mutateAsync(commentText);
-      if (!result.success) return { success: false, message: result.message || 'Failed to submit comment' };
-
-      const submittedComment = result.data;
-      if (submittedComment.status === 'rejected') {
-        return { success: false, message: 'Your comment was rejected.', status: 'rejected' };
-      }
-
-      const successMessage = submittedComment.status === 'needsReview'
-        ? 'Your comment will be reviewed.'
-        : userComment ? 'Comment updated successfully.' : 'Comment submitted successfully.';
-
-      return { success: true, message: successMessage, status: submittedComment.status };
+      await submitCommentMutation.mutateAsync(commentText);
+      return true; // Signal to form to clear input
     } catch (err) {
-      return { success: false, message: err.response?.data?.error || 'Failed to submit comment' };
+      return false; // Signal to form to keep input
     }
-  }, [user, submitCommentMutation, userComment]);
-
+  }, [user, submitCommentMutation, info]);
   // 2. Like/Unlike Mutation (Logic remains same, checking likedBy array)
   const toggleCommentLikeMutation = useMutation({
     mutationFn: ({ commentId, isCurrentlyLiked }) =>
@@ -269,7 +278,7 @@ const useChampionCommentData = (championId) => {
             // Preserve temp replies during load
             const existingReplies = c.replies || [];
             const tempReplies = existingReplies.filter(r => r.id?.startsWith('temp-reply-'));
-            
+
             // Merge logic
             const mergedReplies = [...transformedReplies];
             tempReplies.forEach(temp => {
@@ -327,7 +336,7 @@ const useChampionCommentData = (championId) => {
       const optimisticReply = {
         id: `temp-reply-${Date.now()}`,
         userId: user.id,
-        user: createOptimisticUser(), 
+        user: createOptimisticUser(),
         comment: replyText.trim(),
         createdAt: new Date().toISOString(),
         likedBy: [],
@@ -367,7 +376,7 @@ const useChampionCommentData = (championId) => {
 
           const existingReplies = comment.replies || [];
           let foundTemp = false;
-          
+
           const updatedReplies = existingReplies.map(reply => {
             if (reply.id?.startsWith('temp-reply-')) {
               foundTemp = true;
@@ -389,26 +398,42 @@ const useChampionCommentData = (championId) => {
 
       setExpandedReplies(prev => new Set([...prev, commentId]));
       setReplyingTo(null);
+
+      if (response.data.status === 'needsReview') {
+        info('Your reply is pending review.');
+      } else {
+        success(toastMessages.reply.success);
+      }
     },
     onError: (err, variables, context) => {
       if (context?.previousComments) queryClient.setQueryData(queryKeys.comments(championId), context.previousComments);
+      // ✅ TOAST
+      error(toastMessages.reply.error);
     }
   });
 
   const submitReply = useCallback(async (commentId, replyText) => {
-    if (!user) return { success: false, message: 'Please sign in to reply' };
+    if (!user) {
+      info(toastMessages.signIn.info);
+      return false;
+    }
     const trimmedText = replyText.trim();
-    if (!trimmedText) return { success: false, message: 'Reply cannot be empty' };
-    if (trimmedText.length > REPLY_MAX_LENGTH) return { success: false, message: `Reply cannot exceed ${REPLY_MAX_LENGTH} characters` };
+    if (!trimmedText) {
+      info('Reply cannot be empty');
+      return false;
+    }
+    if (trimmedText.length > REPLY_MAX_LENGTH) {
+      info(`Reply cannot exceed ${REPLY_MAX_LENGTH} characters`);
+      return false;
+    }
 
     try {
-      const result = await submitReplyMutation.mutateAsync({ commentId, replyText });
-      const successMessage = result.data?.status === 'needsReview' ? 'Your reply will be reviewed.' : 'Reply submitted successfully.';
-      return { success: true, message: successMessage };
+      await submitReplyMutation.mutateAsync({ commentId, replyText });
+      return true; // Signal success
     } catch (err) {
-      return { success: false, message: err.response?.data?.error || 'Failed to submit reply' };
+      return false;
     }
-  }, [user, submitReplyMutation]);
+  }, [user, submitReplyMutation, info]);
 
   const deleteCommentMutation = useMutation({
     mutationFn: (commentId) => deleteChampionComment(championId, commentId),
@@ -420,20 +445,27 @@ const useChampionCommentData = (championId) => {
       );
       return { previousComments };
     },
+    onSuccess: () => {
+      success('Comment deleted.');
+    },
     onError: (err, variables, context) => {
       if (context?.previousComments) queryClient.setQueryData(queryKeys.comments(championId), context.previousComments);
+      error(err.response?.data?.error || 'Failed to delete');
     }
   });
 
   const deleteComment = useCallback(async (commentId) => {
-    if (!user) return { success: false, message: 'Please sign in' };
+    if (!user) {
+      info(toastMessages.signIn.info);
+      return false;
+    }
     try {
       await deleteCommentMutation.mutateAsync(commentId);
-      return { success: true, message: 'Comment deleted' };
+      return true;
     } catch (err) {
-      return { success: false, message: err.response?.data?.error || 'Failed to delete' };
+      return false;
     }
-  }, [user, deleteCommentMutation]);
+  }, [user, deleteCommentMutation, info]);
 
   const deleteReplyMutation = useMutation({
     mutationFn: ({ commentId, replyId }) => deleteChampionReply(championId, commentId, replyId),
@@ -451,27 +483,34 @@ const useChampionCommentData = (championId) => {
       );
       return { previousComments };
     },
+    onSuccess: () => {
+      success('Reply deleted.');
+    },
     onError: (err, variables, context) => {
       if (context?.previousComments) queryClient.setQueryData(queryKeys.comments(championId), context.previousComments);
+      error(err.response?.data?.error || 'Failed to delete reply');
     }
   });
 
   const deleteReply = useCallback(async (commentId, replyId) => {
-    if (!user) return { success: false, message: 'Please sign in' };
+    if (!user) {
+      info(toastMessages.signIn.info);
+      return false;
+    }
     try {
       await deleteReplyMutation.mutateAsync({ commentId, replyId });
-      return { success: true, message: 'Reply deleted' };
+      return true;
     } catch (err) {
-      return { success: false, message: err.response?.data?.error || 'Failed to delete reply' };
+      return false;
     }
-  }, [user, deleteReplyMutation]);
+  }, [user, deleteReplyMutation, info]);
 
   const handleRefresh = useCallback(async () => {
     const COOLDOWN_PERIOD = 5000;
     const now = Date.now();
     if (now - lastRefreshTime < COOLDOWN_PERIOD) return { success: false, message: 'Please wait' };
     if (isRefreshing) return { success: false, message: 'In progress' };
-    
+
     try {
       setIsRefreshing(true);
       setLastRefreshTime(now);

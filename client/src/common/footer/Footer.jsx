@@ -1,7 +1,7 @@
 import React from 'react';
 import * as MUI from '@mui/material';
-import Logo from '../Logo';
-import SocialMediaBar from './SocialMediaBar';
+import Logo from '../navigation/Logo.jsx';
+import SocialMediaBar from './SocialMediaBar.jsx';
 import { Link } from 'react-router-dom';
 
 const Footer = () => {

@@ -14,6 +14,7 @@ const ReplySchema = new mongoose.Schema({
   isEdited: { type: Boolean, default: false },
   toxicityScore: { type: Number, min: 0, max: 1, default: 0 },
   spamScore: { type: Number, min: 0, max: 1, default: 0 },
+  autoModerationFailed: { type: Boolean, default: false },
   status: {
     type: String,
     enum: ['approved', 'needsReview', 'rejected'],
@@ -49,6 +50,7 @@ const ChampionCommentSchema = new mongoose.Schema({
     enum: ['approved', 'needsReview', 'rejected'],
     default: 'approved',
   },
+  autoModerationFailed: { type: Boolean, default: false },
   moderatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   moderatedAt: { type: Date, default: null },
   moderatorNotes: { type: String, default: '' },

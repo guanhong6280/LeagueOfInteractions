@@ -1,6 +1,6 @@
 import React from 'react';
 import * as MUI from '@mui/material';
-import googleIcon from '../assets/google_icon.svg';
+import googleIcon from '../../assets/google_icon.svg';
 
 const SignInDialog = (props) => {
   return (

@@ -14,6 +14,7 @@ const ReplySchema = new mongoose.Schema({
   isEdited: { type: Boolean, default: false },
   toxicityScore: { type: Number, min: 0, max: 1, default: 0 },
   spamScore:     { type: Number, min: 0, max: 1, default: 0 },
+  autoModerationFailed: { type: Boolean, default: false },
   status: {
     type: String,
     enum: ['approved', 'needsReview', 'rejected'],
@@ -47,6 +48,7 @@ const SkinCommentSchema = new mongoose.Schema({
   isEdited: { type: Boolean, default: false },
   toxicityScore: { type: Number, min: 0, max: 1, default: 0 },
   spamScore:     { type: Number, min: 0, max: 1, default: 0 },
+  autoModerationFailed: { type: Boolean, default: false },
   status: {
     type: String,
     enum: ['approved', 'needsReview', 'rejected'],

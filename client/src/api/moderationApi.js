@@ -1,20 +1,4 @@
-import axios from 'axios';
-
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5174',
-  withCredentials: true,
-  timeout: 10000,
-});
-
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      window.location.href = '/auth/google';
-    }
-    return Promise.reject(error);
-  }
-);
+import api from './apiClient';
 
 export const getCommentModerationQueue = async (params = {}) => {
   const response = await api.get('/api/moderation/comments', { params });

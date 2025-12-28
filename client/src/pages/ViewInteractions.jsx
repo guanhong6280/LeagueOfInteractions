@@ -1,256 +1,180 @@
-import React from 'react';
+import React, { useMemo, useEffect } from 'react';
 import * as MUI from '@mui/material';
+import { useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 
-import { useChampion } from '../contextProvider/ChampionProvider';
-import ChampionSelectCard from '../common/ChampionSelectCard';
-import { AbilityMap } from './AddInteractions';
-import { fetchChampionDetails, fetchVideoData } from '../api/championApi';
+import ChampionSelectCard from '../common/ViewInteractionPage/ChampionSelectCard.jsx';
 import VideoPlayer from '../common/ViewInteractionPage/VideoDisplay';
+import { AbilityMap } from '../common/championUploadSelectCard.jsx'; // Ensure this path is correct
+import { fetchVideoData } from '../api/championApi';
+import { useChampionDetails } from '../hooks/useChampionDetails';
+import { useChampionNames } from '../hooks/useChampionNames';
 
 const ViewInteractions = () => {
-  const { championNames } = useChampion();
+  const { data: championNames = [] } = useChampionNames();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [firstChampion, setFirstChampion] = React.useState(null);
-  const [secondChampion, setSecondChampion] = React.useState(null);
-  const [firstChampionAbilities, setFirstChampionAbilities] = React.useState([]);
-  const [secondChampionAbilities, setSecondChampionAbilities] = React.useState([]);
-  const [selectedFirstChampionAbility, setSelectedFirstChampionAbility] = React.useState('');
-  const [selectedSecondChampionAbility, setSelectedSecondChampionAbility] = React.useState('');
-  const [videoData, setVideoData] = React.useState(null);
-  const [isLoading, setIsLoading] = React.useState(false);
+  // ==================== 1. STATE MANAGEMENT (URL DRIVEN) ====================
 
-  // Use a ref to track if restoration is in progress
-  const isRestoring = React.useRef(true);
+  // Read state directly from URL
+  const champ1Name = searchParams.get('c1') || '';
+  const ability1 = searchParams.get('a1') || '';
+  const champ2Name = searchParams.get('c2') || '';
+  const ability2 = searchParams.get('a2') || '';
 
-  const filteredChampionNamesForFirstCard = championNames.filter(
-    (name) => name !== secondChampion?.id,
-  );
-  const filteredChampionNamesForSecondCard = championNames.filter(
-    (name) => name !== firstChampion?.id,
-  );
+  // ==================== 2. HYBRID PERSISTENCE (URL + SESSION) ====================
 
-  const saveToSession = (k, v) => {
-    if (v) sessionStorage.setItem(k, v);
-  };
-
-  const getFromSession = (k) => sessionStorage.getItem(k);
-  const removeFromSession = (k) => sessionStorage.removeItem(k);
-
-  const restoreSelections = async () => {
-    isRestoring.current = true;
-    try {
-      const savedFirstChampion = getFromSession('firstChampion');
-      const savedSecondChampion = getFromSession('secondChampion');
-      const savedFirstAbility = getFromSession('selectedFirstChampionAbility');
-      const savedSecondAbility = getFromSession('selectedSecondChampionAbility');
-
-      if (savedFirstChampion) {
-        // Direct state update instead of going through handleChampionSelect to avoid side effects
-        const championData = await fetchChampionDetails(savedFirstChampion);
-        if (championData) {
-          setFirstChampion(championData);
-          setFirstChampionAbilities([
-            {
-              name: championData.passive.name,
-              description: championData.passive.description,
-              image: championData.passive.image.full,
-            },
-            ...championData.spells.map((spell) => ({
-              name: spell.name,
-              description: spell.description,
-              image: spell.image.full,
-            })),
-          ]);
-        }
+  // MOUNT: If URL is empty, try to restore from Session
+  useEffect(() => {
+    if (!searchParams.toString()) {
+      const savedParams = sessionStorage.getItem('interactionParams');
+      if (savedParams) {
+        setSearchParams(new URLSearchParams(savedParams), { replace: true });
       }
-
-      if (savedSecondChampion) {
-        const championData = await fetchChampionDetails(savedSecondChampion);
-        if (championData) {
-          setSecondChampion(championData);
-          setSecondChampionAbilities([
-            {
-              name: championData.passive.name,
-              description: championData.passive.description,
-              image: championData.passive.image.full,
-            },
-            ...championData.spells.map((spell) => ({
-              name: spell.name,
-              description: spell.description,
-              image: spell.image.full,
-            })),
-          ]);
-        }
-      }
-
-      if (savedFirstAbility) setSelectedFirstChampionAbility(savedFirstAbility);
-      if (savedSecondAbility) setSelectedSecondChampionAbility(savedSecondAbility);
-    } catch (e) {
-      console.error("Failed to restore selections", e);
-    } finally {
-      // Small timeout to allow state updates to settle before enabling saveToSession
-      setTimeout(() => {
-        isRestoring.current = false;
-      }, 100);
     }
-  };
+  }, []); // Run once
 
-  React.useEffect(() => {
-    // Only save to session if we are NOT currently restoring
-    if (isRestoring.current) return;
-
-    if (firstChampion) saveToSession('firstChampion', firstChampion.id);
-    else removeFromSession('firstChampion');
-
-    if (secondChampion) saveToSession('secondChampion', secondChampion.id);
-    else removeFromSession('secondChampion');
-
-    if (selectedFirstChampionAbility) saveToSession('selectedFirstChampionAbility', selectedFirstChampionAbility);
-    else removeFromSession('selectedFirstChampionAbility');
-
-    if (selectedSecondChampionAbility) saveToSession('selectedSecondChampionAbility', selectedSecondChampionAbility);
-    else removeFromSession('selectedSecondChampionAbility');
-  }, [firstChampion, secondChampion, selectedFirstChampionAbility, selectedSecondChampionAbility]);
-
-  React.useEffect(() => {
-    restoreSelections();
-  }, []);
-
-  // Call this function when both champions and abilities are selected
-  React.useEffect(() => {
-    if (firstChampion && selectedFirstChampionAbility && secondChampion && selectedSecondChampionAbility) {
-      fetchAndSetVideoData();
+  // UPDATE: Sync URL changes to Session (Handle Cancel/Clear)
+  useEffect(() => {
+    const currentParams = searchParams.toString();
+    if (currentParams) {
+      sessionStorage.setItem('interactionParams', currentParams);
     } else {
-      setVideoData(null); // Clear video if selection is incomplete
+      sessionStorage.removeItem('interactionParams'); // Wipe session on clear
     }
-  }, [firstChampion, selectedFirstChampionAbility, secondChampion, selectedSecondChampionAbility]);
+  }, [searchParams]);
 
-  const handleChampionSelect = async (championName, setChampion, setChampionAbilities) => {
-    if (!championName) {
-      setChampion(null);
-      setChampionAbilities([]);
-      return;
-    }
+  // ==================== 3. DATA FETCHING (REACT QUERY) ====================
 
-    const championData = await fetchChampionDetails(championName);
-    if (championData) {
-      setChampion(championData);
-      setChampionAbilities([
-        {
-          name: championData.passive.name,
-          description: championData.passive.description,
-          image: championData.passive.image.full,
-        },
-        ...championData.spells.map((spell) => ({
-          name: spell.name,
-          description: spell.description,
-          image: spell.image.full,
-        })),
-      ]);
-    }
+  // Fetch Champion Details (Parallel & Cached)
+  const { data: firstChampion, isLoading: loadingFirst } = useChampionDetails(champ1Name);
+  const { data: secondChampion, isLoading: loadingSecond } = useChampionDetails(champ2Name);
+
+  // Helper to format abilities for the cards
+  const formatAbilities = (championData) => {
+    if (!championData) return [];
+    return [
+      {
+        name: championData.passive.name,
+        description: championData.passive.description,
+        image: championData.passive.image.full,
+      },
+      ...championData.spells.map((spell) => ({
+        name: spell.name,
+        description: spell.description,
+        image: spell.image.full,
+      })),
+    ];
   };
 
-  const handleFirstChampionSelect = async (event) => {
-    const val = event.target.value;
-    handleChampionSelect(val, setFirstChampion, setFirstChampionAbilities);
-    if (!val) setSelectedFirstChampionAbility(''); // Clear ability if champion cleared
-    else setSelectedFirstChampionAbility(''); // Reset ability if changing champion
-  };
+  const firstChampionAbilities = useMemo(() => formatAbilities(firstChampion), [firstChampion]);
+  const secondChampionAbilities = useMemo(() => formatAbilities(secondChampion), [secondChampion]);
 
-  const handleSecondChampionSelect = async (event) => {
-    const val = event.target.value;
-    handleChampionSelect(val, setSecondChampion, setSecondChampionAbilities);
-    if (!val) setSelectedSecondChampionAbility(''); // Clear ability if champion cleared
-    else setSelectedSecondChampionAbility(''); // Reset ability if changing champion
-  };
+  // Fetch Video Data (Only when all selections are ready)
+  const ability1Index = firstChampionAbilities.findIndex((a) => a.name === ability1);
+  const ability2Index = secondChampionAbilities.findIndex((a) => a.name === ability2);
+  
+  const isSelectionComplete = 
+    firstChampion && ability1 && ability1Index !== -1 && 
+    secondChampion && ability2 && ability2Index !== -1;
 
-  const selectFirstChampionAbility = (abilityName) => {
-    setSelectedFirstChampionAbility(abilityName);
-  };
-
-  const selectSecondChampionAbility = (abilityName) => {
-    setSelectedSecondChampionAbility(abilityName);
-  };
-
-  const fetchAndSetVideoData = async () => {
-    setVideoData(null);
-    setIsLoading(true);
-
-    const ability1Index = firstChampionAbilities.findIndex((ability) => ability.name === selectedFirstChampionAbility);
-    const ability2Index = secondChampionAbilities.findIndex((ability) => ability.name === selectedSecondChampionAbility);
-
-    if (ability1Index === -1 || ability2Index === -1) {
-      setIsLoading(false);
-      return;
-    }
-
-    const params = {
-      champion1: firstChampion?.id,
-      ability1: AbilityMap[ability1Index],
-      champion2: secondChampion?.id,
+  const { data: videoData, isLoading: loadingVideo } = useQuery({
+    queryKey: ['interaction-video', firstChampion?.id, ability1, secondChampion?.id, ability2],
+    queryFn: () => fetchVideoData({
+      champion1: firstChampion.id,
+      ability1: AbilityMap[ability1Index], // Maps index 0->P, 1->Q, etc.
+      champion2: secondChampion.id,
       ability2: AbilityMap[ability2Index],
-    };
+    }),
+    enabled: !!isSelectionComplete,
+    staleTime: 1000 * 60 * 10, // Cache video for 10 mins
+    retry: false,
+  });
 
-    try {
-      const data = await fetchVideoData(params);
-      setVideoData(data);
-    } catch (error) {
-      console.error("Error fetching video data:", error);
-    } finally {
-      setIsLoading(false);
-    }
+  // ==================== 4. HANDLERS ====================
+
+  // Helper to cleanly update params without losing other state
+  const updateParam = (updates) => {
+    setSearchParams(prev => {
+      const newParams = new URLSearchParams(prev);
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value) newParams.set(key, value);
+        else newParams.delete(key);
+      });
+      return newParams;
+    }, { replace: true });
   };
 
-  const selectionsComplete = Boolean(
-    firstChampion &&
-    selectedFirstChampionAbility &&
-    secondChampion &&
-    selectedSecondChampionAbility
-  );
+  const handleFirstChampionSelect = (e) => {
+    updateParam({ c1: e.target.value, a1: '' }); // Clear ability on champ change
+  };
+
+  const handleSecondChampionSelect = (e) => {
+    updateParam({ c2: e.target.value, a2: '' });
+  };
+
+  // Filter lists to prevent selecting same champ on both sides
+  const filteredFirstList = championNames.filter(name => name !== champ2Name);
+  const filteredSecondList = championNames.filter(name => name !== champ1Name);
 
   return (
     <MUI.Box
       display="flex"
+      flexDirection="column"
+      alignItems="center"
       minHeight="500px"
       paddingTop="50px"
-      // paddingBottom="50px" // Add bottom padding for scroll space
-      paddingX="20px"
-      height="auto" // Remove fixed viewport height constraint
-      gap="25px"
-      justifyContent="center"
-      alignItems="center" // Ensure items stretch to match tallest element
-      marginBottom="50px"
+      paddingBottom="50px"
+      gap={4}
     >
-      <ChampionSelectCard
-        order="First"
-        champion={firstChampion}
-        abilities={firstChampionAbilities}
-        selectedAbility={selectedFirstChampionAbility}
-        championNames={filteredChampionNamesForFirstCard}
-        handleChampionSelect={handleFirstChampionSelect}
-        handleAbilitySelect={selectFirstChampionAbility}
-      />
-      <VideoPlayer 
-        videoData={videoData} 
-        isLoading={isLoading} 
-        selectionsComplete={selectionsComplete}
-        currentSelections={{
-          champion1: firstChampion,
-          champion2: secondChampion,
-          ability1: selectedFirstChampionAbility,
-          ability2: selectedSecondChampionAbility
-        }}
-      />
-      <ChampionSelectCard
-        order="Second"
-        champion={secondChampion}
-        abilities={secondChampionAbilities}
-        selectedAbility={selectedSecondChampionAbility}
-        championNames={filteredChampionNamesForSecondCard}
-        handleChampionSelect={handleSecondChampionSelect}
-        handleAbilitySelect={selectSecondChampionAbility}
-      />
-    </MUI.Box >
+
+      <MUI.Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center" // Align to top so cards don't stretch weirdly
+        gap="25px"
+        width="100%"
+        paddingX="20px"
+        boxSizing="border-box"
+      >
+        {/* Left Card */}
+        <ChampionSelectCard
+          order="First"
+          champion={firstChampion || null}
+          abilities={firstChampionAbilities}
+          selectedAbility={ability1}
+          championNames={filteredFirstList}
+          handleChampionSelect={handleFirstChampionSelect}
+          handleAbilitySelect={(name) => updateParam({ a1: name })}
+          isLoading={loadingFirst}
+        />
+
+        {/* Center Video Player */}
+        <VideoPlayer 
+          videoData={videoData} 
+          isLoading={loadingVideo} 
+          selectionsComplete={isSelectionComplete}
+          currentSelections={{
+            champion1: firstChampion,
+            champion2: secondChampion,
+            ability1: ability1,
+            ability2: ability2
+          }}
+        />
+
+        {/* Right Card */}
+        <ChampionSelectCard
+          order="Second"
+          champion={secondChampion || null}
+          abilities={secondChampionAbilities}
+          selectedAbility={ability2}
+          championNames={filteredSecondList}
+          handleChampionSelect={handleSecondChampionSelect}
+          handleAbilitySelect={(name) => updateParam({ a2: name })}
+          isLoading={loadingSecond}
+        />
+      </MUI.Box>
+    </MUI.Box>
   );
 };
 

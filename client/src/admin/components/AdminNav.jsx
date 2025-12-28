@@ -6,7 +6,7 @@ import GavelOutlinedIcon from '@mui/icons-material/GavelOutlined';
 import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { NavLink } from 'react-router-dom';
-import Logo from '../../common/Logo';
+import Logo from '../../common/navigation/Logo.jsx';
 import useCurrentUser from '../../hooks/useCurrentUser';
 import useLogout from '../../hooks/useLogout';
 

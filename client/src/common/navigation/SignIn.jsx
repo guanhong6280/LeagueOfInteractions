@@ -1,10 +1,10 @@
 import React from 'react';
 import * as MUI from '@mui/material';
-import SignInDialog from './SignInDialog';
+import SignInDialog from './SignInDialog.jsx';
 import { Link } from 'react-router-dom';
-import useCurrentUser from '../hooks/useCurrentUser';
-import useLogout from '../hooks/useLogout';
-import { redirectToGoogleAuth } from '../api/authApi';
+import useCurrentUser from '../../hooks/useCurrentUser';
+import useLogout from '../../hooks/useLogout';
+import { redirectToGoogleAuth } from '../../api/authApi';
 
 const SignIn = () => {
   const [dialogOpen, setDialogOpen] = React.useState(false);

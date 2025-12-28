@@ -22,6 +22,11 @@ export const toastMessages = {
     info: 'Please select both champion abilities before uploading.',
     error: 'Could not submit interaction.',
   },
+  video: {
+    like_success: 'Video Liked Successfully!',
+    unlike_success: 'Video Unliked Successfully!',
+    like_error: 'Could not like video.',
+  },
   rating:
   {
     champion: {

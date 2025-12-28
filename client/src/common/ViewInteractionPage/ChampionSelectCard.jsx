@@ -1,8 +1,8 @@
 import React from 'react';
 import * as MUI from '@mui/material';
 import { Favorite, FavoriteBorder, Close } from '@mui/icons-material';
-import { useVersion } from '../contextProvider/VersionProvider';
-import { constructImageUrl } from '../utils/imageUtils';
+import { useVersion } from '../../contextProvider/VersionProvider';
+import { constructImageUrl } from '../../utils/imageUtils';
 
 const ChampionSelectCard = (props) => {
   const { version, loading: versionLoading } = useVersion();
@@ -205,6 +205,7 @@ const ChampionSelectCard = (props) => {
 
             return (
               <MUI.Box
+                key={ability.name}
                 onClick={() => props.handleAbilitySelect(ability.name)}
                 sx={{
                   display: 'flex',

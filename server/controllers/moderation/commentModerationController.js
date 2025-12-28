@@ -101,8 +101,11 @@ exports.getCommentModerationQueue = async (req, res) => {
         profilePictureURL: comment.user?.profilePictureURL || null,
         comment: comment.comment,
         status: comment.status,
+
         toxicityScore: comment.toxicityScore,
         spamScore: comment.spamScore,
+        autoModerationFailed: comment.autoModerationFailed || false,
+
         createdAt: comment.createdAt,
         updatedAt: comment.updatedAt,
         moderatedBy: comment.moderatedBy,

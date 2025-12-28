@@ -1,408 +1,141 @@
-import React from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import * as MUI from '@mui/material';
-import axios from 'axios';
-import { UpChunk } from '@mux/upchunk';
-import { initMuxUpload } from '../api/championApi';
-import { useVideoEvents } from '../hooks/useVideoEvents';
-import { useChampion } from '../contextProvider/ChampionProvider';
+import { useLocation } from 'react-router-dom';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import CloseIcon from '@mui/icons-material/Close';
-import { useLocation } from 'react-router-dom';
-import { toastMessages } from '../toast/useToast';
-import { useToast } from '../toast/useToast';
 
-export const AbilityMap = {
-  0: 'P',
-  1: 'Q',
-  2: 'W',
-  3: 'E',
-  4: 'R',
-};
+// Hooks
+import { useServerStatus } from '../hooks/useServerStatus';
+import { useChampionNames } from '../hooks/useChampionNames';
+import { useChampionDetails } from '../hooks/useChampionDetails';
+import { useVideoUpload } from '../hooks/useVideoUpload';
+import { toastMessages, useToast } from '../toast/useToast';
 
-const ChampionBattleZone = ({
-  champion,
-  championNames,
-  abilities,
-  selectedAbility,
-  onChampionSelect,
-  onAbilitySelect,
-  themeColor,
-  label,
-}) => {
-  const isRed = themeColor === 'red';
-  const mainColor = isRed ? '#ff4d4d' : '#4d79ff'; // Neo-brutalist red/blue
-  const borderColor = '#000';
-
-  return (
-    <MUI.Box
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      flex={1}
-      gap="20px"
-      sx={{
-        border: `4px solid ${borderColor}`,
-        backgroundColor: isRed ? '#fff5f5' : '#f0f4ff',
-        padding: '30px',
-        boxShadow: `12px 12px 0px 0px ${borderColor}`,
-        position: 'relative',
-        transition: 'transform 0.2s',
-        '&:hover': {
-          transform: 'translate(-2px, -2px)',
-          boxShadow: `16px 16px 0px 0px ${borderColor}`,
-        }
-      }}
-    >
-      {/* Label Badge */}
-      <MUI.Typography
-        variant="h5"
-        fontWeight="900"
-        textTransform="uppercase"
-        sx={{
-          backgroundColor: mainColor,
-          color: 'white',
-          padding: '5px 20px',
-          border: `3px solid ${borderColor}`,
-          boxShadow: `4px 4px 0px 0px ${borderColor}`,
-          marginBottom: '10px'
-        }}
-      >
-        {label}
-      </MUI.Typography>
-
-      {/* Champion Select */}
-      <MUI.FormControl sx={{ width: '100%', maxWidth: '300px' }}>
-        <MUI.Select
-          value={champion?.id || ''}
-          onChange={onChampionSelect}
-          displayEmpty
-          sx={{
-            borderRadius: '0px',
-            border: `3px solid ${borderColor}`,
-            fontWeight: 'bold',
-            backgroundColor: 'white',
-            '& .MuiSelect-select': {
-              padding: '10px 15px',
-            },
-            '& fieldset': { border: 'none' },
-            boxShadow: `4px 4px 0px 0px ${borderColor}`,
-          }}
-          renderValue={(selected) => {
-            if (!selected) {
-              return <MUI.Typography color="text.secondary" fontWeight="bold">SELECT CHAMPION</MUI.Typography>;
-            }
-            return selected;
-          }}
-        >
-          {championNames.map((name, index) => (
-            <MUI.MenuItem key={index} value={name}>
-              {name}
-            </MUI.MenuItem>
-          ))}
-        </MUI.Select>
-      </MUI.FormControl>
-
-      {/* Avatar Display */}
-      <MUI.Box
-        sx={{
-          width: '200px',
-          height: '200px',
-          backgroundColor: '#e0e0e0',
-          border: `4px solid ${borderColor}`,
-          backgroundImage: champion ? `url(https://ddragon.leagueoflegends.com/cdn/14.19.1/img/champion/${champion.id}.png)` : 'none',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          boxShadow: `8px 8px 0px 0px ${borderColor}`,
-          marginBottom: '10px'
-        }}
-      />
-
-      {/* Ability Grid */}
-      <MUI.Stack direction="row" spacing={2}>
-        {abilities.map((ability, index) => {
-          const imageUrl = index === 0 ?
-            `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/passive/${ability.image})` :
-            `url(https://ddragon.leagueoflegends.com/cdn/14.13.1/img/spell/${ability.image})`;
-
-          const isSelected = ability.name === selectedAbility;
-
-          return (
-            <MUI.Tooltip key={index} title={`${AbilityMap[index]}: ${ability.name}`} arrow>
-              <MUI.Box
-                onClick={() => onAbilitySelect({ target: { value: ability.name } })}
-                sx={{
-                  width: '50px',
-                  height: '50px',
-                  border: `3px solid ${borderColor}`,
-                  backgroundColor: '#ccc',
-                  backgroundImage: champion ? imageUrl : 'none',
-                  backgroundSize: 'cover',
-                  cursor: 'pointer',
-                  opacity: isSelected ? 1 : 0.5,
-                  transform: isSelected ? 'scale(1.1) translate(-2px, -2px)' : 'none',
-                  boxShadow: isSelected ? `4px 4px 0px 0px ${mainColor}` : `2px 2px 0px 0px ${borderColor}`,
-                  transition: 'all 0.1s ease',
-                  '&:hover': {
-                    opacity: 1,
-                    transform: 'translate(-2px, -2px)',
-                    boxShadow: `4px 4px 0px 0px ${mainColor}`,
-                  }
-                }}
-              />
-            </MUI.Tooltip>
-          );
-        })}
-        {/* Placeholders if no abilities loaded yet */}
-        {!champion && Array(5).fill(0).map((_, i) => (
-          <MUI.Box
-            key={i}
-            sx={{
-              width: '50px',
-              height: '50px',
-              border: `3px solid ${borderColor}`,
-              backgroundColor: 'rgba(0,0,0,0.05)',
-            }}
-          />
-        ))}
-      </MUI.Stack>
-    </MUI.Box>
-  );
-};
+// Components
+import ChampionUploadSelectCard, { AbilityMap } from '../common/championUploadSelectCard.jsx';
 
 const AddInteractions = () => {
-  const { championNames } = useChampion();
   const location = useLocation();
-  const { success, error } = useToast();
-  const [firstChampion, setFirstChampion] = React.useState(null);
-  const [secondChampion, setSecondChampion] = React.useState(null);
-  const [firstChampionAbilities, setFirstChampionAbilities] = React.useState([]);
-  const [secondChampionAbilities, setSecondChampionAbilities] = React.useState([]);
-  const [selectedFirstChampionAbility, setSelectedFirstChampionAbility] = React.useState('');
-  const [selectedSecondChampionAbility, setSelectedSecondChampionAbility] = React.useState('');
-  const [videoLink, setVideoLink] = React.useState('');
-  const [selectedFile, setSelectedFile] = React.useState(null);
-  const [uploadProgress, setUploadProgress] = React.useState(0);
-  const [isUploading, setIsUploading] = React.useState(false);
-  const [currentVideoId, setCurrentVideoId] = React.useState(null);
-  const { snapshot: sseSnapshot } = useVideoEvents(currentVideoId);
+  const { info } = useToast(); 
+  
+  // --- 1. Data Hooks ---
+  const { data: championNames = [] } = useChampionNames();
+  
+  // --- 2. Local State ---
+  const [firstChampName, setFirstChampName] = useState('');
+  const [secondChampName, setSecondChampName] = useState('');
+  const [selectedFirstAbility, setSelectedFirstAbility] = useState('');
+  const [selectedSecondAbility, setSelectedSecondAbility] = useState('');
 
-  const hasFile = Boolean(selectedFile);
-  const hasLink = Boolean(videoLink && videoLink.trim());
-  const isUploadDisabled = !selectedFirstChampionAbility || !selectedSecondChampionAbility || isUploading || (!hasFile && !hasLink);
+  // Upload Inputs
+  const [videoLink, setVideoLink] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
 
-  React.useEffect(() => {
-    if (firstChampion) {
-      const abilities = [
-        {
-          name: firstChampion.passive.name,
-          description: firstChampion.passive.description,
-          image: firstChampion.passive.image.full,
-        },
-        ...firstChampion.spells.map((spell) => ({
-          name: spell.name,
-          description: spell.description,
-          image: spell.image.full,
-        })),
-      ];
-      setFirstChampionAbilities(abilities);
+  // --- 3. Custom Upload Hook ---
+  // The hook handles the API call and the Success/Error toasts internally.
+  const { 
+    mutate: startUpload, 
+    isPending: isUploading, 
+    uploadProgress, 
+    uploadedVideoId,
+    resetUpload,
+  } = useVideoUpload();
+
+  // --- 4. Status Polling Hook ---
+  // Polls the server for the video status once an ID exists.
+  // When status becomes 'ready' or 'failed', it waits 5s and then calls resetUpload.
+  const { data: statusData } = useServerStatus(uploadedVideoId, resetUpload, 2000, !isUploading);
+
+  // --- 5. Champion Data Queries ---
+  const { data: firstChampion, isLoading: loadingFirst } = useChampionDetails(firstChampName);
+  const { data: secondChampion, isLoading: loadingSecond } = useChampionDetails(secondChampName);
+
+  // --- 6. Derived Logic (Memoization) ---
+  const formatAbilities = (champData) => {
+    if (!champData) return [];
+    return [
+      { name: champData.passive.name, description: champData.passive.description, image: champData.passive.image.full },
+      ...champData.spells.map((spell) => ({ name: spell.name, description: spell.description, image: spell.image.full })),
+    ];
+  };
+
+  const firstChampionAbilities = useMemo(() => formatAbilities(firstChampion), [firstChampion]);
+  const secondChampionAbilities = useMemo(() => formatAbilities(secondChampion), [secondChampion]);
+
+  // --- 7. Prefill Logic (from Navigation) ---
+  useEffect(() => {
+    if (location.state?.preselected) {
+      const { champion1, champion2, ability1, ability2 } = location.state.preselected;
+      if (champion1) setFirstChampName(champion1);
+      if (champion2) setSecondChampName(champion2);
+      if (ability1) setSelectedFirstAbility(ability1);
+      if (ability2) setSelectedSecondAbility(ability2);
     }
-  }, [firstChampion]);
-
-  React.useEffect(() => {
-    if (secondChampion) {
-      const abilities = [
-        {
-          name: secondChampion.passive.name,
-          description: secondChampion.passive.description,
-          image: secondChampion.passive.image.full,
-        },
-        ...secondChampion.spells.map((spell) => ({
-          name: spell.name,
-          description: spell.description,
-          image: spell.image.full,
-        })),
-      ];
-      setSecondChampionAbilities(abilities);
-    }
-  }, [secondChampion]);
-
-  React.useEffect(() => {
-    const prefillData = async () => {
-      if (location.state?.preselected) {
-        const { champion1, champion2, ability1, ability2 } = location.state.preselected;
-
-        if (champion1) {
-          const champ1Data = await fetchChampionDetails(champion1);
-          setFirstChampion(champ1Data);
-          setSelectedFirstChampionAbility(ability1 || '');
-        }
-
-        if (champion2) {
-          const champ2Data = await fetchChampionDetails(champion2);
-          setSecondChampion(champ2Data);
-          setSelectedSecondChampionAbility(ability2 || '');
-        }
-      }
-    };
-
-    prefillData();
   }, [location.state]);
 
-  const fetchChampionDetails = async (championName) => {
-    const url = `https://ddragon.leagueoflegends.com/cdn/14.19.1/data/en_US/champion/${championName}.json`;
+  // --- 8. Handlers ---
+  const handleFileSelect = (e) => setSelectedFile(e.target.files?.[0] || null);
 
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
-      return data.data[championName];
-    } catch (error) {
-      console.error('Error fetching champion details:', error);
+  const handleUploadClick = () => {
+    // A. Validation
+    // We check for missing inputs and show an "Info" toast if something is wrong.
+    if (!selectedFirstAbility || !selectedSecondAbility) {
+      info(toastMessages.addInteraction.info);
+      return;
     }
-  };
 
-  const handleFirstChampionSelect = async (event) => {
-    const selectedFirstChampion = event.target.value;
-    const firstChampionInfo = await fetchChampionDetails(selectedFirstChampion);
-    setFirstChampion(firstChampionInfo);
-    setSelectedFirstChampionAbility('');
-  };
-
-  const handleSecondChampionSelect = async (event) => {
-    const selectedSecondChampion = event.target.value;
-    const secondChampionInfo = await fetchChampionDetails(selectedSecondChampion);
-    setSecondChampion(secondChampionInfo);
-    setSelectedSecondChampionAbility('');
-  };
-
-  const selectFirstChampionAbility = (event) => {
-    setSelectedFirstChampionAbility(event.target.value);
-  };
-
-  const selectSecondChampionAbility = (event) => {
-    setSelectedSecondChampionAbility(event.target.value);
-  };
-
-  const handleVideoLink = (event) => {
-    setVideoLink(event.target.value);
-  };
-
-  const handleFileSelect = (event) => {
-    const file = event.target.files?.[0] || null;
-    setSelectedFile(file);
-  };
-
-  const uploadWithTus = (file, endpoint, onProgress) => {
-    return new Promise((resolve, reject) => {
-      const upload = UpChunk.createUpload({
-        endpoint,
-        file,
-        chunkSize: 5120, // in KB
-      });
-
-      upload.on('progress', (evt) => {
-        const percent = Math.floor(evt.detail);
-        if (typeof onProgress === 'function') onProgress(percent, 100);
-      });
-
-      upload.on('success', () => resolve());
-      upload.on('error', (err) => reject(err?.detail || err));
-    });
-  };
-
-  const uploadVideo = async () => {
-    try {
-      if (!selectedFirstChampionAbility || !selectedSecondChampionAbility) {
-        info(toastMessages.addInteraction.info);
-        return;
-      }
-      const ability1Index = firstChampionAbilities.findIndex(
-        (ability) => ability.name === selectedFirstChampionAbility,
-      );
-      const ability2Index = secondChampionAbilities.findIndex(
-        (ability) => ability.name === selectedSecondChampionAbility,
-      );
-
-      if (ability1Index === -1 || ability2Index === -1) {
-        alert('Please select valid abilities for both champions.');
-        return;
-      }
-
-      const ability1Key = AbilityMap[ability1Index];
-      const ability2Key = AbilityMap[ability2Index];
-
-      if (selectedFile) {
-        setIsUploading(true);
-        setUploadProgress(0);
-
-        const initPayload = {
-          champion1: firstChampion?.id,
-          ability1: ability1Key,
-          champion2: secondChampion?.id,
-          ability2: ability2Key,
-          corsOrigin: window.location.origin,
-        };
-
-        const { uploadUrl, videoId } = await initMuxUpload(initPayload);
-        setCurrentVideoId(videoId);
-
-        await uploadWithTus(
-          selectedFile,
-          uploadUrl,
-          (bytesSent, bytesTotal) => {
-            const percentage = Math.floor((bytesSent / bytesTotal) * 100);
-            setUploadProgress(percentage);
-          },
-        );
-
-        success(toastMessages.addInteraction.success);
-      } else {
-        if (!hasLink) {
-          alert('Please provide a video link or select a file to upload.');
-          return;
-        }
-        const payload = {
-          champion1: firstChampion?.id,
-          ability1: ability1Key,
-          champion2: secondChampion?.id,
-          ability2: ability2Key,
-          videoURL: videoLink,
-        };
-
-        const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5174'}/api/videos/upload`, payload, {
-          withCredentials: true,
-        });
-
-        console.log('Video uploaded successfully:', response.data);
-        success(toastMessages.addInteraction.success);
-      }
-    } catch (error) {
-      console.error('Error uploading video:', error);
-      error(toastMessages.addInteraction.error);
+    const ability1Index = firstChampionAbilities.findIndex(a => a.name === selectedFirstAbility);
+    const ability2Index = secondChampionAbilities.findIndex(a => a.name === selectedSecondAbility);
+    
+    if (ability1Index === -1 || ability2Index === -1) {
+      info('Please select valid abilities for both champions.');
+      return;
     }
-    finally {
-      setIsUploading(false);
+
+    const hasFile = Boolean(selectedFile);
+    const hasLink = Boolean(videoLink && videoLink.trim());
+
+    if (!hasFile && !hasLink) {
+      info('Please provide a video link or select a file to upload.');
+      return;
     }
+
+    // B. Prepare Metadata
+    const metadata = {
+      champion1: firstChampion?.id,
+      ability1: AbilityMap[ability1Index],
+      champion2: secondChampion?.id,
+      ability2: AbilityMap[ability2Index],
+    };
+
+    // C. Execute Mutation
+    // No callbacks needed here because the hook handles success/error logic.
+    startUpload({ file: selectedFile, videoLink, metadata });
   };
+
+  // --- 9. UI Helpers ---
+  const hasFile = Boolean(selectedFile);
+  const isUploadDisabled = !selectedFirstAbility || !selectedSecondAbility || isUploading || (!hasFile && !videoLink);
+
+  // Determine current status for the UI feedback box
+  const isProcessing = statusData?.status === 'processing' || statusData?.status === 'waiting' || statusData?.status === 'pending';
+  const isReady = statusData?.status === 'ready';
+  const isFailed = statusData?.status === 'failed' || statusData?.status === 'errored';
 
   return (
     <MUI.Container maxWidth="lg" sx={{ paddingY: '50px' }}>
-      {/* Header */}
       <MUI.Box mb={6} textAlign="center">
         <MUI.Typography
           variant="h2"
           component="h1"
           fontWeight="900"
-          sx={{
-            textTransform: 'uppercase',
-            color: 'black',
-            textShadow: '4px 4px 0px #ccc'
-          }}
+          sx={{ textTransform: 'uppercase', color: 'black', textShadow: '4px 4px 0px #ccc' }}
         >
           New Interaction
         </MUI.Typography>
       </MUI.Box>
 
-      {/* Battle Arena */}
+      {/* --- Battle Arena (Champion Selection) --- */}
       <MUI.Box
         display="flex"
         flexDirection={{ xs: 'column', md: 'row' }}
@@ -411,15 +144,17 @@ const AddInteractions = () => {
         mb={6}
         position="relative"
       >
-        <ChampionBattleZone
+        <ChampionUploadSelectCard
           label="Red Side"
           themeColor="red"
           champion={firstChampion}
+          isLoading={loadingFirst}
           championNames={championNames}
+          selectedName={firstChampName}
           abilities={firstChampionAbilities}
-          selectedAbility={selectedFirstChampionAbility}
-          onChampionSelect={handleFirstChampionSelect}
-          onAbilitySelect={selectFirstChampionAbility}
+          selectedAbility={selectedFirstAbility}
+          onChampionSelect={(e) => { setFirstChampName(e.target.value); setSelectedFirstAbility(''); }}
+          onAbilitySelect={(e) => setSelectedFirstAbility(e.target.value)}
         />
 
         {/* VS Badge */}
@@ -439,25 +174,27 @@ const AddInteractions = () => {
             justifyContent: 'center',
             border: '4px solid white',
             boxShadow: '0px 0px 0px 4px black',
-            alignSelf: 'center' // For mobile column layout
+            alignSelf: 'center'
           }}
         >
           <MUI.Typography variant="h4" fontWeight="900" fontStyle="italic">VS</MUI.Typography>
         </MUI.Box>
 
-        <ChampionBattleZone
+        <ChampionUploadSelectCard
           label="Blue Side"
           themeColor="blue"
           champion={secondChampion}
+          isLoading={loadingSecond}
           championNames={championNames}
+          selectedName={secondChampName}
           abilities={secondChampionAbilities}
-          selectedAbility={selectedSecondChampionAbility}
-          onChampionSelect={handleSecondChampionSelect}
-          onAbilitySelect={selectSecondChampionAbility}
+          selectedAbility={selectedSecondAbility}
+          onChampionSelect={(e) => { setSecondChampName(e.target.value); setSelectedSecondAbility(''); }}
+          onAbilitySelect={(e) => setSelectedSecondAbility(e.target.value)}
         />
       </MUI.Box>
 
-      {/* Evidence Footer */}
+      {/* --- Evidence Footer (Upload Section) --- */}
       <MUI.Paper
         elevation={0}
         sx={{
@@ -473,26 +210,17 @@ const AddInteractions = () => {
 
         <MUI.Stack spacing={3}>
           <MUI.Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} gap={2}>
-            {/* File Upload Button */}
+            {/* File Button */}
             {hasFile ? (
               <MUI.Box
                 flex={1}
                 display="flex"
                 alignItems="center"
                 justifyContent="space-between"
-                sx={{
-                  border: '3px solid black',
-                  padding: '10px 20px',
-                  backgroundColor: '#e6ffe6',
-                  fontWeight: 'bold'
-                }}
+                sx={{ border: '3px solid black', padding: '10px 20px', backgroundColor: '#e6ffe6', fontWeight: 'bold' }}
               >
-                <MUI.Typography fontWeight="bold" noWrap sx={{ maxWidth: '200px' }}>
-                  {selectedFile.name}
-                </MUI.Typography>
-                <MUI.IconButton onClick={() => setSelectedFile(null)} size="small" sx={{ color: 'black' }}>
-                  <CloseIcon />
-                </MUI.IconButton>
+                <MUI.Typography fontWeight="bold" noWrap sx={{ maxWidth: '200px' }}>{selectedFile.name}</MUI.Typography>
+                <MUI.IconButton onClick={() => setSelectedFile(null)} size="small" sx={{ color: 'black' }}><CloseIcon /></MUI.IconButton>
               </MUI.Box>
             ) : (
               <MUI.Button
@@ -507,11 +235,7 @@ const AddInteractions = () => {
                   color: 'black',
                   fontWeight: 'bold',
                   textTransform: 'uppercase',
-                  '&:hover': {
-                    backgroundColor: 'black',
-                    color: 'white',
-                    border: '3px solid black',
-                  }
+                  '&:hover': { backgroundColor: 'black', color: 'white', border: '3px solid black' }
                 }}
               >
                 Select Video File
@@ -525,9 +249,8 @@ const AddInteractions = () => {
               variant="outlined"
               fullWidth
               value={videoLink || ''}
-              onChange={handleVideoLink}
+              onChange={(e) => setVideoLink(e.target.value)}
               disabled={hasFile}
-              color="black"
               sx={{
                 flex: 2,
                 '& .MuiOutlinedInput-root': {
@@ -537,18 +260,22 @@ const AddInteractions = () => {
                   '&:hover fieldset': { border: '3px solid black' },
                   '&.Mui-focused fieldset': { border: '3px solid black', boxShadow: '4px 4px 0px 0px black' },
                 },
-                '& .MuiInputLabel-root': {
-                  fontWeight: 'bold',
-                  color: 'black',
-                  textTransform: 'uppercase',
-                }
+                '& .MuiInputLabel-root': { fontWeight: 'bold', color: 'black', textTransform: 'uppercase' }
               }}
             />
           </MUI.Box>
 
-          {/* Progress / Status */}
-          {(isUploading || sseSnapshot) && (
-            <MUI.Box sx={{ border: '2px solid black', padding: '15px', backgroundColor: 'white' }}>
+          {/* --- Status / Progress Box --- */}
+          {/* This box appears if we are Uploading, Processing, Ready, or Failed */}
+          {(isUploading || isProcessing || isReady || isFailed) && (
+            <MUI.Box 
+              sx={{ 
+                border: '2px solid black', 
+                padding: '15px', 
+                // Change background color based on status for better feedback
+                backgroundColor: isReady ? '#e6ffe6' : isFailed ? '#ffe6e6' : 'white' 
+              }}
+            >
               {isUploading ? (
                 <MUI.Stack direction="row" alignItems="center" spacing={2}>
                   <MUI.CircularProgress variant="determinate" value={uploadProgress} size={24} sx={{ color: 'black' }} />
@@ -556,18 +283,18 @@ const AddInteractions = () => {
                 </MUI.Stack>
               ) : (
                 <MUI.Typography fontWeight="bold">
-                  {sseSnapshot?.status === 'processing' && 'Processing on Mux...'}
-                  {sseSnapshot?.status === 'ready' && 'Ready!'}
-                  {sseSnapshot?.status === 'failed' && 'Processing failed. Please try another video.'}
+                  {isProcessing && 'Processing video... (This may take a moment)'}
+                  {isReady && '✅ Ready! Interaction created successfully.'}
+                  {isFailed && '❌ Processing failed. Please try again.'}
                 </MUI.Typography>
               )}
             </MUI.Box>
           )}
 
-          {/* Upload Action */}
+          {/* Confirm Button */}
           <MUI.Button
             variant="contained"
-            onClick={uploadVideo}
+            onClick={handleUploadClick}
             disabled={isUploadDisabled}
             fullWidth
             sx={{
@@ -581,21 +308,9 @@ const AddInteractions = () => {
               border: '3px solid black',
               boxShadow: '6px 6px 0px 0px #888',
               transition: 'all 0.1s',
-              '&:hover': {
-                backgroundColor: '#333',
-                transform: 'translate(-2px, -2px)',
-                boxShadow: '8px 8px 0px 0px #888',
-              },
-              '&:active': {
-                transform: 'translate(2px, 2px)',
-                boxShadow: '2px 2px 0px 0px #888',
-              },
-              '&.Mui-disabled': {
-                backgroundColor: '#ccc',
-                color: '#666',
-                border: '3px solid #999',
-                boxShadow: 'none',
-              }
+              '&:hover': { backgroundColor: '#333', transform: 'translate(-2px, -2px)', boxShadow: '8px 8px 0px 0px #888' },
+              '&:active': { transform: 'translate(2px, 2px)', boxShadow: '2px 2px 0px 0px #888' },
+              '&.Mui-disabled': { backgroundColor: '#ccc', color: '#666', border: '3px solid #999', boxShadow: 'none' }
             }}
           >
             CONFIRM UPLOAD

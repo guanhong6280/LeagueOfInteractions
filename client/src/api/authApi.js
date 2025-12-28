@@ -1,9 +1,7 @@
-import axios from 'axios';
-
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5174';
+import api from './apiClient';
 
 export const getGoogleAuthUrl = ({ returnTo } = {}) => {
-  const url = new URL(`${baseURL}/api/auth/google`);
+  const url = new URL(`${api.defaults.baseURL}/api/auth/google`);
   if (returnTo) url.searchParams.set('returnTo', returnTo);
   return url.toString();
 };
@@ -23,14 +21,14 @@ export const redirectToGoogleAuth = ({ returnTo } = {}) => {
 };
 
 export const getCurrentUser = async () => {
-  const { data } = await axios.get(`${baseURL}/api/auth/user`, {
+  const { data } = await api.get(`/api/auth/user`, {
     withCredentials: true,
   });
   return data;
 };
 
 export const logout = async () => {
-  const response = await axios.get(`${baseURL}/api/auth/logout`, {
+  const response = await api.get(`/api/auth/logout`, {
     withCredentials: true,
   });
   return response.data;

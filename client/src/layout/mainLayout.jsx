@@ -3,7 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 
 import "../App.css"
 import theme from '../theme/theme';
-import Navigation from '../common/Navigation';
+import Navigation from '../common/navigation/Navigation';
 import Footer from '../common/footer/Footer';
 
 function MainLayout() {

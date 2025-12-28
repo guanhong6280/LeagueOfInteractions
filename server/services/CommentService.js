@@ -128,12 +128,23 @@ class CommentService {
       const query = { [this.entityIdField]: normalizedId, userId };
       let commentDoc = await this.CommentModel.findOne(query);
 
+      const moderationData = {
+        toxicityScore: req.body.toxicityScore || 0,
+        spamScore: req.body.spamScore || 0,
+        status: req.body.status || 'approved',
+        autoModerationFailed: req.body.autoModerationFailed || false,
+      };
+
       if (commentDoc) {
         // Update existing
         commentDoc.comment = comment.trim();
         commentDoc.isEdited = true;
-        // Reset status if needed based on your moderation rules
-        commentDoc.status = req.body.status || 'approved';
+
+        // Update moderation fields on edit
+        commentDoc.status = moderationData.status;
+        commentDoc.toxicityScore = moderationData.toxicityScore;
+        commentDoc.spamScore = moderationData.spamScore;
+        commentDoc.autoModerationFailed = moderationData.autoModerationFailed;
         await commentDoc.save();
       } else {
         // Create new
@@ -143,9 +154,7 @@ class CommentService {
           userId,
           comment: comment.trim(),
           isEdited: false,
-          status: req.body.status || 'approved',
-          toxicityScore: req.body.toxicityScore || 0,
-          spamScore: req.body.spamScore || 0,
+          ...moderationData,
         });
       }
 

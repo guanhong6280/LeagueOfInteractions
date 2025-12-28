@@ -3,46 +3,50 @@ const { createDirectUpload, verifyWebhookSignature, fetchAssetMetadata } = requi
 const { buildInteractionKey } = require('../../utils/interaction');
 const { addSseClient, removeSseClient, broadcastToVideo, writeSse } = require('../../utils/sseManager');
 
-exports.subscribeVideoEvents = async (req, res) => {
-  const { id: videoId } = req.params;
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.setHeader('Connection', 'keep-alive');
-  res.setHeader('X-Accel-Buffering', 'no');
-  // Send an initial comment to establish stream
-  res.write(': connected\n\n');
+/**
+Here is the deprecated code to send mux events to the client.
+I might need to use this again later.
+ */
+// exports.subscribeVideoEvents = async (req, res) => {
+//   const { id: videoId } = req.params;
+//   res.setHeader('Content-Type', 'text/event-stream');
+//   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+//   res.setHeader('Connection', 'keep-alive');
+//   res.setHeader('X-Accel-Buffering', 'no');
+//   // Send an initial comment to establish stream
+//   res.write(': connected\n\n');
 
-  addSseClient(String(videoId), res);
+//   addSseClient(String(videoId), res);
 
-  // Send initial snapshot
-  try {
-    const doc = await Video.findById(videoId).lean();
-    if (doc) {
-      writeSse(res, 'snapshot', {
-        _id: doc._id,
-        status: doc.status,
-        isApproved: doc.isApproved,
-        provider: doc.provider,
-        playbackUrl: doc.playbackUrl,
-        title: doc.title,
-        description: doc.description,
-      });
-    }
-  } catch (e) {
-    // If fetching snapshot fails, just continue the stream
-  }
+//   // Send initial snapshot
+//   try {
+//     const doc = await Video.findById(videoId).lean();
+//     if (doc) {
+//       writeSse(res, 'snapshot', {
+//         _id: doc._id,
+//         status: doc.status,
+//         isApproved: doc.isApproved,
+//         provider: doc.provider,
+//         playbackUrl: doc.playbackUrl,
+//         title: doc.title,
+//         description: doc.description,
+//       });
+//     }
+//   } catch (e) {
+//     // If fetching snapshot fails, just continue the stream
+//   }
 
-  // Heartbeats to keep proxies alive
-  const heartbeat = setInterval(() => {
-    try { res.write(': ping\n\n'); } catch (e) { }
-  }, 25000);
+//   // Heartbeats to keep proxies alive
+//   const heartbeat = setInterval(() => {
+//     try { res.write(': ping\n\n'); } catch (e) { }
+//   }, 25000);
 
-  req.on('close', () => {
-    clearInterval(heartbeat);
-    removeSseClient(String(videoId), res);
-    try { res.end(); } catch (e) { }
-  });
-};
+//   req.on('close', () => {
+//     clearInterval(heartbeat);
+//     removeSseClient(String(videoId), res);
+//     try { res.end(); } catch (e) { }
+//   });
+// };
 
 exports.uploadVideo = async (req, res) => {
   try {
@@ -99,8 +103,23 @@ exports.incrementView = async (req, res) => {
   }
 };
 
+exports.getVideoById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Find video and select only necessary fields (status, title, etc.)
+    const video = await Video.findById(id).select('status title processingProgress');
 
-// server/controllers/videoController.js
+    if (!video) {
+      return res.status(404).json({ message: 'Video not found' });
+    }
+
+    res.status(200).json(video);
+  } catch (error) {
+    console.error('Error fetching video by ID:', error);
+    res.status(500).json({ message: 'Server error fetching video' });
+  }
+};
 
 exports.getVideoByInteraction = async (req, res) => {
   let { champion1, ability1, champion2, ability2 } = req.query;
@@ -218,11 +237,12 @@ exports.muxWebhook = async (req, res) => {
   // 1) Verify against raw bytes
   try {
     verifyWebhookSignature(req);
+    console.log('Mux webhook signature verified');
   } catch (err) {
     console.error('Mux webhook signature verification failed:', err.message);
     return res.status(400).send('Invalid signature');
   }
-
+  console.log('Mux webhook body:', req.body.toString('utf8'));
   // 2) Parse the Buffer -> JSON
   let event;
   try {
@@ -242,6 +262,7 @@ exports.muxWebhook = async (req, res) => {
     const { type, data } = event;
 
     if (type === 'video.upload.asset_created') {
+      console.log('Mux webhook asset created');
       const directUploadId = data.id;
       const assetId = data.asset_id;
       const video = await Video.findOneAndUpdate(
@@ -254,6 +275,7 @@ exports.muxWebhook = async (req, res) => {
     }
 
     else if (type === 'video.asset.ready') {
+      console.log('Mux webhook asset ready');
       const assetId = data.id;
       const playbackId = data.playback_ids?.[0]?.id;
       const playbackUrl = playbackId ? `https://stream.mux.com/${playbackId}.m3u8` : undefined;

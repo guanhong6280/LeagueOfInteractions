@@ -8,7 +8,6 @@ import MainLayout from './layout/mainLayout.jsx';
 import './index.css';
 import ViewInteractions from './pages/ViewInteractions.jsx';
 import AddInteractions from './pages/AddInteractions.jsx';
-import ChampionProvider from './contextProvider/ChampionProvider.jsx';
 import { VersionProvider } from './contextProvider/VersionProvider.jsx';
 import { QueryProvider } from './contextProvider/QueryProvider.jsx';
 import Profile from './pages/Profile.jsx';
@@ -18,7 +17,8 @@ import Contact from './pages/Contact.jsx';
 import RatingLanding from './pages/RatingLanding.jsx';
 import { ChampionRatingPage, ChampionSkinRatingPage } from './common/rating_system/index.js';
 import { ToastProvider } from './toast/ToastProvider.jsx';
-import ToastTest from './pages/ToastTest.jsx';
+import VideoUploadTracker from './common/VideoUploadTracker.jsx';
+import AuthGuard from './common/authGuard/AuthGuard.jsx';
 
 // Admin imports
 import AdminGuard from './admin/components/guards/AdminGuard.jsx';
@@ -33,45 +33,45 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <QueryProvider>
       <VersionProvider>
-        <ChampionProvider>
-            <Elements stripe={stripePromise}>
-              <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<MainLayout />}>
-                  {/* The default route that shows creators */}
-                  <Route index element={<ViewInteractions />} />
+        <Elements stripe={stripePromise}>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<MainLayout />}>
+                {/* The default route that shows creators */}
+                <Route index element={<ViewInteractions />} />
+                <Route path="rating_landing" element={<RatingLanding />} />
+                <Route path="contact" element={<Contact />} />
+                <Route path="/champion-skin-details/:id" element={<ChampionSkinRatingPage />} />
+                <Route path="/champion-rating/:id" element={<ChampionRatingPage />} />
+                <Route element={<AuthGuard />}>
                   <Route path="add" element={<AddInteractions />} />
-                  <Route path="rating_landing" element={<RatingLanding />} />
                   <Route path="profile" element={<Profile />} />
                   <Route path="donation" element={<Donate />} />
-                  <Route path="contact" element={<Contact />} />
-                  <Route path="toast-test" element={<ToastTest />} />
                   <Route path="settings" element={<AccountManagement />} />
-                  <Route path="/champion-skin-details/:id" element={<ChampionSkinRatingPage />} />
-                  <Route path="/champion-rating/:id" element={<ChampionRatingPage />} />
                 </Route>
-                
-                {/* Admin Routes - Protected by AdminGuard */}
-                <Route path="admin/*"
-                  element={
-                    <AdminGuard>
-                      <AdminLayout />
-                    </AdminGuard>
-                  }
-                >
-                  <Route path="comments" element={<CommentModeration />} />
-                  <Route path="videos" element={<VideoModeration />} />
-                  <Route path="settings" element={<AdminSettings />} />
-                  {/* <Route index element={<AdminDashboard />} /> */}
-                  {/* Future admin routes will go here */}
-                  {/* <Route path="users" element={<UserManagement />} /> */}
-                  {/* <Route path="analytics" element={<Analytics />} /> */}
-                </Route>
-              </Routes>
-              <ToastProvider />
-              </BrowserRouter>
-            </Elements>
-        </ChampionProvider>
+              </Route>
+
+              {/* Admin Routes - Protected by AdminGuard */}
+              <Route path="admin/*"
+                element={
+                  <AdminGuard>
+                    <AdminLayout />
+                  </AdminGuard>
+                }
+              >
+                <Route path="comments" element={<CommentModeration />} />
+                <Route path="videos" element={<VideoModeration />} />
+                <Route path="settings" element={<AdminSettings />} />
+                {/* <Route index element={<AdminDashboard />} /> */}
+                {/* Future admin routes will go here */}
+                {/* <Route path="users" element={<UserManagement />} /> */}
+                {/* <Route path="analytics" element={<Analytics />} /> */}
+              </Route>
+            </Routes>
+            <VideoUploadTracker />
+            <ToastProvider />
+          </BrowserRouter>
+        </Elements>
       </VersionProvider>
     </QueryProvider>
   </StrictMode>,

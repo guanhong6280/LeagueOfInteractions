@@ -1,7 +1,7 @@
 import React from 'react';
 import * as MUI from '@mui/material';
 import { Link } from 'react-router-dom';
-import navIcon from '../assets/moba.svg';
+import navIcon from '../../assets/moba.svg';
 
 const Logo = ({ marginLeft = true }) => {
   return (

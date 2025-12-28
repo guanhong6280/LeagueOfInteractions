@@ -5,12 +5,12 @@ const PERSPECTIVE_API_KEY = process.env.PERSPECTIVE_API_KEY;
 async function getPerspectiveScores(text, language = 'en') {
   const url = `https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=${PERSPECTIVE_API_KEY}`;
   
-  // Base attributes that work for all languages
+  // Base attributes (Toxicity is standard across languages)
   const requestedAttributes = {
     TOXICITY: {}
   };
   
-  // Only include SPAM attribute for English text
+  // Only request SPAM for English (Perspective API limitation/recommendation)
   if (language === 'en') {
     requestedAttributes.SPAM = {};
   }
@@ -21,20 +21,19 @@ async function getPerspectiveScores(text, language = 'en') {
     requestedAttributes
   };
 
+  // We perform the request. If this fails (4xx/5xx), axios throws an error
+  // which is caught by the middleware above.
   const response = await axios.post(url, body);
   
-  const result = {
-    toxicity: response.data.attributeScores.TOXICITY.summaryScore.value
-  };
+  // Safely extract scores
+  const toxicity = response.data.attributeScores?.TOXICITY?.summaryScore?.value || 0;
   
-  // Only include spam score for English text
+  let spam = 0;
   if (language === 'en') {
-    result.spam = response.data.attributeScores.SPAM?.summaryScore?.value || 0;
-  } else {
-    result.spam = 0; // Default spam score for non-English text
+    spam = response.data.attributeScores?.SPAM?.summaryScore?.value || 0;
   }
   
-  return result;
+  return { toxicity, spam };
 }
 
 module.exports = { getPerspectiveScores };

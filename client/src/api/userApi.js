@@ -1,29 +1,4 @@
-import axios from 'axios';
-
-// Create axios instance with default config
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5174',
-  withCredentials: true,
-  timeout: 10000,
-});
-
-// Request interceptor for auth
-api.interceptors.request.use((config) => {
-  return config;
-});
-
-// Response interceptor for error handling
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized - redirect to login
-      window.location.href = '/auth/google';
-    }
-    return Promise.reject(error);
-  }
-);
-
+import api from './apiClient';
 // ============================================
 // USER PROFILE APIs
 // ============================================

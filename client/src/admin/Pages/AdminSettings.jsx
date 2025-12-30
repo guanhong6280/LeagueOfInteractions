@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as MUI from '@mui/material';
-import axios from 'axios';
+import { getSkinSyncStatus, startSkinSync } from '../../api/adminApi';
 import SyncIcon from '@mui/icons-material/Sync';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
@@ -11,8 +11,6 @@ const AdminSettings = () => {
   const [syncProgress, setSyncProgress] = useState(null);
   const pollIntervalRef = useRef(null);
 
-  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5174';
-
   const stopPolling = () => {
     if (pollIntervalRef.current) {
       clearInterval(pollIntervalRef.current);
@@ -22,10 +20,7 @@ const AdminSettings = () => {
 
   const fetchProgress = async () => {
     try {
-      const response = await axios.get(`${apiBase}/api/skins/sync/status`, {
-        withCredentials: true
-      });
-      const progress = response.data?.data;
+      const progress = await getSkinSyncStatus();
       setSyncProgress(progress);
 
       if (progress?.status && progress.status !== 'running') {
@@ -49,15 +44,11 @@ const AdminSettings = () => {
     setSyncProgress(null);
     startPolling();
     try {
-      const response = await axios.post(
-        `${apiBase}/api/skins/sync`,
-        {},
-        { withCredentials: true }
-      );
+      const data = await startSkinSync();
       
       setSyncResult({
         success: true,
-        data: response.data.data
+        data: data.data
       });
       await fetchProgress(); // ensure final status captured
     } catch (error) {

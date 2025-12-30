@@ -1,6 +1,6 @@
 import React from 'react';
 import * as MUI from '@mui/material';
-import axios from 'axios';
+import { getDonationProgress } from '../../api/donationApi';
 
 const DonationCard = (props) => {
   const [progress, setProgress] = React.useState(0);
@@ -9,9 +9,9 @@ const DonationCard = (props) => {
   React.useEffect(() => {
     const fetchProgress = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5174'}/api/donations/progress/${donationCardId}`, { withCredentials: true });
-        setProgress(response.data.totalDonations);
-        console.log(response.data.totalDonations);
+        const data = await getDonationProgress(donationCardId);
+        setProgress(data.totalDonations);
+        console.log(data.totalDonations);
       } catch (error) {
         console.error('Error fetching progress:', error);
       }

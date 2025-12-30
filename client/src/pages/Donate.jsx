@@ -2,7 +2,7 @@ import React from 'react';
 import * as MUI from '@mui/material';
 import DonationCard from '../common/donation/DonationCard';
 import DonationDialog from '../common/donation/DonationDialog';
-import axios from 'axios';
+import { getDonationCards } from '../api/donationApi';
 
 const Donate = () => {
   const [dialogOpen, setDialogOpen] = React.useState(false);
@@ -13,8 +13,8 @@ const Donate = () => {
   React.useEffect(() => {
     const fetchDonationCards = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5174'}/api/donations/donation-cards`);
-        setDonationInformation(response.data);
+        const data = await getDonationCards();
+        setDonationInformation(data);
       } catch (error) {
         console.error('Error fetching donation cards:', error);
       }

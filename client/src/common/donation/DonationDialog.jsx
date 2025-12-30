@@ -2,7 +2,7 @@ import React from 'react';
 import * as MUI from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import AmountCard from './AmountCard';
-import axios from 'axios';
+import { createDonationCheckoutSession } from '../../api/donationApi';
 
 const DonationAmounts = [
   {
@@ -60,14 +60,12 @@ const DonationDialog = (props) => {
 
   const handleDonate = async (amount) => {
     try {
-      // Send a POST request to your backend
-      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5174'}/api/donations/create-checkout-session`, {
+      // Create checkout session and redirect to Stripe Checkout page
+      const data = await createDonationCheckoutSession({
         amount,
         donationCardId,
       });
-
-      // Redirect the user to the Stripe Checkout page
-      window.location.href = response.data.url;
+      window.location.href = data.url;
     } catch (error) {
       console.error('Error creating checkout session:', error);
     }

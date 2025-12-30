@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Typography, TextField, Button, CircularProgress } from '@mui/material';
-import axios from 'axios';
+import { sendContactMessage } from '../api/contactApi';
 import { useToast } from '../toast/useToast';
 import { toastMessages } from '../toast/useToast';
 
@@ -25,7 +25,7 @@ const Contact = () => {
     setLoading(true);
 
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5174'}/api/contact`, formData);
+      await sendContactMessage(formData);
       success(toastMessages.contact.success);
       setFormData({ name: '', email: '', message: '' });
     } catch (error) {

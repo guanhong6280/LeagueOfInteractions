@@ -17,10 +17,10 @@ const championStatsRoutes = require('./routes/championStatsRoutes');
 const championRatingRoutes = require('./routes/championRatingRoutes');
 const moderationRoutes = require('./routes/moderationRoutes');
 const contactRoutes = require('./routes/contactRoutes');
-const skipMiddleware = require('./middleware/skipMiddleware');
 const { startReconciler } = require('./utils/reconciler');
 
-import { generalLimiter, authLimiter } from './middleware/rateLimiters';
+// FIX: Use 'require' instead of 'import' for Node.js
+const { generalLimiter, authLimiter, uploadLimiter } = require('./middleware/rateLimiters');
 
 // Initialize App
 const app = express();
@@ -31,25 +31,22 @@ const app = express();
 const PORT = process.env.PORT || 5174;
 const isProduction = process.env.NODE_ENV === 'production';
 
-// CRITICAL: Tells Express to trust the proxy (Render/Vercel load balancers)
-// Without this, 'secure' cookies will not work.
 if (isProduction) {
   app.set('trust proxy', 1); 
 }
 
 // =========================================================================
-// 2. CORS CONFIGURATION (The logic you asked for)
+// 2. CORS CONFIGURATION
 // =========================================================================
 const allowedOrigins = [
-  'http://localhost:5173',               // Vite Local Dev
-  'http://localhost:3000',               // CRA/Next Local Dev
-  'https://leagueofinteractions.com',    // Your Production Domain
-  'https://www.leagueofinteractions.com' // WWW Version
+  'http://localhost:5173',               
+  'http://localhost:3000',               
+  'https://leagueofinteractions.com',    
+  'https://www.leagueofinteractions.com' 
 ];
 
-// If you have a CLIENT_URL in .env, add it to the list safely
 if (process.env.CLIENT_URL) {
-  const envUrl = process.env.CLIENT_URL.replace(/\/$/, ""); // Remove trailing slash
+  const envUrl = process.env.CLIENT_URL.replace(/\/$/, ""); 
   if (!allowedOrigins.includes(envUrl)) {
     allowedOrigins.push(envUrl);
   }
@@ -57,56 +54,55 @@ if (process.env.CLIENT_URL) {
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl, or Postman)
     if (!origin) return callback(null, true);
-    
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      console.log("Blocked by CORS:", origin); // Helpful for debugging
+      console.log("Blocked by CORS:", origin); 
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true, // Allow Cookies/Sessions
+  credentials: true, 
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
 };
 
-// Apply CORS globally
 app.use(cors(corsOptions));
-// Handle pre-flight requests explicitly (optional but recommended)
 app.options('*', cors(corsOptions));
 
 // =========================================================================
-// 3. MIDDLEWARE
+// 3. MIDDLEWARE & PARSING (CRITICAL ORDER)
 // =========================================================================
 
-// Webhook handling: Skip JSON parsing for specific routes that need raw bodies
-const RAW_WEBHOOK_PATHS = [
-  '/api/stripe/webhook',
-  '/api/videos/webhook/mux',
-];
-app.use(skipMiddleware(express.json(), RAW_WEBHOOK_PATHS));
+// A. WEBHOOKS (First!)
+// These need RAW bodies. We mount them BEFORE express.json()
+// They handle their own parsing inside webHookRoutes.js
+app.use('/api/webhook', webHookRoutes);
 
-// Session Configuration
+// B. GLOBAL BODY PARSER (Second)
+// Now safe to use globally because webhooks are already handled
+app.use(express.json());
+
+// C. RATE LIMITING (Global)
+app.use('/api/', generalLimiter);
+
+// D. SESSION
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    proxy: true, // Required for Render/Heroku to handle cookies correctly
+    proxy: true, 
     cookie: {
-      maxAge: 1000 * 60 * 60 * 24, // 1 Day
-      // Secure: true in production (HTTPS), false in dev (HTTP)
+      maxAge: 1000 * 60 * 60 * 24, 
       secure: isProduction, 
-      // SameSite: 'none' is required for cross-site cookies (Backend on Render, Frontend on Vercel)
       sameSite: isProduction ? 'none' : 'lax',
       httpOnly: true, 
     }
   }),
 );
 
-// Passport
+// E. PASSPORT
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -128,13 +124,13 @@ const connectDB = async () => {
 // =========================================================================
 // 5. ROUTES
 // =========================================================================
-app.use('/api/', generalLimiter);
+// Note: /api/webhook is already mounted above!
+
 app.use('/api/users', userRoutes);
 app.use('/api/videos', videoRoutes);
-app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/auth', authLimiter, authRoutes); // Strict limiter for Auth
 app.use('/api/championData', championDataRoutes);
 app.use('/api/donations', donationRoutes);
-app.use('/api/webhook', webHookRoutes);
 app.use('/api/skins', skinRatingRoutes);
 app.use('/api/champions', championRatingRoutes);
 app.use('/api/champion-stats', championStatsRoutes);

@@ -17,7 +17,6 @@
     "@aws-sdk/client-bedrock-runtime": "^3.855.0",
     "@aws-sdk/client-sqs": "^3.864.0",
     "@mux/mux-node": "^8.6.1",
-    "@sendgrid/mail": "^8.1.4",
     "axios": "^1.10.0",
     "body-parser": "^1.20.3",
     "cookie-session": "^2.1.0",

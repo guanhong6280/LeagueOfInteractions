@@ -13,8 +13,6 @@ router.get('/:id', optionalAuth, videoController.getVideoById);
 router.post('/upload/init', uploadLimiter, ensureApiAuthenticated, videoController.initMuxUpload);
 router.post('/:id/view', videoController.incrementView);
 router.post('/:id/like', ensureApiAuthenticated, videoController.toggleLike);
-
-router.post('/webhook/mux', express.raw({ type: 'application/json' }), videoController.muxWebhook);
 // router.get('/:id/events', ensureApiAuthenticated, videoController.subscribeVideoEvents);
 
 module.exports = router;

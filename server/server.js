@@ -42,7 +42,8 @@ const allowedOrigins = [
   'http://localhost:5173',               
   'http://localhost:3000',               
   'https://leagueofinteractions.com',    
-  'https://www.leagueofinteractions.com' 
+  'https://www.leagueofinteractions.com' ,
+  "https://league-of-interactions-aml4e794t-guanhongs-projects.vercel.app/"
 ];
 
 if (process.env.CLIENT_URL) {

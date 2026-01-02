@@ -1,7 +1,7 @@
 import api from './apiClient';
 
 export const getGoogleAuthUrl = ({ returnTo } = {}) => {
-  const url = new URL(`${api.defaults.baseURL}/api/auth/google`);
+  const url = new URL(`/api/auth/google`, window.location.origin);
   if (returnTo) url.searchParams.set('returnTo', returnTo);
   return url.toString();
 };

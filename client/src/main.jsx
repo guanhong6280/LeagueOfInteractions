@@ -27,7 +27,7 @@ import CommentModeration from './admin/Pages/CommentModeration.jsx';
 import VideoModeration from './admin/Pages/VideoModeration.jsx';
 import AdminSettings from './admin/Pages/AdminSettings.jsx';
 
-const stripePromise = loadStripe('your-publishable-key-here');
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

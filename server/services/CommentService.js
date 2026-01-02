@@ -623,8 +623,11 @@ async getReplies(req, res) {
         });
       }
 
-      // Security: Only allow the comment author to delete their comment
-      if (comment.userId.toString() !== userId.toString()) {
+      // Security: Only allow the comment author or admins to delete comments
+      const isAuthor = comment.userId.toString() === userId.toString();
+      const isAdmin = req.user && req.user.isAdministrator;
+      
+      if (!isAuthor && !isAdmin) {
         return sendError(res, 'Unauthorized. You can only delete your own comments.', {
           status: 403,
           errorCode: 'COMMENT_DELETE_FORBIDDEN',
@@ -684,8 +687,11 @@ async getReplies(req, res) {
         });
       }
 
-      // Security: Only allow the reply author to delete their reply
-      if (reply.userId.toString() !== userId.toString()) {
+      // Security: Only allow the reply author or admins to delete replies
+      const isAuthor = reply.userId.toString() === userId.toString();
+      const isAdmin = req.user && req.user.isAdministrator;
+      
+      if (!isAuthor && !isAdmin) {
         return sendError(res, 'Unauthorized. You can only delete your own replies.', {
           status: 403,
           errorCode: 'REPLY_DELETE_FORBIDDEN',

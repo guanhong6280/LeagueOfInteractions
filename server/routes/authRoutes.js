@@ -2,7 +2,7 @@
 const express = require('express');
 const passport = require('passport');
 const userController = require('../controllers/user/userController');
-
+const { authLimiter } = require('../middleware/rateLimiters');
 const router = express.Router();
 
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
@@ -36,6 +36,7 @@ const resolveRedirectUrl = (returnTo) => {
 // Initiate Google authentication
 router.get(
   '/google',
+  authLimiter,
   (req, res, next) => {
     const { returnTo } = req.query;
     if (isSafeReturnTo(returnTo)) {

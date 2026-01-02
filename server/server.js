@@ -20,7 +20,7 @@ const contactRoutes = require('./routes/contactRoutes');
 const { startReconciler } = require('./utils/reconciler');
 
 // FIX: Use 'require' instead of 'import' for Node.js
-const { generalLimiter, authLimiter, uploadLimiter } = require('./middleware/rateLimiters');
+const { generalLimiter } = require('./middleware/rateLimiters');
 
 // Initialize App
 const app = express();
@@ -136,7 +136,7 @@ const connectDB = async () => {
 
 app.use('/api/users', userRoutes);
 app.use('/api/videos', videoRoutes);
-app.use('/api/auth', authLimiter, authRoutes); // Strict limiter for Auth
+app.use('/api/auth', authRoutes); // Strict limiter for Auth
 app.use('/api/championData', championDataRoutes);
 app.use('/api/donations', donationRoutes);
 app.use('/api/skins', skinRatingRoutes);

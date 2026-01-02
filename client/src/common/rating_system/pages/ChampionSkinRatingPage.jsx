@@ -4,8 +4,6 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { SkinCarousel } from '../components/carousel';
 import { ChampionSkinStatsSection } from '../components/stats';
 import { SkinRatingSection, SkinCommentSection } from '../components/sections';
-import { getChampionSquareAssetUrl } from '../../../utils/championNameUtils';
-import { useVersion } from '../../../contextProvider/VersionProvider';
 import { ReturnButton } from '../components/common';
 import { useRatingSectionData } from '../../../hooks/useRatingSectionData'; // Use reusable hook
 import { NeoCard } from '../components/design/NeoComponents';
@@ -14,7 +12,6 @@ const ChampionSkinRatingPage = () => {
   const { id } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeSection, setActiveSection] = useState('rating');
-  const { version } = useVersion();
 
   // Unified data management with query params for 'skins'
   const {
@@ -59,7 +56,6 @@ const ChampionSkinRatingPage = () => {
       {/* Champion Stats Section */}
       <MUI.Box sx={{ mb: 4 }}>
         <ChampionSkinStatsSection
-          championImageUrl={getChampionSquareAssetUrl(championName, version)}
           championName={championName}
           championTitle={championData?.title || ''}
           stats={stats}

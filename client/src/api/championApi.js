@@ -24,7 +24,6 @@ export const fetchChampionList = async () => {
 export const fetchChampionDetails = async (championName) => {
   try {
     const response = await api.get(`/api/championData/champion/${championName}`);
-    console.log('Champion details from server:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching champion details:', error);
@@ -117,8 +116,6 @@ export const getSkinComments = async (
   const params = {
     includeUserDetails,
   };
-  console.log("params in getSkinComments", params);
-  console.log("skinId in getSkinComments", skinId);
   if (limit !== undefined) params.limit = limit;
   if (cursor) params.cursor = cursor;
   if (withCount !== undefined) params.withCount = withCount;

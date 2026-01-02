@@ -7,7 +7,6 @@ const AuthGuard = () => {
   const location = useLocation();
   const { isAuthenticated, isLoading } = useCurrentUser();
 
-  console.log('isAuthenticated', isAuthenticated);
   // 1. LOADING STATE
   // While React Query is checking session, show a spinner. 
   // Otherwise, the user might be kicked out instantly before the data arrives.

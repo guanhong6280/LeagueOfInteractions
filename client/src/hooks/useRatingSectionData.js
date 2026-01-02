@@ -26,7 +26,6 @@ export const useRatingSectionData = (championId, options = {}) => {
         // Throwing makes React Query put it into `error`
         throw new Error(response?.message || 'Failed to fetch champion data');
       }
-      console.log('response from useRatingSectionData', response);
       return response.data ?? null;
     },
     enabled,

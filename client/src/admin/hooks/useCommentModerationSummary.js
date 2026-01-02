@@ -40,7 +40,6 @@ const useCommentModerationSummary = (type = 'skin', options = {}) => {
   });
 
   const summary = useMemo(() => {
-    console.log('query.data', query.data);
     return normalizeResponse(query.data, type);
   }, [query.data, type]);
 

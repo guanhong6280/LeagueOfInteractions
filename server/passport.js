@@ -6,14 +6,12 @@ require('dotenv').config();
 
 // Take the user object validated and store it into session.
 passport.serializeUser((user, done) => {
-  console.log('from serializeUser function');
   done(null, user.id);
 });
 
 // Take this user object and attach it to the request object
 passport.deserializeUser(async (id, done) => {
   try {
-    console.log('from deserializeUser function, fetching user by ID:', id);
     const user = await User.findById(id);
     done(null, user);
   } catch (error) {

@@ -15,7 +15,6 @@ const idToNameCache = new Map();
  */
 const withChampionName = (serviceFn) => async (req, res) => {
   try {
-    console.log("withChampionName", req.params);
     const { championId } = req.params;
 
     // 1. Validation
@@ -26,14 +25,11 @@ const withChampionName = (serviceFn) => async (req, res) => {
     // 2. CACHE HIT: Check if we already know this ID
     if (idToNameCache.has(championId)) {
       req.params.championName = idToNameCache.get(championId);
-      console.log("championName from cache", req.params.championName);
       return serviceFn(req, res); // ⚡️ INSTANT RETURN
     }
 
     // 3. CACHE MISS: Look it up in the DB
-    console.log(`[Cache Miss] resolving name for ID: ${championId}`);
     const champ = await ChampionStats.findById(championId).select('championName').lean();
-    console.log("champ", champ);
     
     if (!champ) {
       return sendError(res, 'Champion not found', { status: 404 });

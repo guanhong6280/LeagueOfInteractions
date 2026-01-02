@@ -266,7 +266,6 @@ const useSkinCommentData = (currentSkinId) => {
           ...reply,
           displayText: reply.comment,
         }));
-        console.log('transformedReplies', transformedReplies);
 
         queryClient.setQueryData(queryKeys.comments(currentSkinId), (oldData = []) =>
           oldData.map(comment => {

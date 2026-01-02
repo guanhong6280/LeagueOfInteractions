@@ -26,7 +26,6 @@ const AdminGuard = ({ children }) => {
 
   // Redirect to home if user is not logged in
   if (!user) {
-    console.log("User is not logged in");
     return <Navigate to="/" replace />;
   }
 
@@ -71,7 +70,6 @@ const AdminGuard = ({ children }) => {
   }
 
   // Render admin content if user is authorized
-  console.log('AdminGuard - rendering admin content');
   return children;
 };
 

@@ -11,7 +11,6 @@ const DonationCard = (props) => {
       try {
         const data = await getDonationProgress(donationCardId);
         setProgress(data.totalDonations);
-        console.log(data.totalDonations);
       } catch (error) {
         console.error('Error fetching progress:', error);
       }

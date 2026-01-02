@@ -4,6 +4,7 @@ import { Refresh as RefreshIcon, Search as SearchIcon, FilterList as FilterListI
 import { useChampionStats } from '../hooks/useChampionStats';
 import ChampionPreviewCard from '../common/rating_system/components/cards/ChampionPreviewCard';
 import CircularProgress from '@mui/material/CircularProgress';
+import { useVersion } from '../contextProvider/VersionProvider';
 
 // --- Reusable Neo-Brutalist Components ---
 
@@ -105,7 +106,7 @@ const VersionTag = React.memo(({ count }) => (
             border: '2px solid black'
         }}
     >
-        VERSION: v{count}.0.1
+        VERSION: v{count}
     </MUI.Typography>
 ));
 
@@ -191,6 +192,8 @@ const RatingLanding = () => {
         if (type === 'kMixed') return 'MIXED';
         return type;
     };
+
+    const { version } = useVersion();
 
     // Filter Logic
     const filteredChampionNames = useMemo(() => {
@@ -280,7 +283,7 @@ const RatingLanding = () => {
                         Champion Rating
                     </MUI.Typography>
 
-                    <VersionTag count={Object.keys(stats || {}).length} />
+                    <VersionTag count={version} />
 
                     {/* Main Controls */}
                     <MUI.Stack 

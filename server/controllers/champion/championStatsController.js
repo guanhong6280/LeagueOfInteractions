@@ -20,11 +20,9 @@ const getChampionStats = async (req, res) => {
   try {
     // Check cache
     if (statsCache.data && (Date.now() - statsCache.timestamp < statsCache.duration)) {
-      console.log('Serving champion stats from cache');
       return res.json(statsCache.data);
     }
 
-    console.log('Starting champion stats aggregation...');
     
     // Optimized MongoDB Aggregation Pipeline
     // Removed comments lookup and complex distribution calc since they aren't used on landing page
@@ -80,7 +78,6 @@ const getChampionStats = async (req, res) => {
       }
     ];
 
-    console.log('Executing aggregation pipeline...');
     const results = await Skin.aggregate(pipeline);
     
     // Transform results into the format expected by frontend
@@ -111,7 +108,6 @@ const getChampionStats = async (req, res) => {
       };
     });
 
-    console.log(`Aggregation complete. Processed ${results.length} champions.`);
     
     const responseData = buildSuccess(championStats, null);
     responseData.timestamp = new Date().toISOString();
@@ -157,8 +153,6 @@ const getChampionSpecificStats = async (req, res) => {
         errorCode: 'INVALID_ID_FORMAT' 
       });
     }
-
-    console.log(`Fetching detailed stats for ID: ${id}`);
 
     // 2. FETCH: Strict lookup by Database _id
     const championStatsDoc = await ChampionStats.findById(id).lean();

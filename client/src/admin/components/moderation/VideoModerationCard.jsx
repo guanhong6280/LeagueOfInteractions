@@ -63,10 +63,6 @@ const VideoModerationCard = ({
   const [note, setNote] = useState('');
   const [deleteRemote, setDeleteRemote] = useState(false);
 
-  useEffect(() => {
-    console.log('Moderation mux src:', video?.playbackUrl);
-  }, [video?.playbackUrl]);
-
   const avatarLabel = useMemo(() => {
     if (!video?.contributor?.username) return '?';
     return video.contributor.username.slice(0, 2).toUpperCase();

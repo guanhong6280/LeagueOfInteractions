@@ -199,7 +199,6 @@ class CommentService {
       } = req.query;
 
       const rawId = req.params[this.entityIdField] || req.params.championName || req.params.skinId;
-      console.log("rawId", rawId);
       const requestingUserId = req.user?._id;
 
       // 2. Validation (Fail Fast Principle)
@@ -502,8 +501,6 @@ async getReplies(req, res) {
     try {
       const rawId = req.params[this.entityIdField] || req.params.championName || req.params.skinId;
       const { commentId } = req.params;
-      console.log("rawId in getReplies", rawId);
-      console.log("commentId in getReplies", commentId);
       // Robust boolean check
       const { includeUserDetails = 'true' } = req.query; 
       const requestingUserId = req.user?._id;

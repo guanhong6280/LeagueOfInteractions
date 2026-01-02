@@ -23,7 +23,6 @@ export const rejectCommentModeration = async (commentId, payload = {}) => {
 
 export const getVideoModerationQueue = async () => {
   const response = await api.get('/api/moderation/videos');
-  console.log('response', response.data);
   return response.data;
 };
 

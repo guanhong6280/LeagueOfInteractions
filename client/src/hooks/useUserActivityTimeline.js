@@ -25,7 +25,6 @@ const useUserActivityTimeline = ({
         type: activityType,
         limit,
       });
-      console.log('response from getUserActivity', response);
       return response?.data || [];
     },
     enabled: !!userId,

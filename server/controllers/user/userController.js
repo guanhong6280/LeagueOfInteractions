@@ -33,8 +33,6 @@ exports.registerUser = async (req, res) => {
 
 // Get the currently logged in user
 exports.getUser = (req, res) => {
-  console.log('Session data:', req.session);
-  console.log('Authenticated user:', req.user);
   if (req.user) {
     res.status(200).json(req.user);
   } else {
@@ -70,9 +68,7 @@ exports.updateUserInfo = async (req, res) => {
       username, age, rank, sex, timeJoinedTheGame, homeCountry, profilePictureURL,
       mainRoles, preferredGameModes, favoriteSkins, favoriteChampions 
     } = req.body;
-    console.log(req.body);
     const user = await User.findById(req.user._id);
-    console.log('user debug info');
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -93,7 +89,6 @@ exports.updateUserInfo = async (req, res) => {
     if (favoriteSkins !== undefined) user.favoriteSkins = favoriteSkins;
     if (favoriteChampions !== undefined) user.favoriteChampions = favoriteChampions;
 
-    console.log('user debug info', user);
 
     await user.save();
 
@@ -336,7 +331,6 @@ exports.getUserActivity = async (req, res) => {
 
     const activitiesWithChampionIds = await populateChampionIds(activities);
     
-    console.log("activities in getUserActivity", activities);
     res.json({
       success: true,
       type,

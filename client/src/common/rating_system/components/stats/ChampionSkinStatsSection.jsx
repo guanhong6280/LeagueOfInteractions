@@ -8,6 +8,8 @@ import {
   PieChart as PieChartIcon,
   BarChart as BarChartIcon,
 } from '@mui/icons-material';
+import { useVersion } from '../../../../contextProvider/VersionProvider';
+import { getChampionSquareAssetUrl } from '../../../../utils/championNameUtils';
 import { NeoCard, StatCard, ChampionImage } from '../design/NeoComponents';
 import RatingDistributionChart from './RatingDistributionChart';
 import RarityDistributionChart from './RarityDistributionChart';
@@ -24,7 +26,7 @@ const PopularSkinsSection = ({ mostPopularSkin, highestRatedSkin }) => (
     <MUI.Typography variant="h6" fontWeight="900" textTransform="uppercase" mb={2}>
       Skin Highlights
     </MUI.Typography>
-    
+
     <MUI.Stack spacing={2}>
       <MUI.Box>
         <MUI.Typography variant="subtitle2" fontWeight="bold" color="text.secondary">
@@ -34,7 +36,7 @@ const PopularSkinsSection = ({ mostPopularSkin, highestRatedSkin }) => (
           {mostPopularSkin?.name || '—'}
         </MUI.Typography>
       </MUI.Box>
-      
+
       <MUI.Box>
         <MUI.Typography variant="subtitle2" fontWeight="bold" color="text.secondary">
           HIGHEST RATED
@@ -48,8 +50,8 @@ const PopularSkinsSection = ({ mostPopularSkin, highestRatedSkin }) => (
               icon={<StarIcon style={{ color: '#000' }} />}
               label={highestRatedSkin.averageRating.toFixed(1)}
               size="small"
-              sx={{ 
-                bgcolor: '#FFD740', 
+              sx={{
+                bgcolor: '#FFD740',
                 border: '1px solid #000',
                 fontWeight: 'bold'
               }}
@@ -62,13 +64,13 @@ const PopularSkinsSection = ({ mostPopularSkin, highestRatedSkin }) => (
 );
 
 const ChampionSkinStatsSection = ({
-  championImageUrl,
   championName,
   championTitle,
   stats,
   error,
   onRetry,
 }) => {
+  const { version } = useVersion();
   const [activeChart, setActiveChart] = useState('rating');
 
   if (error) {
@@ -123,11 +125,12 @@ const ChampionSkinStatsSection = ({
             }}
           >
             <MUI.Stack direction="column" spacing={2} alignItems="center">
-              <ChampionImage
-                imageUrl={championImageUrl}
-                championName={championName}
-                onRetry={onRetry}
-              />
+              {version && championName && (
+                <ChampionImage
+                  imageUrl={getChampionSquareAssetUrl(championName, version)}
+                  championName={championName}
+                />
+              )}
               <MUI.Stack spacing={0.5} textAlign="center" width="100%">
                 <MUI.Typography
                   variant="h4"
@@ -153,7 +156,7 @@ const ChampionSkinStatsSection = ({
             </MUI.Stack>
           </MUI.Box>
 
-          <PopularSkinsSection 
+          <PopularSkinsSection
             mostPopularSkin={safeStats.mostPopularSkin}
             highestRatedSkin={safeStats.highestRatedSkin}
           />

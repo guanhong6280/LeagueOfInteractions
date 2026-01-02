@@ -49,7 +49,6 @@ const useChampionCommentData = (championId) => {
     queryFn: async () => {
       // ✅ Correct: Passing object per your API definition
       const response = await getChampionComments(championId, { includeUserDetails: true });
-      console.log('response from useChampionCommentData', response);
       return response.success ? response.data : [];
     },
     enabled: !!championId,
@@ -264,7 +263,6 @@ const useChampionCommentData = (championId) => {
     try {
       // ✅ Correct: Passing object for options
       const response = await getChampionRepliesForComment(championId, commentId, { includeUserDetails: true });
-      console.log('response from loadReplies', response);
       if (response.success) {
         const transformedReplies = response.data.map(reply => ({
           ...reply,

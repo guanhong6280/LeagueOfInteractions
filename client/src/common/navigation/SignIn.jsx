@@ -67,26 +67,6 @@ const SignIn = () => {
       >
         Rating
       </MUI.Button>
-      <MUI.Button
-        component={Link}
-        to="/donation"
-        sx={{
-          color: 'black',
-          fontWeight: 900,
-          textTransform: 'uppercase',
-          border: '2px solid transparent',
-          borderRadius: '0px',
-          '&:hover': {
-            backgroundColor: '#FFDE00',
-            border: '2px solid black',
-            boxShadow: '4px 4px 0px black',
-            transform: 'translate(-2px, -2px)',
-          },
-          transition: 'all 0.2s',
-        }}
-      >
-        Donate
-      </MUI.Button>
 
       {isLoading || isSigningIn ? (
         <MUI.CircularProgress size={30} sx={{ color: 'black' }} />
@@ -168,11 +148,6 @@ const SignIn = () => {
                 </MUI.Typography>
               </MUI.Stack>
 
-              {user.isAdministrator && (
-                <MUI.MenuItem component={Link} to="/admin/comments">
-                  Moderation
-                </MUI.MenuItem>
-              )}
               <MUI.MenuItem component={Link} to="/profile">
                 Profile
               </MUI.MenuItem>
@@ -182,6 +157,16 @@ const SignIn = () => {
               <MUI.MenuItem component={Link} to="/add">
                 Add Interaction
               </MUI.MenuItem>
+              {user.isAdministrator && (
+                <MUI.MenuItem component={Link} to="/admin/comments">
+                  Moderation
+                </MUI.MenuItem>
+              )}
+              {user && (
+                <MUI.MenuItem component={Link} to="/donation">
+                  Donate
+                </MUI.MenuItem>
+              )}
               <MUI.Divider sx={{ borderBottomWidth: '3px', borderColor: 'black' }} />
               <MUI.MenuItem onClick={() => logout()} sx={{ color: 'red' }}>
                 LOGOUT

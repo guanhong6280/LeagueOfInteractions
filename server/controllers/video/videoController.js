@@ -237,12 +237,10 @@ exports.muxWebhook = async (req, res) => {
   // 1) Verify against raw bytes
   try {
     verifyWebhookSignature(req);
-    console.log('Mux webhook signature verified');
   } catch (err) {
     console.error('Mux webhook signature verification failed:', err.message);
     return res.status(400).send('Invalid signature');
   }
-  console.log('Mux webhook body:', req.body.toString('utf8'));
   // 2) Parse the Buffer -> JSON
   let event;
   try {
@@ -253,16 +251,11 @@ exports.muxWebhook = async (req, res) => {
   }
 
   // 3) Now you can read event.type & event.data
-  console.log('[MUX EVENT]', event.type, {
-    uploadId: event?.data?.id,
-    assetId: event?.data?.asset_id,
-  });
 
   try {
     const { type, data } = event;
 
     if (type === 'video.upload.asset_created') {
-      console.log('Mux webhook asset created');
       const directUploadId = data.id;
       const assetId = data.asset_id;
       const video = await Video.findOneAndUpdate(
@@ -275,7 +268,6 @@ exports.muxWebhook = async (req, res) => {
     }
 
     else if (type === 'video.asset.ready') {
-      console.log('Mux webhook asset ready');
       const assetId = data.id;
       const playbackId = data.playback_ids?.[0]?.id;
       const playbackUrl = playbackId ? `https://stream.mux.com/${playbackId}.m3u8` : undefined;

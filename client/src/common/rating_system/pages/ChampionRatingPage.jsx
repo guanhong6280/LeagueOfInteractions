@@ -75,10 +75,12 @@ const ChampionRatingPage = () => {
                 }}
               >
                 <MUI.Stack direction="column" spacing={2} alignItems="center">
-                  <ChampionImage
-                    imageUrl={getChampionSquareAssetUrl(championName, version)}
-                    championName={championName}
-                  />
+                  {version && championName && (
+                    <ChampionImage
+                      imageUrl={getChampionSquareAssetUrl(championName, version)}
+                      championName={championName}
+                    />
+                  )}
                   <MUI.Stack spacing={0.5} textAlign="center" width="100%">
                     <MUI.Typography
                       variant="h4"

@@ -23,7 +23,6 @@ const useSkinData = (championName) => {
       if (!response.success) {
         throw new Error(response.message || 'Failed to fetch skins');
       }
-      console.log("response in useSkinData", response);
       return response.data || [];
     },
     // Only fetch if we have a name

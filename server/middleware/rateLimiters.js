@@ -42,4 +42,18 @@ const uploadLimiter = rateLimit({
   },
 });
 
-module.exports = { generalLimiter, authLimiter, uploadLimiter };
+// 4. DONATION LIMITER
+// Purpose: Prevent spam donation sessions and abuse
+// Rule: 5 donation sessions per 15 minutes per IP
+const donationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Max 5 donation sessions per 15 minutes per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    status: 429,
+    error: 'Too many donation attempts. Please wait a moment.',
+  },
+});
+
+module.exports = { generalLimiter, authLimiter, uploadLimiter, donationLimiter };

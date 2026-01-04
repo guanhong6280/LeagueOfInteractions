@@ -6,18 +6,6 @@ import { createDonationCheckoutSession } from '../../api/donationApi';
 
 const DonationAmounts = [
   {
-    id: 0,
-    dollarValue: '0.50',
-    value: 50,
-    imageURL: null,
-  },
-  {
-    id: 1,
-    dollarValue: '1.00',
-    value: 100,
-    imageURL: null,
-  },
-  {
     id: 2,
     dollarValue: '2.00',
     value: 200,

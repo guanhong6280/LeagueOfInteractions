@@ -6,6 +6,11 @@ const DonationCardSchema = new mongoose.Schema({
   imageURL: String,
   description: String,
   price: Number, // Optional: Set a target amount for the progress bar
+  status: {
+    type: String,
+    enum: ['active', 'inactive'],
+    default: 'active'
+  }
 });
 
 module.exports = mongoose.model('DonationCard', DonationCardSchema);

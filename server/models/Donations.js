@@ -34,7 +34,9 @@ const DonationSchema = new mongoose.Schema({
   stripeSessionId: { 
     type: String, 
     required: true,
-    unique: true 
+  },
+  stripePaymentIntentId: {
+    type: String,
   },
   status: {
     type: String,
@@ -46,5 +48,7 @@ const DonationSchema = new mongoose.Schema({
 });
 
 DonationSchema.index({ donationCardId: 1, createdAt: -1 });
+DonationSchema.index({ stripeSessionId: 1 }, { unique: true });
+DonationSchema.index({ stripePaymentIntentId: 1 }, { unique: true });
 
 module.exports = mongoose.model('Donation', DonationSchema);

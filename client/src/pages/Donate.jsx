@@ -1,14 +1,33 @@
 import React from 'react';
 import * as MUI from '@mui/material';
+import { useSearchParams } from 'react-router-dom';
 import DonationCard from '../common/donation/DonationCard';
 import DonationDialog from '../common/donation/DonationDialog';
 import { getDonationCards } from '../api/donationApi';
+import { useToast, toastMessages } from '../toast/useToast';
 
 const Donate = () => {
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [donationCardId, setDonationCardId] = React.useState(null);
-
   const [donationInformation, setDonationInformation] = React.useState([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { success, error: showError } = useToast();
+
+  // Handle donation success/cancel from Stripe redirect
+  React.useEffect(() => {
+    const successParam = searchParams.get('success');
+    const canceledParam = searchParams.get('canceled');
+
+    if (successParam === 'true') {
+      success(toastMessages.donate.success);
+      // Clean up URL by removing query parameters
+      setSearchParams({}, { replace: true });
+    } else if (canceledParam === 'true') {
+      showError('Donation was canceled.');
+      // Clean up URL by removing query parameters
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams, success, showError]);
 
   React.useEffect(() => {
     const fetchDonationCards = async () => {

@@ -21,10 +21,15 @@ export const redirectToGoogleAuth = ({ returnTo } = {}) => {
 };
 
 export const getCurrentUser = async () => {
-  const { data } = await api.get(`/api/auth/user`, {
-    withCredentials: true,
-  });
-  return data;
+  const { data } = await api.get('/api/auth/user', { withCredentials: true });
+
+  // If backend returned { authenticated, user }, use it.
+  if (data && typeof data === 'object' && 'authenticated' in data && 'user' in data) {
+    return data.user; // null or user object
+  }
+
+  // Otherwise backend returned the user directly
+  return data; 
 };
 
 export const logout = async () => {

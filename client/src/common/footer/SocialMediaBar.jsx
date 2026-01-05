@@ -18,6 +18,7 @@ const SocialMediaBar = () => {
         return (
           <MUI.Link
             key={index}
+            aria-label={`Visit ${link.name} page`}
             href={link.url}
             target="_blank"
             sx={{ 

@@ -16,7 +16,7 @@ function MainLayout() {
       <MUI.ThemeProvider theme={theme}>
         {!isSkinDetailPage && !isChampionRatingPage && <Navigation></Navigation>}
         {/* <MUI.Box minHeight="95vh"> */}
-        <MUI.Box>
+        <MUI.Box component="main">
           <Outlet />
         </MUI.Box>
         {!isSkinDetailPage && <Footer></Footer>}

@@ -79,7 +79,7 @@ const Footer = () => {
         <MUI.Typography variant="caption" sx={{ fontFamily: 'monospace', fontWeight: 'bold', display: 'block', color: '#555' }}>
           © 2024-Present LeagueInteractions.
         </MUI.Typography>
-        <MUI.Typography variant="caption" sx={{ fontFamily: 'monospace', display: 'block', marginTop: '10px', color: '#777' }}>
+        <MUI.Typography variant="caption" sx={{ fontFamily: 'monospace', display: 'block', marginTop: '10px', color: '#505050' }}>
           LeagueInteractions is not endorsed by Riot Games and does not reflect the views or opinions of Riot Games or anyone officially involved in producing or managing League of Legends. League of Legends and Riot Games are trademarks or registered trademarks of Riot Games, Inc. League of Legends © Riot Games, Inc.
         </MUI.Typography>
       </MUI.Box>

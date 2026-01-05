@@ -63,6 +63,10 @@ const ChampionSelectCard = (props) => {
             value={props.champion?.id || ''}
             onChange={props.handleChampionSelect}
             displayEmpty
+            aria-label={`Select ${props.order} champion`}
+            inputProps={{
+              'aria-label': `Select ${props.order} champion`,
+            }}
             sx={{
               borderRadius: '0px',
               border: '2px solid black',
@@ -93,6 +97,7 @@ const ChampionSelectCard = (props) => {
         <MUI.IconButton
           onClick={handleClearSelection}
           disabled={!props.champion}
+          aria-label={`Clear ${props.order} champion selection`}
           sx={{
             border: '2px solid black',
             borderRadius: '0px',
@@ -161,6 +166,8 @@ const ChampionSelectCard = (props) => {
             <MUI.IconButton
               onClick={() => setIsFavorite(!isFavorite)}
               disableRipple
+              aria-label={`Favorite ${props.champion?.id || 'champion'}`}
+              aria-pressed={isFavorite}
               sx={{
                 position: 'absolute',
                 top: '5px',
@@ -177,9 +184,9 @@ const ChampionSelectCard = (props) => {
               }}
             >
               {isFavorite ? (
-                <Favorite sx={{ fontSize: '32px' }} />
+                <Favorite sx={{ fontSize: '32px' }} aria-hidden="true" />
               ) : (
-                <FavoriteBorder sx={{ fontSize: '32px', color: 'white' }} />
+                <FavoriteBorder sx={{ fontSize: '32px', color: 'white' }} aria-hidden="true" />
               )}
             </MUI.IconButton>
           )}
@@ -204,9 +211,18 @@ const ChampionSelectCard = (props) => {
             const borderColor = '#000000';
 
             return (
-              <MUI.Box
+              <MUI.ButtonBase
                 key={ability.name}
                 onClick={() => props.handleAbilitySelect(ability.name)}
+                tabIndex={0}
+                aria-label={`${ability.name} ability`}
+                aria-pressed={isSelected}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    props.handleAbilitySelect(ability.name);
+                  }
+                }}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
@@ -226,6 +242,10 @@ const ChampionSelectCard = (props) => {
                     backgroundColor: isSelected ? mainColor : (isRed ? '#ffebee' : '#e3f2fd'), // Light hover tint
                     transform: 'translate(-2px, -2px)',
                     boxShadow: '4px 4px 0px 0px #000000',
+                  },
+                  '&:focus-visible': {
+                    outline: '3px solid #4A90E2',
+                    outlineOffset: '2px',
                   },
                   marginBottom: '8px',
                 }}
@@ -286,7 +306,7 @@ const ChampionSelectCard = (props) => {
                     </MUI.Typography>
                   </MUI.Stack>
                 </MUI.Box>
-              </MUI.Box>
+              </MUI.ButtonBase>
             );
           })}
 

@@ -32,11 +32,15 @@ exports.registerUser = async (req, res) => {
 };
 
 // Get the currently logged in user
+// Returns 200 with user data if authenticated, or null if not
+// This is a "check auth status" endpoint, not a "require auth" endpoint
 exports.getUser = (req, res) => {
   if (req.user) {
     res.status(200).json(req.user);
   } else {
-    res.status(401).json({ message: 'Unauthorized' });
+    // Return 200 with null - "not authenticated" is a valid state, not an error
+    // This prevents console errors for public users who haven't signed in
+    res.status(200).json({authenticated: false, user: null});
   }
 };
 

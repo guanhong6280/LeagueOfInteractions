@@ -16,19 +16,12 @@ const useCurrentUser = () => {
     refetch,
   } = useQuery({
     queryKey: currentUserQueryKey,
-    queryFn: async () => {
-      try {
-        const result = await getCurrentUser(); 
-        return result;
-      } catch (err) {
-        if (err?.response?.status === 401) return null;
-        throw err;
-      }
-    },
+    queryFn: getCurrentUser, // Backend returns 200 with null if not authenticated
     refetchOnWindowFocus: true, 
     staleTime: DEFAULT_STALE_TIME,
     retry: (failureCount, err) => {
-      if (err?.response?.status === 401) return false;
+      // Don't retry on client errors (4xx)
+      if (err?.response?.status >= 400 && err?.response?.status < 500) return false;
       return failureCount < 2;
     },
   });

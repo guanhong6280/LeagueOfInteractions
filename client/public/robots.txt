@@ -1,0 +1,20 @@
+# https://www.robotstxt.org/robotstxt.html
+# robots.txt for League of Interactions
+
+# Allow all crawlers to access public content
+User-agent: *
+Allow: /
+
+# Disallow admin routes (protected, requires authentication)
+Disallow: /admin/
+
+# Disallow API endpoints (not meant for crawling)
+Disallow: /api/
+
+# Optional: Disallow user-specific routes if they exist
+# Disallow: /profile/
+# Disallow: /settings/
+
+# Sitemap location (add when you create a sitemap)
+# Sitemap: https://www.leagueofinteractions.com/sitemap.xml
+

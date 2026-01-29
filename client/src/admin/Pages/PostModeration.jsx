@@ -1,14 +1,12 @@
 import React from 'react';
 import * as MUI from '@mui/material';
-import CommentModerationCard from '../components/moderation/CommentModerationCard';
+import PostModerationCard from '../components/moderation/PostModerationCard';
 import MinimalAlert from '../components/moderation/common/MinimalAlert';
-import useCommentModeration from '../hooks/useCommentModeration';
+import usePostModeration from '../hooks/usePostModeration';
 
-const CommentModeration = () => {
+const PostModeration = () => {
   const {
-    tabIndex,
-    currentType,
-    comments,
+    posts,
     thresholds,
     pendingActionId,
     snackbar,
@@ -20,13 +18,11 @@ const CommentModeration = () => {
     isMutating,
     hasNextPage,
     fetchNextPage,
-    handleTabChange,
     handleApprove,
     handleReject,
     refetch,
     closeSnackbar,
-    commentTypes,
-  } = useCommentModeration();
+  } = usePostModeration();
 
   return (
     <>
@@ -38,7 +34,7 @@ const CommentModeration = () => {
           justifyContent="space-between"
         >
           <MUI.Typography variant="title_text">
-            Comment Moderation
+            Post Moderation
           </MUI.Typography>
           <MUI.Button
             variant="contained"
@@ -59,28 +55,6 @@ const CommentModeration = () => {
         </MUI.Stack>
         <MUI.Divider />
 
-        <MUI.Tabs
-          value={tabIndex}
-          onChange={handleTabChange}
-          aria-label="moderation tabs"
-          sx={{
-            '& .MuiTabs-indicator': {
-              backgroundColor: '#000000',
-            },
-            '& .MuiTab-root': {
-              color: '#878787',
-              '&.Mui-selected': {
-                color: '#000000',
-                fontWeight: 'bold',
-              },
-            },
-          }}
-        >
-          <MUI.Tab label="Skin Comments" />
-          <MUI.Tab label="Champion Comments" />
-          <MUI.Tab label="Post Comments" />
-        </MUI.Tabs>
-
         {isError && (
           <MUI.Alert severity="error">
             {error?.response?.data?.error ||
@@ -100,26 +74,20 @@ const CommentModeration = () => {
           </MUI.Box>
         ) : (
           <MUI.Stack spacing={3}>
-            {comments.length === 0 && !isFetching && (
+            {posts.length === 0 && !isFetching && (
               <MinimalAlert severity="info">
-                All caught up! There are no {currentType} comments waiting for review.
+                All caught up! There are no posts waiting for review.
               </MinimalAlert>
             )}
 
-            {comments.map((comment) => (
-              <CommentModerationCard
-                key={comment.commentId}
-                comment={comment}
-                subjectType={currentType}
-                skin={currentType === 'skin' ? comment.skin : undefined}
-                champion={currentType === 'champion' ? comment.champion : undefined}
-                post={currentType === 'post' ? comment.post : undefined}
+            {posts.map((post) => (
+              <PostModerationCard
+                key={post.postId}
+                post={post}
                 thresholds={thresholds}
-                onApprove={() => handleApprove(comment.commentId)}
-                onReject={() => handleReject(comment.commentId)}
-                isProcessing={
-                  isMutating && pendingActionId === comment.commentId
-                }
+                onApprove={() => handleApprove(post.postId)}
+                onReject={() => handleReject(post.postId)}
+                isProcessing={isMutating && pendingActionId === post.postId}
               />
             ))}
 
@@ -156,4 +124,4 @@ const CommentModeration = () => {
   );
 };
 
-export default CommentModeration;
+export default PostModeration;

@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const { sendSuccess, sendError } = require('../utils/response');
 
@@ -32,7 +33,22 @@ class CommentService {
       const num = Number(id);
       return isNaN(num) ? null : num;
     }
+    // For MongoDB ObjectIds, convert string to ObjectId for proper comparison
+    if (this.idType === 'ObjectId') {
+      if (mongoose.Types.ObjectId.isValid(id)) {
+        return new mongoose.Types.ObjectId(id);
+      }
+      return null;
+    }
     return String(id).trim() || null;
+  }
+
+  compareIds(id1, id2) {
+    if (this.idType === 'ObjectId') {
+      // Convert both to strings for comparison
+      return String(id1) === String(id2);
+    }
+    return id1 === id2;
   }
 
   /**
@@ -440,7 +456,7 @@ class CommentService {
       if (!parentComment) return sendError(res, 'Parent comment not found.', { status: 404 });
 
       // Integrity Check
-      if (parentComment[this.entityIdField] !== normalizedId) {
+      if (!this.compareIds(parentComment[this.entityIdField], normalizedId)) {
         return sendError(res, 'Comment entity mismatch.', { status: 400, errorCode: 'COMMENT_ENTITY_MISMATCH' });
       }
 
@@ -522,7 +538,7 @@ async getReplies(req, res) {
       const parentComment = await query;
       if (!parentComment) return sendError(res, 'Comment not found.', { status: 404 });
 
-      if (parentComment[this.entityIdField] !== normalizedId) {
+      if (!this.compareIds(parentComment[this.entityIdField], normalizedId)) {
         return sendError(res, 'Comment entity mismatch.', { status: 400 });
       }
 

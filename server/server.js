@@ -17,6 +17,7 @@ const championStatsRoutes = require('./routes/championStatsRoutes');
 const championRatingRoutes = require('./routes/championRatingRoutes');
 const moderationRoutes = require('./routes/moderationRoutes');
 const contactRoutes = require('./routes/contactRoutes');
+const patchDiscussionRoutes = require('./routes/patchDiscussionRoutes');
 const { startReconciler } = require('./utils/reconciler');
 
 // FIX: Use 'require' instead of 'import' for Node.js
@@ -144,6 +145,7 @@ app.use('/api/champions', championRatingRoutes);
 app.use('/api/champion-stats', championStatsRoutes);
 app.use('/api/moderation', moderationRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/patch-discussion', patchDiscussionRoutes);
 
 // =========================================================================
 // 6. START SERVER

@@ -87,7 +87,14 @@ const CommentList = memo(({
     <>
       <MUI.Box marginX="10px">
         <CommentListHeader sortBy={sortBy} setSortBy={setSortBy} onRefreshComments={onRefreshComments} isRefreshing={isRefreshing} />
-        <MUI.Box height="550px" overflow="auto">
+        <MUI.Box 
+          height="550px" 
+          overflow="auto"
+          // sx={{
+          //   // Add padding to prevent clipping of shadows and hover effects
+          //   p: 1.5,
+          // }}
+        >
           {isLoading ? (
             <MUI.Box display="flex" height="100%" justifyContent="center" alignItems="center">
               <MUI.CircularProgress size={40} />

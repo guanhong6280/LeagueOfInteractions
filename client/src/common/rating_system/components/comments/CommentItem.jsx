@@ -22,12 +22,12 @@ const CommentItem = memo(({
         px: 2,
         mb: 2,
         bgcolor: 'white',
-        border: '3px solid black',
-        boxShadow: '6px 6px 0px black',
+        border: '2px solid black',
+        boxShadow: '4px 4px 0px black',
         transition: 'transform 0.2s',
         '&:hover': {
           transform: 'translate(-2px, -2px)',
-          boxShadow: '8px 8px 0px black',
+          boxShadow: '5px 5px 0px black',
         },
       }}
     >

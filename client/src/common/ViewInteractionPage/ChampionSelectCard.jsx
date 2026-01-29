@@ -11,7 +11,7 @@ const ChampionSelectCard = (props) => {
   // Determine theme based on order
   const isRed = props.order === 'First'; // 'First' champion is Red (Left), 'Second' is Blue (Right)
   const mainColor = isRed ? '#ff4d4d' : '#4d79ff'; // Neo-brutalist red/blue
-  const bgColor = isRed ? '#fff5f5' : '#f0f4ff'; // Light tint background
+  const bgColor = isRed ? '#ffe6e6' : '#e6f3ff'; // Light tint background
 
   // Construct image URLs with proper versioning
   const getAbilityImageUrl = (ability, index) => {

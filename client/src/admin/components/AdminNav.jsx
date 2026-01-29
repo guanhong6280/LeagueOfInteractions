@@ -1,5 +1,6 @@
 import { Box } from '@mui/material';
 import * as MUI from '@mui/material';
+import ArticleOutlinedIcon from '@mui/icons-material/ArticleOutlined';
 import CommentOutlinedIcon from '@mui/icons-material/CommentOutlined';
 import VideoLibraryOutlinedIcon from '@mui/icons-material/VideoLibraryOutlined';
 import GavelOutlinedIcon from '@mui/icons-material/GavelOutlined';
@@ -17,6 +18,12 @@ export default function AdminNav() {
   const email = user?.email || 'admin@example.com';
 
   const moderationLinks = [
+    {
+      label: 'Post Approval',
+      to: '/admin/posts',
+      icon: ArticleOutlinedIcon,
+      helper: 'Review user posts before publishing.',
+    },
     {
       label: 'Comment Approval',
       to: '/admin/comments',

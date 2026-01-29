@@ -49,6 +49,26 @@ const SignIn = () => {
     >
       <MUI.Button
         component={Link}
+        to="/patch-discussion"
+        sx={{
+          color: 'black',
+          fontWeight: 900,
+          textTransform: 'uppercase',
+          border: '2px solid transparent',
+          borderRadius: '0px',
+          '&:hover': {
+            backgroundColor: '#FFDE00',
+            border: '2px solid black',
+            boxShadow: '4px 4px 0px black',
+            transform: 'translate(-2px, -2px)',
+          },
+          transition: 'all 0.2s',
+        }}
+      >
+        Discussion
+      </MUI.Button>
+      <MUI.Button
+        component={Link}
         to="/rating_landing"
         sx={{
           color: 'black',

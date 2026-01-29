@@ -61,7 +61,7 @@ const createToast = (fn) => (message, options) =>
 export const useToast = () => {
   const success = createToast(toast.success);
   const error = createToast(toast.error);
-  const info = createToast(toast.info);
+  const info = createToast(toast); // Use default toast for info (react-hot-toast doesn't have toast.info)
   const loading = createToast(toast.loading);
 
   const promise = (promiseOrFn, messages, options) =>

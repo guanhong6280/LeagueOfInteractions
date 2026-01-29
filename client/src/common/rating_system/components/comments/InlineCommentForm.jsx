@@ -65,10 +65,10 @@ const InlineCommentForm = memo(({
         elevation={0} 
         sx={{ 
           bgcolor: 'white',
-          border: '3px solid black',
-          boxShadow: '6px 6px 0px black',
+          border: '2px solid black',
           p: 2,
           borderRadius: 0,
+          // boxShadow: '2px 2px 0px black',
         }}
       >
         {/* Reply Mode: @username cancel button */}

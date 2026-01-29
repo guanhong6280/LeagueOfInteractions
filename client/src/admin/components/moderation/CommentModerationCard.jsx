@@ -1,7 +1,5 @@
 import React, { useMemo } from 'react';
 import * as MUI from '@mui/material';
-import CheckIcon from '@mui/icons-material/Check';
-import CloseIcon from '@mui/icons-material/Close';
 import ToxicitySpamCard from './common/ToxicitySpamCard';
 import { getSkinImageUrl } from '../../../common/rating_system/utils/getSkinImageUrl';
 
@@ -18,6 +16,7 @@ const CommentModerationCard = ({
   comment,
   skin,
   champion,
+  post,
   subjectType = 'skin',
   thresholds,
   onApprove,
@@ -36,6 +35,10 @@ const CommentModerationCard = ({
     if (subjectType === 'skin' && skin) {
       return getSkinImageUrl(skin);
     }
+    // Posts don't have images, return null
+    if (subjectType === 'post') {
+      return null;
+    }
     return null;
   }, [skin, champion, subjectType]);
 
@@ -43,8 +46,11 @@ const CommentModerationCard = ({
     if (subjectType === 'champion') {
       return champion?.championId || 'Unknown Champion';
     }
+    if (subjectType === 'post') {
+      return post?.title || 'Unknown Post';
+    }
     return skin?.name || 'Unknown Skin';
-  }, [skin, champion, subjectType]);
+  }, [skin, champion, post, subjectType]);
 
   return (
     <MUI.Box
@@ -86,6 +92,14 @@ const CommentModerationCard = ({
                 variant="outlined" 
               />
             )}
+            {subjectType === 'post' && (
+              <MUI.Chip 
+                label="Post Comment" 
+                size="small" 
+                color="primary" 
+                variant="outlined" 
+              />
+            )}
           </MUI.Box>
 
           <MUI.Box display="flex" gap="10px">
@@ -106,38 +120,72 @@ const CommentModerationCard = ({
           </MUI.Typography>
         </MUI.Stack>
 
-        {/* Subject (Skin or Champion) Information */}
-        <MUI.Stack gap="10px">
-          <MUI.Typography color="white">
+        {/* Subject (Skin, Champion, or Post) Information */}
+        <MUI.Stack gap="10px" sx={{ minWidth: '200px' }}>
+          <MUI.Typography color="white" fontWeight="bold">
             {subjectName}
           </MUI.Typography>
-          <MUI.Box display="flex">
-            {subjectImage ? (
-              <MUI.Box
-                component="img"
-                src={subjectImage}
-                alt={subjectName}
+          {subjectType === 'post' && post && (
+            <MUI.Stack gap="4px">
+              <MUI.Typography variant="caption" color="#878787">
+                Patch: {post.patchVersion || 'N/A'}
+              </MUI.Typography>
+              {post.selectedChampion && (
+                <MUI.Typography variant="caption" color="#878787">
+                  Champion: {post.selectedChampion}
+                </MUI.Typography>
+              )}
+              {post.selectedGameMode && (
+                <MUI.Typography variant="caption" color="#878787">
+                  Mode: {post.selectedGameMode}
+                </MUI.Typography>
+              )}
+              <MUI.Typography 
+                variant="caption" 
+                color="#878787"
                 sx={{
-                  width: '200px',
-                  height: '100px',
-                  objectFit: 'cover',
-                  borderRadius: '10px',
+                  mt: 1,
+                  maxWidth: '200px',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
                 }}
-              />
-            ) : (
-              <MUI.Box
-                width="200px"
-                height="100px"
-                borderRadius="10px"
-                border="1px dashed #e0e0e0"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
               >
-                <MUI.Typography variant="body2" color="white">No preview</MUI.Typography>
-              </MUI.Box>
-            )}
-          </MUI.Box>
+                {post.body || 'No body text'}
+              </MUI.Typography>
+            </MUI.Stack>
+          )}
+          {subjectType !== 'post' && (
+            <MUI.Box display="flex">
+              {subjectImage ? (
+                <MUI.Box
+                  component="img"
+                  src={subjectImage}
+                  alt={subjectName}
+                  sx={{
+                    width: '200px',
+                    height: '100px',
+                    objectFit: 'cover',
+                    borderRadius: '10px',
+                  }}
+                />
+              ) : (
+                <MUI.Box
+                  width="200px"
+                  height="100px"
+                  borderRadius="10px"
+                  border="1px dashed #e0e0e0"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <MUI.Typography variant="body2" color="white">No preview</MUI.Typography>
+                </MUI.Box>
+              )}
+            </MUI.Box>
+          )}
         </MUI.Stack>
 
         {/* Action area */}

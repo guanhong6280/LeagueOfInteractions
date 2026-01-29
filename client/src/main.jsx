@@ -19,6 +19,8 @@ import { ChampionRatingPage, ChampionSkinRatingPage } from './common/rating_syst
 import { ToastProvider } from './toast/ToastProvider.jsx';
 import VideoUploadTracker from './common/VideoUploadTracker.jsx';
 import AuthGuard from './common/authGuard/AuthGuard.jsx';
+import PatchDiscussion from './pages/PatchDiscussion.jsx';
+import PatchDiscussionDetail from './pages/PatchDiscussionDetail.jsx';
 
 // Admin imports
 import AdminGuard from './admin/components/guards/AdminGuard.jsx';
@@ -26,6 +28,7 @@ import AdminLayout from './layout/index.jsx';
 import CommentModeration from './admin/Pages/CommentModeration.jsx';
 import VideoModeration from './admin/Pages/VideoModeration.jsx';
 import AdminSettings from './admin/Pages/AdminSettings.jsx';
+import PostModeration from './admin/Pages/PostModeration.jsx';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
@@ -39,6 +42,8 @@ createRoot(document.getElementById('root')).render(
               <Route path="/" element={<MainLayout />}>
                 {/* The default route that shows creators */}
                 <Route index element={<ViewInteractions />} />
+                <Route path="patch-discussion" element={<PatchDiscussion />} />
+                <Route path="patch-discussion/:postId" element={<PatchDiscussionDetail />} />
                 <Route path="rating_landing" element={<RatingLanding />} />
                 <Route path="contact" element={<Contact />} />
                 <Route path="/champion-skin-details/:id" element={<ChampionSkinRatingPage />} />
@@ -62,6 +67,7 @@ createRoot(document.getElementById('root')).render(
                 <Route path="comments" element={<CommentModeration />} />
                 <Route path="videos" element={<VideoModeration />} />
                 <Route path="settings" element={<AdminSettings />} />
+                <Route path="posts" element={<PostModeration />} />
                 {/* <Route index element={<AdminDashboard />} /> */}
                 {/* Future admin routes will go here */}
                 {/* <Route path="users" element={<UserManagement />} /> */}

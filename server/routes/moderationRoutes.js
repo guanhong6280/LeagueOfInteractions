@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const commentModerationController = require('../controllers/moderation/commentModerationController');
 const videoModerationController = require('../controllers/moderation/videoModerationController');
+const postModerationController = require('../controllers/moderation/postModerationController');
 const { ensureApiAdmin } = require('../middleware/auth');
 
 router.get('/comments', ensureApiAdmin, commentModerationController.getCommentModerationQueue);
@@ -9,6 +10,12 @@ router.get('/comments/summary', ensureApiAdmin, commentModerationController.getC
 router.get('/summary', ensureApiAdmin, commentModerationController.getCommentModerationSummary); // backward compat
 router.post('/comments/:commentId/approve', ensureApiAdmin, commentModerationController.approveComment);
 router.post('/comments/:commentId/reject', ensureApiAdmin, commentModerationController.rejectComment);
+
+// Post moderation routes
+router.get('/posts', ensureApiAdmin, postModerationController.getPostModerationQueue);
+router.get('/posts/summary', ensureApiAdmin, postModerationController.getPostModerationSummary);
+router.post('/posts/:postId/approve', ensureApiAdmin, postModerationController.approvePost);
+router.post('/posts/:postId/reject', ensureApiAdmin, postModerationController.rejectPost);
 
 router.get('/videos', ensureApiAdmin, videoModerationController.getVideoModerationQueue);
 router.get('/videos/summary', ensureApiAdmin, videoModerationController.getVideoModerationSummary);

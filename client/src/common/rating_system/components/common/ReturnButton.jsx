@@ -3,12 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import * as MUI from '@mui/material';
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 
-const ReturnButton = ({ 
-  onClick, 
+const ReturnButton = ({
+  onClick,
   customText = "Back",
   showIcon = true,
   color = "primary",
-  size = "medium"
+  size = "small",
+  top = { xs: 8, sm: 30 },
+  left = { xs: 8, sm: 16 },
+  containerSx,
 }) => {
   const navigate = useNavigate();
 
@@ -24,12 +27,13 @@ const ReturnButton = ({
     <MUI.Box
       sx={{
         position: 'fixed',
-        top: { xs: 8, sm: 30 },
-        left: { xs: 8, sm: 16 },
+        top,
+        left,
         zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
         gap: 1,
+        ...(containerSx || {}),
       }}
     >
       <MUI.Button

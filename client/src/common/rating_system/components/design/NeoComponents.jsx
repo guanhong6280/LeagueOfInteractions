@@ -7,24 +7,112 @@ import {
 
 // --- Neo-Brutalist Design Components ---
 
-export const NeoCard = ({ children, sx = {}, bgcolor = 'white' }) => (
+export const NeoCard = ({ children, sx = {}, bgcolor = 'white', ...props }) => (
   <MUI.Box
     sx={{
       border: '3px solid #000',
-      boxShadow: '8px 8px 0px #000',
+      boxShadow: '4px 4px 0px #000',
       bgcolor: bgcolor,
       p: 3,
       transition: 'transform 0.2s',
       '&:hover': {
         transform: 'translate(-2px, -2px)',
-        boxShadow: '10px 10px 0px #000',
+        boxShadow: '6px 6px 0px #000',
       },
       ...sx
     }}
+    {...props}
   >
     {children}
   </MUI.Box>
 );
+
+export const NeoButton = ({ 
+  children, 
+  onClick, 
+  color = '#FF9A8B', 
+  disabled, 
+  sx = {}, 
+  size = 'medium', 
+  ...props 
+}) => {
+  const isSmall = size === 'small';
+
+  return (
+    <MUI.Button
+      onClick={onClick}
+      disabled={disabled}
+      {...props}
+      sx={{
+        color: 'black',
+        bgcolor: color,
+        border: '2px solid #000',
+        borderRadius: 0,
+        fontWeight: 900,
+        textTransform: 'uppercase',
+        
+        // Dynamic based on size
+        minWidth: isSmall ? 'auto' : undefined,
+        px: isSmall ? 1.5 : 2, // Default MUI padding is roughly 2 (16px) or 6px 16px
+        py: isSmall ? 0.5 : 1, // Default MUI padding
+        fontSize: isSmall ? '0.7rem' : '0.875rem',
+        boxShadow: isSmall ? '2px 2px 0px #000' : '4px 4px 0px #000',
+        
+        transition: 'all 0.1s ease',
+        '&:hover': {
+          bgcolor: color,
+          filter: 'brightness(1.1)',
+          transform: isSmall ? 'translate(-1px, -1px)' : 'translate(-2px, -2px)',
+          boxShadow: isSmall ? '3px 3px 0px #000' : '6px 6px 0px #000',
+        },
+        '&:active': {
+          transform: isSmall ? 'translate(0, 0)' : 'translate(2px, 2px)',
+          boxShadow: isSmall ? '1px 1px 0px #000' : '0px 0px 0px #000',
+        },
+        '&:disabled': {
+          bgcolor: '#e0e0e0',
+          color: '#9e9e9e',
+          boxShadow: 'none',
+          border: '2px solid #9e9e9e',
+          pointerEvents: 'none',
+        },
+        // Allow overrides (this handles specific hover colors if passed in sx)
+        ...sx
+      }}
+    >
+      {children}
+    </MUI.Button>
+  );
+};
+
+export const FilterChip = memo(({ label, active, onClick, color = 'white' }) => (
+  <MUI.Box
+    onClick={onClick}
+    sx={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      px: 2,
+      py: 1,
+      border: '2px solid black',
+      bgcolor: active ? color : 'white',
+      color: 'black',
+      cursor: 'pointer',
+      fontWeight: 'bold',
+      fontSize: '0.875rem',
+      textTransform: 'uppercase',
+      boxShadow: active ? '2px 2px 0px black' : 'none',
+      transition: 'all 0.1s',
+      '&:hover': {
+        transform: 'translate(-1px, -1px)',
+        boxShadow: '3px 3px 0px black',
+        bgcolor: active ? color : '#f0f0f0',
+      },
+    }}
+  >
+    {label}
+  </MUI.Box>
+));
 
 export const NeoBadge = ({ label, color = '#A5D6A7' }) => (
   <MUI.Box

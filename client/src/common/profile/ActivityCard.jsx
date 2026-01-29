@@ -1,25 +1,11 @@
 import React from 'react';
 import * as MUI from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { formatRelativeDateLower } from '../../utils/dateUtils';
 
 const ActivityCard = ({ activity }) => {
   const navigate = useNavigate();
   const { type, date, championName, championId, skinId, skinName, data } = activity;
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const d = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - d;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 30) return `${diffDays}d ago`;
-    return d.toLocaleDateString();
-  };
 
   const getImageUrl = () => {
     if (championName) {
@@ -187,7 +173,7 @@ const ActivityCard = ({ activity }) => {
                 whiteSpace: 'nowrap',
               }}
             >
-               • {formatDate(date)}
+               • {formatRelativeDateLower(date)}
             </MUI.Typography>
           </MUI.Box>
 

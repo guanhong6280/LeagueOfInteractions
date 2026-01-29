@@ -1,6 +1,8 @@
 const Skin = require('../../models/Skin');
 const SkinComment = require('../../models/SkinComment');
 const ChampionComment = require('../../models/ChampionComment');
+const PatchDiscussionComment = require('../../models/PatchDiscussionComment');
+const PatchDiscussionPost = require('../../models/PatchDiscussionPost');
 const {
   TOX_LOW,
   TOX_MID,
@@ -18,7 +20,9 @@ const {
 const parseCommentType = (value) => {
   if (!value) return 'skin';
   const lowered = value.toString().trim().toLowerCase();
-  return lowered === 'champion' ? 'champion' : 'skin';
+  if (lowered === 'champion') return 'champion';
+  if (lowered === 'post' || lowered === 'patch-discussion' || lowered === 'patch') return 'post';
+  return 'skin';
 };
 
 const buildSkinContext = async (comments) => {
@@ -62,6 +66,19 @@ const buildChampionContext = async (comments) => {
   return championMap;
 };
 
+const buildPostContext = async (comments) => {
+  const postIds = [...new Set(comments.map((comment) => comment.postId))];
+  if (!postIds.length) {
+    return new Map();
+  }
+
+  const posts = await PatchDiscussionPost.find({ _id: { $in: postIds } })
+    .select('_id title patchVersion selectedChampion selectedGameMode')
+    .lean();
+
+  return new Map(posts.map((post) => [post._id.toString(), post]));
+};
+
 exports.getCommentModerationQueue = async (req, res) => {
   try {
     const limit = parseLimit(req.query.limit);
@@ -74,7 +91,14 @@ exports.getCommentModerationQueue = async (req, res) => {
       filter._id = { $lt: cursor };
     }
 
-    const CommentModel = commentType === 'champion' ? ChampionComment : SkinComment;
+    let CommentModel;
+    if (commentType === 'champion') {
+      CommentModel = ChampionComment;
+    } else if (commentType === 'post') {
+      CommentModel = PatchDiscussionComment;
+    } else {
+      CommentModel = SkinComment;
+    }
 
     const comments = await CommentModel.find(filter)
       .sort({ createdAt: -1, _id: -1 })
@@ -89,6 +113,8 @@ exports.getCommentModerationQueue = async (req, res) => {
     let subjectMap = new Map();
     if (commentType === 'champion') {
       subjectMap = await buildChampionContext(items);
+    } else if (commentType === 'post') {
+      subjectMap = await buildPostContext(items);
     } else {
       subjectMap = await buildSkinContext(items);
     }
@@ -119,6 +145,15 @@ exports.getCommentModerationQueue = async (req, res) => {
           ...base,
           championId: comment.championId,
           champion: subjectMap.get(comment.championId) || { championId: comment.championId },
+        };
+      }
+
+      if (commentType === 'post') {
+        const postId = comment.postId?.toString() || comment.postId;
+        return {
+          ...base,
+          postId: postId,
+          post: subjectMap.get(postId) || null,
         };
       }
 
@@ -162,6 +197,7 @@ exports.getCommentModerationQueue = async (req, res) => {
 const resolveCommentById = async (commentId, typeHint) => {
   const normalizedType = parseCommentType(typeHint);
 
+  // If type is specified, try that first
   if (normalizedType === 'champion') {
     const comment = await ChampionComment.findById(commentId);
     if (comment) {
@@ -170,6 +206,15 @@ const resolveCommentById = async (commentId, typeHint) => {
     return { type: 'champion', comment: null };
   }
 
+  if (normalizedType === 'post') {
+    const comment = await PatchDiscussionComment.findById(commentId);
+    if (comment) {
+      return { type: 'post', comment };
+    }
+    return { type: 'post', comment: null };
+  }
+
+  // If type is 'skin' or not specified, try all models
   const skinComment = await SkinComment.findById(commentId);
   if (skinComment) {
     return { type: 'skin', comment: skinComment };
@@ -178,6 +223,11 @@ const resolveCommentById = async (commentId, typeHint) => {
   const championComment = await ChampionComment.findById(commentId);
   if (championComment) {
     return { type: 'champion', comment: championComment };
+  }
+
+  const postComment = await PatchDiscussionComment.findById(commentId);
+  if (postComment) {
+    return { type: 'post', comment: postComment };
   }
 
   return { type: normalizedType, comment: null };
@@ -209,6 +259,10 @@ const updateCommentStatus = async (req, res, nextStatus) => {
     if (subjectType === 'champion') {
       const championContext = await buildChampionContext([comment]);
       subject = championContext.get(comment.championId) || { championId: comment.championId };
+    } else if (subjectType === 'post') {
+      const postContext = await buildPostContext([comment]);
+      const postId = comment.postId?.toString() || comment.postId;
+      subject = postContext.get(postId) || null;
     } else {
       subject = await Skin.findOne({ skinId: comment.skinId })
         .select('skinId name championId rarity splashPath loadScreenPath')
@@ -221,6 +275,7 @@ const updateCommentStatus = async (req, res, nextStatus) => {
         commentId: comment._id,
         skinId: subjectType === 'skin' ? comment.skinId : undefined,
         championId: subjectType === 'champion' ? comment.championId : undefined,
+        postId: subjectType === 'post' ? (comment.postId?.toString() || comment.postId) : undefined,
         status: comment.status,
         moderatorNotes: comment.moderatorNotes,
         moderatedBy: comment.moderatedBy,
@@ -246,7 +301,14 @@ exports.rejectComment = (req, res) => updateCommentStatus(req, res, 'rejected');
 exports.getCommentModerationSummary = async (req, res) => {
   try {
     const commentType = parseCommentType(req.query.type);
-    const CommentModel = commentType === 'champion' ? ChampionComment : SkinComment;
+    let CommentModel;
+    if (commentType === 'champion') {
+      CommentModel = ChampionComment;
+    } else if (commentType === 'post') {
+      CommentModel = PatchDiscussionComment;
+    } else {
+      CommentModel = SkinComment;
+    }
 
     const aggregation = await CommentModel.aggregate([
       {

@@ -1,6 +1,5 @@
 import React, { memo } from 'react';
 import * as MUI from '@mui/material';
-import FilterIcon from '@mui/icons-material/FilterList';
 import CommentItem from './CommentItem';
 
 const CommentItems = memo(({

@@ -12,12 +12,37 @@ export const getCommentModerationSummary = async (type) => {
 };
 
 export const approveCommentModeration = async (commentId, payload = {}) => {
-  const response = await api.post(`/api/moderation/comments/${commentId}/approve`, payload);
+  const { type, ...body } = payload;
+  const params = type ? { type } : {};
+  const response = await api.post(`/api/moderation/comments/${commentId}/approve`, body, { params });
   return response.data;
 };
 
 export const rejectCommentModeration = async (commentId, payload = {}) => {
-  const response = await api.post(`/api/moderation/comments/${commentId}/reject`, payload);
+  const { type, ...body } = payload;
+  const params = type ? { type } : {};
+  const response = await api.post(`/api/moderation/comments/${commentId}/reject`, body, { params });
+  return response.data;
+};
+
+// Post moderation APIs
+export const getPostModerationQueue = async (params = {}) => {
+  const response = await api.get('/api/moderation/posts', { params });
+  return response.data;
+};
+
+export const getPostModerationSummary = async () => {
+  const response = await api.get('/api/moderation/posts/summary');
+  return response.data;
+};
+
+export const approvePostModeration = async (postId, payload = {}) => {
+  const response = await api.post(`/api/moderation/posts/${postId}/approve`, payload);
+  return response.data;
+};
+
+export const rejectPostModeration = async (postId, payload = {}) => {
+  const response = await api.post(`/api/moderation/posts/${postId}/reject`, payload);
   return response.data;
 };
 

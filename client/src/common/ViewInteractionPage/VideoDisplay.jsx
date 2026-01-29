@@ -12,6 +12,7 @@ import useCurrentUser from '../../hooks/useCurrentUser';
 import { useVideoActions } from '../../hooks/useVideoActions'; // ✅ New Hook
 import { redirectToGoogleAuth } from '../../api/authApi';
 import SignInDialog from "../../common/navigation/SignInDialog.jsx";
+import { formatDateShort } from '../../utils/dateUtils';
 
 const VideoPlayer = ({ videoData, autoplay = false, isLoading, selectionsComplete, currentSelections }) => {
   const navigate = useNavigate();
@@ -80,14 +81,6 @@ const VideoPlayer = ({ videoData, autoplay = false, isLoading, selectionsComplet
     await toggleLike(videoData._id);
   };
 
-  // --- 3. Formatting ---
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString(undefined, {
-      year: 'numeric', month: 'short', day: 'numeric',
-    });
-  };
-
   // --- 4. Render Logic ---
   
   // A. Loading State
@@ -110,7 +103,7 @@ const VideoPlayer = ({ videoData, autoplay = false, isLoading, selectionsComplet
           <Box
             sx={{
               border: '3px solid #000000',
-              backgroundColor: '#FFDE00',
+              // backgroundColor: '#ccffe1',
               padding: '8px 10px',
               marginBottom: '15px',
               boxShadow: '4px 4px 0px #000000',
@@ -188,7 +181,7 @@ const VideoPlayer = ({ videoData, autoplay = false, isLoading, selectionsComplet
               />
               <Chip
                 icon={<CalendarTodayIcon style={{ color: 'black', fontSize: '1rem' }} />}
-                label={formatDate(videoData.createdAt)}
+                label={formatDateShort(videoData.createdAt)}
                 size="small"
                 sx={chipStyles(false)}
               />
@@ -273,7 +266,7 @@ const StyledCard = ({ children }) => (
       borderRadius: '0px',
       boxShadow: '8px 8px 0px #000000',
       border: '3px solid #000000',
-      backgroundColor: '#d0f5d5',
+      backgroundColor: '#e6fff0',
       transition: 'all 0.2s ease-in-out',
       '&:hover': { transform: 'translate(-2px, -2px)', boxShadow: '10px 10px 0px #000000' },
     }}
@@ -323,7 +316,7 @@ const buttonStyles = {
     backgroundColor: '#fff',
     color: '#000',
     boxShadow: '6px 6px 0px #000',
-    transform: 'translate(-2px, -2px)',
+    // transform: 'translate(-2px, -2px)',
   },
   '&:active': {
     boxShadow: '2px 2px 0px #000',

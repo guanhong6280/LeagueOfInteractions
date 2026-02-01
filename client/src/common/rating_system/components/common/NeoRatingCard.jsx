@@ -1,6 +1,7 @@
 import React from 'react';
 import * as MUI from '@mui/material';
-import { NeoCard } from '../design/NeoComponents';
+import { NeoCard, NeoSectionTitle } from '../design/NeoComponents';
+import theme from '../../../../theme/theme';
 
 const NeoRatingCard = ({
   title = "SUBMIT YOUR RATING",
@@ -9,33 +10,13 @@ const NeoRatingCard = ({
   onChange,
   onSubmit,
   submitLabel = "SUBMIT RATING",
-  color = "#FFCCBC",
-  badgeText = "YOUR TURN"
+  color = "#ffffff",
 }) => {
   return (
     <NeoCard bgcolor={color} sx={{ position: 'relative', width: '100%' }}>
-      {badgeText && (
-        <MUI.Box
-          position="absolute"
-          top={-15}
-          right={-10}
-          bgcolor="black"
-          color="white"
-          px={2}
-          py={0.5}
-          fontWeight="bold"
-        >
-          {badgeText}
-        </MUI.Box>
-      )}
-
-      <MUI.Typography
-        variant="h5"
-        fontWeight="900"
-        mb={3}
-        sx={{ textDecoration: 'underline', textDecorationThickness: 3 }}>
+      <NeoSectionTitle bgcolor={theme.palette.button.blueSide}>
         {title}
-      </MUI.Typography>
+      </NeoSectionTitle>
 
       <MUI.Box display="flex" flexDirection="column" gap={2}>
         {fields.map((field) => (

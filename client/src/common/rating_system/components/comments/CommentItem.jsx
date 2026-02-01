@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
 import * as MUI from '@mui/material';
 import CommentActions from './CommentActions';
+import theme from '../../../../theme/theme';
 
 const CommentItem = memo(({
   comment,
@@ -21,7 +22,7 @@ const CommentItem = memo(({
         py: 2,
         px: 2,
         mb: 2,
-        bgcolor: 'white',
+        bgcolor: theme.palette.background.redSide_light,
         border: '2px solid black',
         boxShadow: '4px 4px 0px black',
         transition: 'transform 0.2s',
@@ -32,7 +33,12 @@ const CommentItem = memo(({
       }}
     >
       {/* TikTok-style Comment Layout */}
-      <MUI.Box display="flex" alignItems="flex-start" gap={2}>
+      <MUI.Box
+        display="flex"
+        alignItems="flex-start"
+        gap={2}
+
+      >
         <MUI.Avatar
           src={comment.user?.profilePictureURL}
           alt={comment.user?.username}
@@ -152,7 +158,7 @@ const CommentItem = memo(({
                 key={reply.id || index}
                 reply={reply}
                 commentId={comment.id}
-                onToggleLike={onToggleLike} 
+                onToggleLike={onToggleLike}
                 onDeleteReply={onDeleteReply}
                 isLast={index === comment.replies.length - 1}
               />
@@ -179,7 +185,7 @@ const ReplyItem = memo(({ reply, commentId, onToggleLike, onDeleteReply, isLast 
         py: 2,
         px: 2,
         mb: 2,
-        bgcolor: '#F5F5F5',
+        bgcolor: theme.palette.background.blueSide,
         border: '2px solid black',
         boxShadow: '4px 4px 0px black',
         transition: 'transform 0.2s',
@@ -270,7 +276,7 @@ const ReplyItem = memo(({ reply, commentId, onToggleLike, onDeleteReply, isLast 
           {/* Actions using CommentActions component */}
           <CommentActions
             comment={reply}
-            onToggleLike={onToggleLike}
+            onToggleLike={(replyId, isLiked) => onToggleLike(replyId, isLiked, commentId)}
             onDeleteComment={handleDeleteReply}
             hideReplyButton={true}
             hideViewRepliesButton={true}

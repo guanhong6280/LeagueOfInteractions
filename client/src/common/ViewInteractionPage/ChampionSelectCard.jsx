@@ -3,6 +3,7 @@ import * as MUI from '@mui/material';
 import { Favorite, FavoriteBorder, Close } from '@mui/icons-material';
 import { useVersion } from '../../contextProvider/VersionProvider';
 import { constructImageUrl } from '../../utils/imageUtils';
+import theme from '../../theme/theme';
 
 const ChampionSelectCard = (props) => {
   const { version, loading: versionLoading } = useVersion();
@@ -10,8 +11,8 @@ const ChampionSelectCard = (props) => {
 
   // Determine theme based on order
   const isRed = props.order === 'First'; // 'First' champion is Red (Left), 'Second' is Blue (Right)
-  const mainColor = isRed ? '#ff4d4d' : '#4d79ff'; // Neo-brutalist red/blue
-  const bgColor = isRed ? '#ffe6e6' : '#e6f3ff'; // Light tint background
+  const mainColor = isRed ? theme.palette.button.redSide : theme.palette.button.blueSide; // Neo-brutalist red/blue
+  const bgColor = isRed ? theme.palette.background.redSide_light : theme.palette.background.blueSide_light; // Light tint background
 
   // Construct image URLs with proper versioning
   const getAbilityImageUrl = (ability, index) => {
@@ -41,7 +42,7 @@ const ChampionSelectCard = (props) => {
         flexDirection: 'column',
         borderRadius: '0px',
         border: '3px solid black',
-        boxShadow: '8px 8px 0px 0px #000000',
+        boxShadow: '4px 4px 0px 0px #000000',
         backgroundColor: bgColor, // Use tinted background
         overflow: 'visible',
         position: 'relative',
@@ -149,11 +150,11 @@ const ChampionSelectCard = (props) => {
               width: '100%',
               height: '100%',
               backgroundColor: 'white', // Keep image background white/neutral
-              border: '3px solid black',
               backgroundImage: getChampionProfileUrl() ? `url(${getChampionProfileUrl()})` : 'none',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              boxShadow: '6px 6px 0px 0px #000000',
+              border: '2px solid black',
+              boxShadow: '4px 4px 0px 0px #000000',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

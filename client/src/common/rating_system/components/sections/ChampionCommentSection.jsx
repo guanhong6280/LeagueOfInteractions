@@ -35,7 +35,7 @@ const ChampionCommentSection = memo(({ championId }) => {
   return (
     <MUI.Box
       // No extra border/margin/padding here as it will be inside a container
-      sx={{ width: '100%', mx: 'auto' }}
+      sx={{ width: '100%', mx: 'auto'}}
     >
       <CommentList
         comments={comments}

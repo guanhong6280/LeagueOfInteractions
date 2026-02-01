@@ -1,14 +1,14 @@
 import React, { memo, useState } from 'react';
 import * as MUI from '@mui/material';
 import {
-  ThumbUpOutlined,
-  ThumbUp,
   Reply as ReplyIcon,
   DeleteOutline as DeleteIcon
 } from '@mui/icons-material';
 import useCurrentUser from '../../../../hooks/useCurrentUser';
 import { NeoButton } from '../design/NeoComponents';
+import LikeButton from '../../../button/LikeButton';
 import DeleteConfirmationDialog from '../design/DeleteConfirmationDialog';
+import theme from '../../../../theme/theme';
 
 // Neo-brutalist View Replies Button Component
 const ViewRepliesButton = memo(({
@@ -25,10 +25,10 @@ const ViewRepliesButton = memo(({
       onClick={onToggleReplies}
       disabled={isLoadingReplies}
       startIcon={isLoadingReplies ? <MUI.CircularProgress size={12} thickness={6} /> : undefined}
-      color={showReplies ? '#FFE082' : 'white'}
+      color={showReplies ? theme.palette.button.view_replies_button : 'white'}
       sx={{
         '&:hover': {
-          bgcolor: showReplies ? '#FFD54F' : '#F5F5F5',
+          bgcolor: showReplies ? theme.palette.button.view_replies_button_hover : theme.palette.button.view_replies_button
         }
       }}
     >
@@ -58,7 +58,6 @@ const CommentActions = memo(({
   isReply = false
 }) => {
   const { user } = useCurrentUser();
-  const [likeAnimation, setLikeAnimation] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const isLiked = user && comment.likedBy?.includes(user.id);
@@ -72,11 +71,6 @@ const CommentActions = memo(({
 
   const handleLikeClick = async () => {
     if (!user || isDisabled) return;
-
-    // Trigger animation
-    setLikeAnimation(true);
-    setTimeout(() => setLikeAnimation(false), 300);
-
     await onToggleLike(comment.id, isLiked);
   };
 
@@ -109,38 +103,12 @@ const CommentActions = memo(({
     <>
       <MUI.Box display="flex" alignItems="center" gap={1}>
         {/* Like Button - Neo-Brutalist Style */}
-        <NeoButton
-          size="small"
+        <LikeButton
+          isLiked={isLiked}
+          likeCount={likeCount}
           onClick={handleLikeClick}
           disabled={!user || isDisabled}
-          color={isLiked ? '#90CAF9' : 'white'}
-          startIcon={
-            isLiked ? (
-              <ThumbUp
-                sx={{
-                  fontSize: 16,
-                  transform: likeAnimation ? 'scale(1.3)' : 'scale(1)',
-                  transition: 'transform 0.2s ease-in-out',
-                }}
-              />
-            ) : (
-              <ThumbUpOutlined
-                sx={{
-                  fontSize: 16,
-                  transform: likeAnimation ? 'scale(1.3)' : 'scale(1)',
-                  transition: 'transform 0.2s ease-in-out'
-                }}
-              />
-            )
-          }
-          sx={{
-            '&:hover': {
-              bgcolor: isLiked ? '#64B5F6' : '#F5F5F5',
-            }
-          }}
-        >
-          {likeCount}
-        </NeoButton>
+        />
         
         {/* Reply Button - Neo-Brutalist Style */}
         {!hideReplyButton && (
@@ -149,10 +117,10 @@ const CommentActions = memo(({
             onClick={handleReplyClick}
             disabled={!user || isDisabled || isSubmittingReply}
             startIcon={<ReplyIcon sx={{ fontSize: 16 }} />}
-            color={isReplyingTo ? '#A5D6A7' : 'white'}
+            color={isReplyingTo ? theme.palette.button.reply_button : 'white'}
             sx={{
               '&:hover': {
-                bgcolor: isReplyingTo ? '#81C784' : '#F5F5F5',
+                bgcolor: isReplyingTo ? theme.palette.button.reply_button_hover : theme.palette.button.reply_button,
               }
             }}
           >
@@ -183,7 +151,7 @@ const CommentActions = memo(({
             color="white"
             sx={{
               '&:hover': {
-                bgcolor: '#FFCDD2',
+                bgcolor: theme.palette.button.delete_button_hover,
               }
             }}
           >

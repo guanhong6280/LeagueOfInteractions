@@ -2,6 +2,7 @@ import React from 'react';
 import * as MUI from '@mui/material';
 import SignIn from './SignIn.jsx';
 import Logo from './Logo.jsx';
+import theme from '../../theme/theme';
 
 const Navigation = () => {
   return (
@@ -10,7 +11,7 @@ const Navigation = () => {
       width="100%"
       height="80px"
       alignItems="center"
-      bgcolor="#fff5f5"
+      bgcolor={theme.palette.background.redSide_light}
       borderBottom="3px solid black"
       position="sticky"
       top="0"

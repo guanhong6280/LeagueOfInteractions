@@ -2,6 +2,7 @@ import React from 'react';
 import * as MUI from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { getChampionLoadingUrl } from '../../../../utils/championNameUtils';
+import theme from '../../../../theme/theme';
 
 // Helper for the "Class/Role" Badge
 const RoleBadge = ({ roles }) => {
@@ -111,13 +112,10 @@ const ChampionPreviewCard = React.memo(({ championName, stats }) => {
           left: 0,
           width: '100%',
           height: '24%', // Occupy bottom half
-          // bgcolor: '#F0F0F0', // REMOVED: Old grey
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
           zIndex: 0, // Behind the cover
-          // Dark Industrial Hazard Stripe
-          // bgcolor: '#FF00FF'
           bgcolor: '#111',
           backgroundImage: 'repeating-linear-gradient(45deg, #ddd 0px, #ddd 10px, #eee 10px, #eee 20px)',
         }}
@@ -128,12 +126,12 @@ const ChampionPreviewCard = React.memo(({ championName, stats }) => {
         <MUI.Box display="flex" gap={1} justifyContent="center">
           <ActionButton
             label="Champion"
-            color="#FFEB3B" // Yellow
+            color={theme.palette.button.redSide}
             onClick={() => navigate(`/champion-rating/${championId}`)}
           />
           <ActionButton
             label="Skins"
-            color="#00E5FF" // Cyan
+            color={theme.palette.button.blueSide}
             onClick={() => navigate(`/champion-skin-details/${championId}`)}
           />
         </MUI.Box>
@@ -257,7 +255,7 @@ const ChampionPreviewCard = React.memo(({ championName, stats }) => {
                   border: '2px solid black', 
                   p: 0.2, 
                   textAlign: 'center', 
-                  bgcolor: '#E0F2F1',
+                  bgcolor: theme.palette.background.redSide,
                   boxShadow: '2px 2px 0px black', // Hard shadow
                   transition: 'transform 0.1s',
                   '&:hover': { transform: 'translate(-1px, -1px)', boxShadow: '3px 3px 0px black' }
@@ -276,7 +274,7 @@ const ChampionPreviewCard = React.memo(({ championName, stats }) => {
                   border: '2px solid black', 
                   p: 0.2, 
                   textAlign: 'center', 
-                  bgcolor: '#FFF3E0',
+                  bgcolor: theme.palette.background.blueSide,
                   boxShadow: '2px 2px 0px black', // Hard shadow
                   transition: 'transform 0.1s',
                   '&:hover': { transform: 'translate(-1px, -1px)', boxShadow: '3px 3px 0px black' }

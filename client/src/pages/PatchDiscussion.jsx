@@ -6,14 +6,16 @@ import {
   FilterList as FilterListIcon,
   Search as SearchIcon,
   ArrowUpward as ArrowUpwardIcon,
+  Sort as SortIcon,
 } from '@mui/icons-material';
-import { NeoCard, NeoButton, FilterChip } from '../common/rating_system/components/design/NeoComponents';
+import { NeoCard, NeoButton, NeoSelect, FilterChip } from '../common/rating_system/components/design/NeoComponents';
 import DiscussionCard from '../common/patch_discussion/DiscussionCard';
 import CreatePostDialog from '../common/patch_discussion/CreatePostDialog';
 import { useVersion } from '../contextProvider/VersionProvider';
 import { useChampionNames } from '../hooks/useChampionNames';
 import usePostData from "../hooks/usePostData";
 import useCurrentUser from '../hooks/useCurrentUser';
+import theme from '../theme/theme';
 
 const GAME_MODES = [
   'Ranked Solo/Duo',
@@ -28,8 +30,8 @@ const GAME_MODES = [
 ];
 
 const SORT_OPTIONS = [
-  { value: 'new', label: 'NEW' },
-  { value: 'hot', label: 'HOT' },
+  { value: 'new', label: 'LATEST' },
+  { value: 'hot', label: 'MOST LIKED' },
   { value: 'discussed', label: 'MOST DISCUSSED' },
 ];
 
@@ -91,7 +93,7 @@ const PatchDiscussion = () => {
       ...formData,
       patchVersion: version,
     });
-    
+
     if (result.success) {
       setCreateDialogOpen(false);
       // Optionally navigate to the new post
@@ -142,37 +144,42 @@ const PatchDiscussion = () => {
               }}
             />
           ))}
-
-          <MUI.Typography
-            variant="h2"
-            component="h1"
-            sx={{
-              fontWeight: 900,
-              textTransform: 'uppercase',
-              fontSize: { xs: '2rem', md: '3.5rem' },
-              letterSpacing: '-0.02em',
-              mb: 1,
-              textShadow: '3px 3px 0px white',
-            }}
+          <MUI.Box
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            gap={1}
+            marginBottom="10px"
           >
-            Patch Discussion
-          </MUI.Typography>
+            <MUI.Typography
+              variant="h2"
+              component="h1"
+              sx={{
+                fontWeight: 900,
+                textTransform: 'uppercase',
+                fontSize: { xs: '2rem', md: '3.5rem' },
+                letterSpacing: '-0.02em',
+                textShadow: '3px 3px 0px white',
+              }}
+            >
+              DISCUSSION
+            </MUI.Typography>
 
-          <MUI.Typography
-            variant="body1"
-            sx={{
-              fontFamily: 'monospace',
-              fontWeight: 'bold',
-              mb: 3,
-              bgcolor: 'white',
-              display: 'inline-block',
-              px: 2,
-              py: 0.5,
-              border: '2px solid black',
-            }}
-          >
-            PATCH: {version}
-          </MUI.Typography>
+            <MUI.Typography
+              variant="body1"
+              sx={{
+                fontFamily: 'monospace',
+                fontWeight: 'bold',
+                bgcolor: 'white',
+                display: 'inline-block',
+                px: 2,
+                py: 0.5,
+                border: '2px solid black',
+              }}
+            >
+              PATCH: {version}
+            </MUI.Typography>
+          </MUI.Box>
 
           {/* Main Controls */}
           <MUI.Stack
@@ -205,9 +212,10 @@ const PatchDiscussion = () => {
             </MUI.Box>
 
             <NeoButton
+              size="small"
               onClick={() => setShowFilters(!showFilters)}
-              color="#B2FF59"
-              sx={{ height: '45px', minWidth: '120px' }}
+              color={theme.palette.button.redSide_hover}
+              sx={{ height: '45px', minWidth: '120px', fontSize: '0.875rem' }}
             >
               <FilterListIcon sx={{ mr: 1 }} /> FILTERS
             </NeoButton>
@@ -215,29 +223,17 @@ const PatchDiscussion = () => {
             <MUI.Tooltip title={!user ? 'Please sign in to create a post' : ''}>
               <span>
                 <NeoButton
+                  size="small"
                   onClick={handleCreatePost}
                   disabled={!user}
-                  color="#FFEB3B"
-                  sx={{ height: '45px', minWidth: '140px' }}
+                  color={theme.palette.button.blueSide_hover}
+                  sx={{ height: '45px', minWidth: '140px', fontSize: '0.875rem' }}
                 >
                   <AddIcon sx={{ mr: 1 }} /> NEW POST
                 </NeoButton>
               </span>
             </MUI.Tooltip>
           </MUI.Stack>
-
-          {/* Sort Options */}
-          <MUI.Box display="flex" justifyContent="center" gap={1} mb={2}>
-            {SORT_OPTIONS.map((option) => (
-              <FilterChip
-                key={option.value}
-                label={option.label}
-                active={sortBy === option.value}
-                onClick={() => setSortBy(option.value)}
-                color="#80D8FF"
-              />
-            ))}
-          </MUI.Box>
 
           {/* Filter Panel */}
           {showFilters && (
@@ -255,6 +251,7 @@ const PatchDiscussion = () => {
                 <MUI.Select
                   value={selectedChampion}
                   onChange={(e) => setSelectedChampion(e.target.value)}
+                  startAdornment={<SortIcon sx={{ mr: 1, color: 'black' }} />}
                   displayEmpty
                   sx={{
                     borderRadius: 0,
@@ -317,10 +314,19 @@ const PatchDiscussion = () => {
           </MUI.Box>
         ) : filteredPosts.length > 0 ? (
           <MUI.Box display="flex" flexDirection="column" gap={3}>
-            {filteredPosts.map((post) => (
-              <DiscussionCard 
-                key={post.id} 
-                post={post} 
+            <MUI.Box display="flex" justifyContent="flex-start">
+              <NeoSelect
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                options={SORT_OPTIONS}
+                width="240px" // Explicit width
+                startAdornment={<SortIcon sx={{ color: 'black' }} />}
+              />
+            </MUI.Box>
+            {filteredPosts.map((post) => (  
+              <DiscussionCard
+                key={post.id}
+                post={post}
                 onClick={() => handlePostClick(post.id)}
               />
             ))}
@@ -336,7 +342,7 @@ const PatchDiscussion = () => {
                 {searchQuery ? 'NO POSTS MATCH YOUR SEARCH' : 'NO POSTS YET'}
               </MUI.Typography>
               <MUI.Typography variant="caption" fontFamily="monospace">
-                {searchQuery 
+                {searchQuery
                   ? 'Try adjusting your search or filters'
                   : 'Be the first to start a discussion!'
                 }

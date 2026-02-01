@@ -1,5 +1,6 @@
 import React, { useState, memo } from 'react';
 import * as MUI from '@mui/material';
+import theme from '../../../../theme/theme';
 import { 
   Send as SendIcon,
   Close as CloseIcon
@@ -64,7 +65,7 @@ const InlineCommentForm = memo(({
       <MUI.Paper 
         elevation={0} 
         sx={{ 
-          bgcolor: 'white',
+          bgcolor: theme.palette.background.redSide_light,
           border: '2px solid black',
           p: 2,
           borderRadius: 0,
@@ -171,13 +172,19 @@ const InlineCommentForm = memo(({
                     height: "50px", // Let flexbox stretch it
                     borderRadius: "50%",
                     border: '2px solid black',
-                    bgcolor: hasText && !isOverLimit && !isSubmitting ? '#FF4081' : '#e0e0e0',
-                    color: hasText && !isOverLimit && !isSubmitting ? 'white' : '#9e9e9e',
+                    bgcolor: hasText && !isOverLimit && !isSubmitting ? theme.palette.button.blueSide : '#ffffff',
+                    color: hasText && !isOverLimit && !isSubmitting ? 'white' : 'black',
                     boxShadow: hasText && !isOverLimit && !isSubmitting ? '4px 4px 0px black' : 'none',
                     '&:hover': {
-                    bgcolor: hasText && !isOverLimit && !isSubmitting ? '#F50057' : '#e0e0e0',
+                    bgcolor: hasText && !isOverLimit && !isSubmitting ? theme.palette.button.blueSide_hover : '#e0e0e0',
                     transform: hasText && !isOverLimit && !isSubmitting ? 'translate(-2px, -2px)' : 'none',
                     boxShadow: hasText && !isOverLimit && !isSubmitting ? '6px 6px 0px black' : 'none',
+                    },
+                    '&.Mui-disabled': {
+                      bgcolor: '#ffffff',
+                      // color: 'black',
+                      border: '2px solid black',
+                      boxShadow: 'none',
                     },
                     '&:active': {
                     transform: 'translate(0, 0)',

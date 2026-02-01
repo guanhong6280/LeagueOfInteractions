@@ -8,6 +8,7 @@ import {
 import useSkinRatingData from '../../hooks/useSkinRatingData';
 import NeoRatingCard from '../common/NeoRatingCard';
 import NeoStatsCard from '../common/NeoStatsCard';
+import theme from '../../../../theme/theme';
 
 const SkinRatingSection = ({ currentSkinId, skinStats }) => {
   const {
@@ -88,7 +89,6 @@ const SkinRatingSection = ({ currentSkinId, skinStats }) => {
                     <NeoStatsCard
                       title="COMMUNITY RATINGS"
                       sections={statsSections}
-                      color="#E0F7FA"
                     />
                   </Grid>
 
@@ -101,7 +101,6 @@ const SkinRatingSection = ({ currentSkinId, skinStats }) => {
                         onChange={handleRatingChange}
                         onSubmit={handleRatingSubmit}
                         submitLabel={isSubmitting ? "SUBMITTING..." : (userRating ? "UPDATE RATING" : "SUBMIT RATING")}
-                        color="#FFCCBC"
                         badgeText="YOUR TURN"
                     />
                   </Grid>

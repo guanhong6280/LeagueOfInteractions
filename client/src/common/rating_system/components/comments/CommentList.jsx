@@ -23,7 +23,8 @@ const CommentList = memo(({
   onClearError,
   enableFloatingForm = true,
   onDeleteComment,
-  onDeleteReply
+  onDeleteReply,
+  height = "500px"
 }) => {
   const [sortBy, setSortBy] = useState('newest'); // newest, oldest, mostLiked
   const [isFormFloating, setIsFormFloating] = useState(false);
@@ -35,7 +36,7 @@ const CommentList = memo(({
     const handleKeyDown = (event) => {
       // Toggle floating form on 'f' key press, but ignore if typing in an input or textarea
       if (
-        (event.key === 'f' || event.key === 'F') && 
+        (event.key === 'f' || event.key === 'F') &&
         !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)
       ) {
         setIsFormFloating(prev => !prev);
@@ -66,7 +67,7 @@ const CommentList = memo(({
   // Find the comment being replied to (if any)
   const replyToComment = React.useMemo(() => {
     if (!replyingTo) return null;
-    
+
     // Search through all comments and their replies
     for (const comment of comments) {
       if (comment.id === replyingTo) {
@@ -85,68 +86,68 @@ const CommentList = memo(({
 
   return (
     <>
-      <MUI.Box marginX="10px">
+      <MUI.Box px={1.5}>
         <CommentListHeader sortBy={sortBy} setSortBy={setSortBy} onRefreshComments={onRefreshComments} isRefreshing={isRefreshing} />
-        <MUI.Box 
-          height="550px" 
-          overflow="auto"
-          // sx={{
-          //   // Add padding to prevent clipping of shadows and hover effects
-          //   p: 1.5,
-          // }}
-        >
-          {isLoading ? (
-            <MUI.Box display="flex" height="100%" justifyContent="center" alignItems="center">
-              <MUI.CircularProgress size={40} />
-              <MUI.Typography variant="body1" sx={{ ml: 2 }}>
-                Loading comments...
-              </MUI.Typography>
-            </MUI.Box>
-          ) : (
-            <CommentItems
-              comments={sortedComments}
-              onToggleLike={onToggleLike}
-              onStartReply={onStartReply}
-              onCancelReply={onCancelReply}
-              onSubmitReply={onSubmitReply}
-              onToggleReplies={onToggleReplies}
-              replyingTo={replyingTo}
-              expandedReplies={expandedReplies}
-              isSubmittingReply={isSubmittingReply}
-              loadingReplies={loadingReplies}
-              onDeleteComment={onDeleteComment}
-              onDeleteReply={onDeleteReply}
-            />
-          )}
-        </MUI.Box>
-        {/* Load More Button (for future pagination) */}
-        {!isLoading && sortedComments.length >= 10 && (
-          <MUI.Box display="flex" justifyContent="center" mt={4}>
-            <MUI.Button
-              variant="outlined"
-              size="large"
-              sx={{ textTransform: 'none', px: 4, py: 1.5 }}
-            >
-              Load More Comments
-            </MUI.Button>
+      </MUI.Box>
+      <MUI.Box
+        height={height}
+        overflow="auto"
+        sx={{
+          // Add padding to prevent clipping of shadows and hover effects
+          p: 1.5,
+        }}
+      >
+        {isLoading ? (
+          <MUI.Box display="flex" height="100%" justifyContent="center" alignItems="center">
+            <MUI.CircularProgress size={40} />
+            <MUI.Typography variant="body1" sx={{ ml: 2 }}>
+              Loading comments...
+            </MUI.Typography>
           </MUI.Box>
+        ) : (
+          <CommentItems
+            comments={sortedComments}
+            onToggleLike={onToggleLike}
+            onStartReply={onStartReply}
+            onCancelReply={onCancelReply}
+            onSubmitReply={onSubmitReply}
+            onToggleReplies={onToggleReplies}
+            replyingTo={replyingTo}
+            expandedReplies={expandedReplies}
+            isSubmittingReply={isSubmittingReply}
+            loadingReplies={loadingReplies}
+            onDeleteComment={onDeleteComment}
+            onDeleteReply={onDeleteReply}
+          />
         )}
-        {/* Inline Comment Form - Original Position */}
-        <MUI.Box ref={formPlaceholderRef} sx={{ mt: 4 }}>
-          {!isFormFloating && (
-            <InlineCommentForm
-              onSubmit={replyingTo ? onSubmitReply : onSubmitComment}
-              isSubmitting={isSubmittingReply}
-              error={error}
-              onClearError={onClearError}
-              isReplyMode={!!replyingTo}
-              replyToUsername={replyToUsername}
-              parentCommentId={replyingTo}
-              onCancel={onCancelReply}
-              characterLimit={replyingTo ? 500 : 1000}
-            />
-          )}
+      </MUI.Box>
+      {/* Load More Button (for future pagination) */}
+      {!isLoading && sortedComments.length >= 10 && (
+        <MUI.Box display="flex" justifyContent="center" mt={4}>
+          <MUI.Button
+            variant="outlined"
+            size="large"
+            sx={{ textTransform: 'none', px: 4, py: 1.5 }}
+          >
+            Load More Comments
+          </MUI.Button>
         </MUI.Box>
+      )}
+      {/* Inline Comment Form - Original Position */}
+      <MUI.Box ref={formPlaceholderRef} sx={{ mt: 4 }}>
+        {!isFormFloating && (
+          <InlineCommentForm
+            onSubmit={replyingTo ? onSubmitReply : onSubmitComment}
+            isSubmitting={isSubmittingReply}
+            error={error}
+            onClearError={onClearError}
+            isReplyMode={!!replyingTo}
+            replyToUsername={replyToUsername}
+            parentCommentId={replyingTo}
+            onCancel={onCancelReply}
+            characterLimit={replyingTo ? 500 : 1000}
+          />
+        )}
       </MUI.Box>
 
       {/* Floating Comment Form - Appears when toggled via 'F' key */}

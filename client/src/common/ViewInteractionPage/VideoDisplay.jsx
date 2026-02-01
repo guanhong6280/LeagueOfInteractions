@@ -13,18 +13,19 @@ import { useVideoActions } from '../../hooks/useVideoActions'; // ✅ New Hook
 import { redirectToGoogleAuth } from '../../api/authApi';
 import SignInDialog from "../../common/navigation/SignInDialog.jsx";
 import { formatDateShort } from '../../utils/dateUtils';
+import theme from '../../theme/theme';
 
 const VideoPlayer = ({ videoData, autoplay = false, isLoading, selectionsComplete, currentSelections }) => {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
-  
+
   // Logic Hooks
   const { incrementView, toggleLike } = useVideoActions();
-  
+
   // Local UI State
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
-  
+
   // Use a ref to track if we've counted a view for the *current* video ID
   const viewTriggeredRef = useRef(null);
 
@@ -35,28 +36,28 @@ const VideoPlayer = ({ videoData, autoplay = false, isLoading, selectionsComplet
 
     // If we switched videos, reset the trigger ref for the new ID
     if (viewTriggeredRef.current !== videoData._id) {
-       // Check session storage immediately to sync state
-       const sessionKey = `viewed_${videoData._id}`;
-       if (sessionStorage.getItem(sessionKey)) {
-         viewTriggeredRef.current = videoData._id; // Already viewed
-         return;
-       }
+      // Check session storage immediately to sync state
+      const sessionKey = `viewed_${videoData._id}`;
+      if (sessionStorage.getItem(sessionKey)) {
+        viewTriggeredRef.current = videoData._id; // Already viewed
+        return;
+      }
     } else {
-       // We have already triggered a view for this specific video ID in this component lifecycle
-       return;
+      // We have already triggered a view for this specific video ID in this component lifecycle
+      return;
     }
 
     const currentTime = event.target.currentTime;
     // 5-second threshold for a "view"
     if (currentTime > 5) {
       const sessionKey = `viewed_${videoData._id}`;
-      
+
       // Double check storage (redundancy for tab switches)
       if (!sessionStorage.getItem(sessionKey)) {
         // Mark as viewed locally
         sessionStorage.setItem(sessionKey, 'true');
         viewTriggeredRef.current = videoData._id;
-        
+
         // Fire mutation
         incrementView(videoData._id);
       }
@@ -82,7 +83,7 @@ const VideoPlayer = ({ videoData, autoplay = false, isLoading, selectionsComplet
   };
 
   // --- 4. Render Logic ---
-  
+
   // A. Loading State
   if (isLoading) {
     return (
@@ -103,14 +104,28 @@ const VideoPlayer = ({ videoData, autoplay = false, isLoading, selectionsComplet
           <Box
             sx={{
               border: '3px solid #000000',
-              // backgroundColor: '#ccffe1',
+              backgroundColor: 'white',
               padding: '8px 10px',
               marginBottom: '15px',
               boxShadow: '4px 4px 0px #000000',
               alignSelf: 'center',
             }}
           >
-            <Typography variant="h6" sx={{ fontWeight: 900, letterSpacing: 1, textAlign: 'center', textTransform: 'uppercase', color: 'black' }}>
+            <Typography
+              variant="h6"
+              fontWeight="900"
+              letterSpacing={1}
+              textAlign="center"
+              textTransform="uppercase"
+              color="black"
+              sx={{
+                fontWeight: 900,
+                letterSpacing: 1,
+                textAlign: 'center',
+                textTransform: 'uppercase',
+                color: 'black',
+                backgroundColor: "white",
+              }}>
               {videoData.title}
             </Typography>
           </Box>
@@ -152,8 +167,8 @@ const VideoPlayer = ({ videoData, autoplay = false, isLoading, selectionsComplet
               gap: 2,
             }}
           >
-             {/* Contributor */}
-             {videoData.contributor && (
+            {/* Contributor */}
+            {videoData.contributor && (
               <Stack spacing={0}>
                 <Typography variant="caption" sx={{ fontWeight: 'bold', textTransform: 'uppercase', lineHeight: 1 }}>
                   Contributed by
@@ -187,9 +202,9 @@ const VideoPlayer = ({ videoData, autoplay = false, isLoading, selectionsComplet
               />
             </Stack>
           </Box>
-          
-           {/* Description Box */}
-           <Box
+
+          {/* Description Box */}
+          <Box
             display="flex"
             backgroundColor="yellow"
             flex="1"
@@ -206,7 +221,7 @@ const VideoPlayer = ({ videoData, autoplay = false, isLoading, selectionsComplet
             </Typography>
           </Box>
         </Box>
-        
+
         <SignInDialog
           dialogOpen={loginDialogOpen}
           onClose={() => setLoginDialogOpen(false)}
@@ -264,11 +279,10 @@ const StyledCard = ({ children }) => (
       paddingY: '20px',
       paddingX: '10px',
       borderRadius: '0px',
-      boxShadow: '8px 8px 0px #000000',
+      boxShadow: '4px 4px 0px #000000',
       border: '3px solid #000000',
-      backgroundColor: '#e6fff0',
+      backgroundColor: theme.palette.background.neutralSide_light,
       transition: 'all 0.2s ease-in-out',
-      '&:hover': { transform: 'translate(-2px, -2px)', boxShadow: '10px 10px 0px #000000' },
     }}
   >
     {children}
@@ -303,19 +317,18 @@ const chipStyles = (clickable) => ({
 });
 
 const buttonStyles = {
-  backgroundColor: '#000',
-  color: '#fff',
+  backgroundColor: theme.palette.button.neutralSide,
+  color: 'black',
   fontWeight: 900,
   fontSize: '1.2rem',
   borderRadius: '0px',
   border: '2px solid #000',
-  boxShadow: '4px 4px 0px #000',
+  boxShadow: '2px 2px 0px #000',
   padding: '10px 30px',
   textTransform: 'uppercase',
   '&:hover': {
-    backgroundColor: '#fff',
-    color: '#000',
-    boxShadow: '6px 6px 0px #000',
+    boxShadow: '4px 4px 0px #000',
+    backgroundColor: theme.palette.button.neutralSide_hover,
     // transform: 'translate(-2px, -2px)',
   },
   '&:active': {

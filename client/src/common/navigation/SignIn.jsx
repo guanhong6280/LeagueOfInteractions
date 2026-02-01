@@ -129,6 +129,7 @@ const SignIn = () => {
               MenuListProps={{
                 onMouseEnter: handleMouseEnter,
                 onMouseLeave: handleMouseLeave,
+                disablePadding: true,
               }}
               anchorOrigin={{
                 vertical: 'bottom',
@@ -149,7 +150,7 @@ const SignIn = () => {
                 '& .MuiMenuItem-root': {
                   fontWeight: 'bold',
                   textTransform: 'uppercase',
-                  borderBottom: '1px solid #eee',
+                  // borderBottom: '3px dashed black',
                   '&:hover': {
                     backgroundColor: '#FFDE00',
                     color: 'black',
@@ -161,7 +162,6 @@ const SignIn = () => {
                 padding="15px"
                 alignItems="center"
                 borderBottom="3px solid black"
-                bgcolor="#f0f0f0"
               >
                 <MUI.Typography variant="subtitle1" sx={{ fontWeight: 900, textTransform: 'uppercase' }}>
                   {user.username}
@@ -187,7 +187,6 @@ const SignIn = () => {
                   Donate
                 </MUI.MenuItem>
               )}
-              <MUI.Divider sx={{ borderBottomWidth: '3px', borderColor: 'black' }} />
               <MUI.MenuItem onClick={() => logout()} sx={{ color: 'red' }}>
                 LOGOUT
               </MUI.MenuItem>

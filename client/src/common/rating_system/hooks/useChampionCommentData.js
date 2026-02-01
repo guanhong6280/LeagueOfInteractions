@@ -6,6 +6,8 @@ import {
   submitChampionComment,
   likeChampionComment,
   unlikeChampionComment,
+  likeChampionReply,
+  unlikeChampionReply,
   addChampionReply,
   getChampionRepliesForComment,
   deleteChampionComment,
@@ -205,26 +207,50 @@ const useChampionCommentData = (championId) => {
   }, [user, submitCommentMutation, info]);
   // 2. Like/Unlike Mutation (Logic remains same, checking likedBy array)
   const toggleCommentLikeMutation = useMutation({
-    mutationFn: ({ commentId, isCurrentlyLiked }) =>
-      isCurrentlyLiked
+    mutationFn: ({ commentId, isCurrentlyLiked, parentCommentId }) => {
+      if (parentCommentId) {
+        return isCurrentlyLiked
+          ? unlikeChampionReply(championId, parentCommentId, commentId)
+          : likeChampionReply(championId, parentCommentId, commentId);
+      }
+      return isCurrentlyLiked
         ? unlikeChampionComment(championId, commentId)
-        : likeChampionComment(championId, commentId),
+        : likeChampionComment(championId, commentId);
+    },
 
-    onMutate: async ({ commentId, isCurrentlyLiked }) => {
+    onMutate: async ({ commentId, isCurrentlyLiked, parentCommentId }) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.comments(championId) });
       const previousComments = queryClient.getQueryData(queryKeys.comments(championId));
 
       queryClient.setQueryData(queryKeys.comments(championId), (oldData = []) =>
-        oldData.map(comment =>
-          (comment.id === commentId)
-            ? {
+        oldData.map(comment => {
+          // Case 1: Liking a Reply
+          if (parentCommentId && comment.id === parentCommentId) {
+            return {
+              ...comment,
+              replies: comment.replies.map(reply =>
+                reply.id === commentId
+                  ? {
+                    ...reply,
+                    likedBy: isCurrentlyLiked
+                      ? reply.likedBy.filter(id => id !== user.id)
+                      : [...(reply.likedBy || []), user.id]
+                  }
+                  : reply
+              )
+            };
+          }
+          // Case 2: Liking a Comment
+          else if (!parentCommentId && comment.id === commentId) {
+            return {
               ...comment,
               likedBy: isCurrentlyLiked
                 ? comment.likedBy.filter(id => id !== user.id)
                 : [...(comment.likedBy || []), user.id]
-            }
-            : comment
-        )
+            };
+          }
+          return comment;
+        })
       );
       return { previousComments };
     },
@@ -233,13 +259,13 @@ const useChampionCommentData = (championId) => {
     }
   });
 
-  const toggleCommentLike = useCallback(async (commentId, isCurrentlyLiked) => {
+  const toggleCommentLike = useCallback(async (commentId, isCurrentlyLiked, parentCommentId = null) => {
     if (!user) return;
     if (likeDebounceMap.current.has(commentId)) clearTimeout(likeDebounceMap.current.get(commentId));
 
     const timeoutId = setTimeout(async () => {
       try {
-        await toggleCommentLikeMutation.mutateAsync({ commentId, isCurrentlyLiked });
+        await toggleCommentLikeMutation.mutateAsync({ commentId, isCurrentlyLiked, parentCommentId });
       } catch (err) {
         console.error('Failed to toggle like:', err);
       } finally {

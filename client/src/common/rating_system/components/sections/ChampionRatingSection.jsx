@@ -74,7 +74,6 @@ const ChampionRatingSection = ({ championId, championStats }) => {
           <NeoStatsCard
             title="COMMUNITY RATINGS"
             sections={statsSections}
-            color="#E0F7FA"
           />
         </Grid>
 
@@ -87,7 +86,6 @@ const ChampionRatingSection = ({ championId, championStats }) => {
             onChange={updateRatingValue}
             onSubmit={submitRating}
             submitLabel={isSubmitting ? 'SUBMITTING...' : (hasExistingRating ? 'UPDATE RATING' : 'SUBMIT RATING')}
-            color="#FFCCBC"
             badgeText="YOUR TURN"
           />
         </Grid>

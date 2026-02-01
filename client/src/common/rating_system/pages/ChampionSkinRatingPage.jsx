@@ -136,7 +136,7 @@ const ChampionSkinRatingPage = () => {
           </MUI.Box>
         ) : (
           <MUI.Box id="comment-section">
-            <NeoCard bgcolor="#E1BEE7">
+            <NeoCard>
               <SkinCommentSection
                 currentSkinId={currentSkin?.skinId}
               />

@@ -2,10 +2,81 @@ import React, { memo, useState } from 'react';
 import * as MUI from '@mui/material';
 import {
   Error as ErrorIcon,
-  Refresh as RefreshIcon
+  Refresh as RefreshIcon,
+  KeyboardArrowDown as KeyboardArrowDownIcon
 } from '@mui/icons-material';
 
 // --- Neo-Brutalist Design Components ---
+
+export const NeoSelect = ({ value, onChange, options, minWidth = 150, width, startAdornment = null }) => (
+  <MUI.Select 
+    value={value}
+    onChange={onChange}
+    IconComponent={KeyboardArrowDownIcon}
+    displayEmpty
+    startAdornment={startAdornment}
+    sx={{
+      minWidth: minWidth,
+      width: width, // Allow explicit width override
+      height: 40,
+      bgcolor: 'white',
+      borderRadius: 0,
+      border: '2px solid black',
+      boxShadow: '4px 4px 0px black',
+      fontWeight: 'bold',
+      fontSize: '0.875rem',
+      '& .MuiSelect-select': {
+        py: 1,
+        px: 2,
+        display: 'flex',
+        alignItems: 'center',
+      },
+      '& .MuiSvgIcon-root': {
+        color: 'black',
+        // right: 12,
+      },
+      '& fieldset': { border: 'none' },
+      '&:hover': {
+        bgcolor: '#f0f0f0',
+        boxShadow: '5px 5px 0px black',
+        transform: 'translate(-1px, -1px)',
+      },
+      transition: 'all 0.1s',
+    }}
+    MenuProps={{
+      MenuListProps: {
+        disablePadding: true,
+      },
+      PaperProps: {
+        sx: {
+          border: '2px solid black',
+          borderRadius: 0,
+          boxShadow: '4px 4px 0px black',
+          mt: 1,
+          '& .MuiMenuItem-root': {
+            fontWeight: 'bold',
+            fontSize: '0.875rem',
+            '&:hover': {
+              bgcolor: '#f0f0f0',
+            },
+            '&.Mui-selected': {
+              bgcolor: '#80D8FF',
+              '&:hover': {
+                bgcolor: '#40C4FF',
+              },
+            },
+          },
+        },
+      },
+    }}
+  >
+    {options.map((opt) => (
+      <MUI.MenuItem key={opt.value} value={opt.value}>
+        {opt.label}
+      </MUI.MenuItem>
+    ))}
+  </MUI.Select>
+);
 
 export const NeoCard = ({ children, sx = {}, bgcolor = 'white', ...props }) => (
   <MUI.Box
@@ -55,7 +126,7 @@ export const NeoButton = ({
         minWidth: isSmall ? 'auto' : undefined,
         px: isSmall ? 1.5 : 2, // Default MUI padding is roughly 2 (16px) or 6px 16px
         py: isSmall ? 0.5 : 1, // Default MUI padding
-        fontSize: isSmall ? '0.7rem' : '0.875rem',
+        fontSize:  isSmall ? '0.70rem' : '0.875rem',
         boxShadow: isSmall ? '2px 2px 0px #000' : '4px 4px 0px #000',
         
         transition: 'all 0.1s ease',
@@ -132,6 +203,32 @@ export const NeoBadge = ({ label, color = '#A5D6A7' }) => (
     }}
   >
     {label}
+  </MUI.Box>
+);
+
+export const NeoSectionTitle = ({ children, bgcolor = 'white', sx = {}, ...props }) => (
+  <MUI.Box
+    sx={{
+      display: 'inline-block',
+      border: '2px solid black',
+      boxShadow: '2px 2px 0px black',
+      bgcolor: bgcolor,
+      px: 2,
+      py: 1,
+      mb: 3,
+      ...sx
+    }}
+  >
+    <MUI.Typography
+      variant="h6"
+      fontWeight="900"
+      sx={{
+        textTransform: 'uppercase',
+      }}
+      {...props}
+    >
+      {children}
+    </MUI.Typography>
   </MUI.Box>
 );
 
@@ -325,4 +422,3 @@ export const ChampionImage = memo(({
     </MUI.Box>
   );
 });
-

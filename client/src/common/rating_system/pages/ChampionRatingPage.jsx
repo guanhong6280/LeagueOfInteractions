@@ -48,7 +48,6 @@ const ChampionRatingPage = () => {
           sx={{
             maxWidth: 1200,
             mx: 'auto',
-            bgcolor: '#FFF9C4', // Neo-brutalist base color
             border: '3px solid #000',
             boxShadow: '8px 8px 0px #000',
             p: 3,
@@ -202,7 +201,7 @@ const ChampionRatingPage = () => {
 
       {/* --- BOTTOM: COMMENTS --- */}
       <MUI.Box mt={6}>
-        <NeoCard bgcolor="#E1BEE7">
+        <NeoCard>
           <ChampionCommentSection championId={id} />
         </NeoCard>
       </MUI.Box>

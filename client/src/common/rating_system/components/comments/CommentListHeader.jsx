@@ -1,5 +1,6 @@
 import React from 'react';
 import * as MUI from '@mui/material';
+import theme from '../../../../theme/theme';
 import { Sort as SortIcon, Refresh as RefreshIcon } from '@mui/icons-material';
 
 const CommentListHeader = ({ sortBy, setSortBy, onRefreshComments, isRefreshing = false }) => (
@@ -49,10 +50,10 @@ const CommentListHeader = ({ sortBy, setSortBy, onRefreshComments, isRefreshing 
             borderRadius: 0,
             border: '2px solid black',
             boxShadow: '4px 4px 0px black',
-            bgcolor: 'white',
+            bgcolor: theme.palette.button.expand_button,
             '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
             '&:hover': {
-               bgcolor: '#f0f0f0',
+               bgcolor: theme.palette.button.expand_button_hover,
             }
           }}
           MenuProps={{
@@ -66,8 +67,8 @@ const CommentListHeader = ({ sortBy, setSortBy, onRefreshComments, isRefreshing 
             }
           }}
         >
-          <MUI.MenuItem value="newest" sx={{ fontWeight: 'bold' }}>Newest First</MUI.MenuItem>
-          <MUI.MenuItem value="oldest" sx={{ fontWeight: 'bold' }}>Oldest First</MUI.MenuItem>
+          <MUI.MenuItem value="newest" sx={{ fontWeight: 'bold' }}>Latest</MUI.MenuItem>
+          <MUI.MenuItem value="oldest" sx={{ fontWeight: 'bold' }}>Oldest</MUI.MenuItem>
           <MUI.MenuItem value="mostLiked" sx={{ fontWeight: 'bold' }}>Most Liked</MUI.MenuItem>
         </MUI.Select>
       </MUI.FormControl>

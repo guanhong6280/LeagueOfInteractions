@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import * as MUI from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  ThumbUp as ThumbUpIcon,
-  ThumbUpOutlined as ThumbUpOutlinedIcon,
   ChatBubble as ChatBubbleIcon,
   Person as PersonIcon,
   Edit as EditIcon,
@@ -12,10 +10,12 @@ import {
 import { NeoCard, NeoButton, NeoBadge } from '../common/rating_system/components/design/NeoComponents';
 import DeleteConfirmationDialog from '../common/rating_system/components/design/DeleteConfirmationDialog';
 import ReturnButton from '../common/rating_system/components/common/ReturnButton';
+import LikeButton from '../common/button/LikeButton';
 import { CommentList } from '../common/rating_system/components/comments';
 import usePostData, { usePostById } from '../hooks/usePostData';
 import usePostCommentData from '../hooks/usePostCommentData';
 import { formatRelativeDateUpper } from '../utils/dateUtils';
+import theme from '../theme/theme';
 
 const PatchDiscussionDetail = () => {
   const { postId } = useParams();
@@ -217,10 +217,10 @@ const PatchDiscussionDetail = () => {
           {(post.selectedChampion || post.selectedGameMode) && (
             <MUI.Box mb={2} display="flex" flexWrap="wrap" gap={1}>
               {post.selectedChampion && (
-                <NeoBadge label={post.selectedChampion} color="#A5D6A7" />
+                <NeoBadge label={post.selectedChampion} color={theme.palette.button.redSide} />
               )}
               {post.selectedGameMode && (
-                <NeoBadge label={post.selectedGameMode} color="#80D8FF" />
+                <NeoBadge label={post.selectedGameMode} color={theme.palette.button.blueSide} />
               )}
             </MUI.Box>
           )}
@@ -241,7 +241,7 @@ const PatchDiscussionDetail = () => {
           <MUI.Box sx={{ height: '2px', bgcolor: 'black', mb: 2 }} />
 
           {/* Author and Stats */}
-          <MUI.Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <MUI.Box display="flex" justifyContent="space-between" alignItems="center">
             {/* Author */}
             <MUI.Box display="flex" alignItems="center" gap={1.5}>
               {post.user?.profilePictureURL ? (
@@ -275,28 +275,17 @@ const PatchDiscussionDetail = () => {
                 <MUI.Typography variant="body1" fontWeight="900">
                   {post.user?.username || 'Anonymous'}
                 </MUI.Typography>
-                {post.user?.rank && (
-                  <MUI.Typography
-                    variant="caption"
-                    sx={{ fontFamily: 'monospace', color: 'text.secondary' }}
-                  >
-                    {post.user.rank}
-                  </MUI.Typography>
-                )}
               </MUI.Box>
             </MUI.Box>
 
             {/* Stats Group */}
             <MUI.Box display="flex" gap={1}>
               {/* Like Button */}
-              <NeoButton
-                size="small"
+              <LikeButton
+                isLiked={isLiked}
+                likeCount={post.likeCount || 0}
                 onClick={() => togglePostLike(post.id, isLiked)}
-                color={isLiked ? '#90CAF9' : '#ffffff'}
-                startIcon={isLiked ? <ThumbUpIcon /> : <ThumbUpOutlinedIcon />}
-              >
-                {post.likeCount || 0}
-              </NeoButton>
+              />
 
               {/* Comment Count */}
               <NeoButton
@@ -336,6 +325,7 @@ const PatchDiscussionDetail = () => {
             enableFloatingForm={true}
             onDeleteComment={deleteComment}
             onDeleteReply={deleteReply}
+            height="450px"
           />
         </NeoCard>
 

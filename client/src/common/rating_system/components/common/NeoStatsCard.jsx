@@ -1,17 +1,18 @@
 import React from 'react';
 import * as MUI from '@mui/material';
-import { NeoCard, StatBar } from '../design/NeoComponents';
+import { NeoCard, StatBar, NeoSectionTitle } from '../design/NeoComponents';
+import theme from '../../../../theme/theme';
 
 const NeoStatsCard = ({
   title = "PLAYER RATINGS",
   sections = [],
-  color = "#E0F7FA"
+  color = "#ffffff"
 }) => {
   return (
     <NeoCard bgcolor={color} sx={{ width: '100%' }}>
-      <MUI.Typography variant="h5" fontWeight="900" mb={3} sx={{ textDecoration: 'underline', textDecorationThickness: 3 }}>
+      <NeoSectionTitle bgcolor={theme.palette.button.redSide}>
         {title}
-      </MUI.Typography>
+      </NeoSectionTitle>
 
       {sections.map((section, index) => (
         <React.Fragment key={index}>

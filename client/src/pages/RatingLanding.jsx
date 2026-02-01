@@ -6,334 +6,350 @@ import ChampionPreviewCard from '../common/rating_system/components/cards/Champi
 import CircularProgress from '@mui/material/CircularProgress';
 import { useVersion } from '../contextProvider/VersionProvider';
 import { NeoCard, NeoButton, FilterChip } from '../common/rating_system/components/design/NeoComponents';
-
+import theme from '../theme/theme';
 // --- Sub-Components for Performance ---
 
 const VersionTag = React.memo(({ count }) => (
-    <MUI.Typography
-        variant="body1"
-        sx={{
-            fontFamily: 'monospace',
-            fontWeight: 'bold',
-            mb: 3,
-            bgcolor: 'white',
-            display: 'inline-block',
-            px: 2,
-            py: 0.5,
-            border: '2px solid black'
-        }}
-    >
-        Patch: v{count}
-    </MUI.Typography>
+  <MUI.Typography
+    variant="body1"
+    sx={{
+      fontFamily: 'monospace',
+      fontWeight: 'bold',
+      bgcolor: 'white',
+      display: 'inline-block',
+      px: 2,
+      py: 0.5,
+      border: '2px solid black'
+    }}
+  >
+    Patch: v{count}
+  </MUI.Typography>
 ));
 
 const ChampionGrid = React.memo(({ championNames, stats, loading, onReset }) => {
-    if (loading) {
-        return (
-            <MUI.Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-                <MUI.CircularProgress size={60} sx={{ color: 'black' }} />
-            </MUI.Box>
-        );
-    }
-
-    if (!championNames || championNames.length === 0) {
-        return (
-            <MUI.Box display="flex" justifyContent="center" minHeight="400px">
-                <NeoCard sx={{ bgcolor: '#FF9A8B' }}>
-                    <MUI.Typography variant="h5" fontWeight="bold">
-                        NO CHAMPIONS FOUND.
-                    </MUI.Typography>
-                    <MUI.Typography fontFamily="monospace">
-                        SYSTEM RETURNED 0 RESULTS FOR QUERY.
-                    </MUI.Typography>
-                    <MUI.Button onClick={onReset}>
-                        RESET FILTERS
-                    </MUI.Button>
-                </NeoCard>
-            </MUI.Box>
-        );
-    }
-
+  if (loading) {
     return (
-        <MUI.Box
-            maxWidth="1200px"
-            mx="auto"
-            px={2}
-        >
-            <MUI.Box
-                display="grid"
-                gridTemplateColumns={{
-                    xs: '1fr',
-                    sm: 'repeat(2, 1fr)',
-                    md: 'repeat(3, 1fr)',
-                    lg: 'repeat(4, 1fr)',
-                    xl: 'repeat(5, 1fr)'
-                }}
-                gap={3}
-                width="100%"
-            >
-                {championNames.map((championName) => (
-                    <MUI.Box
-                        key={stats[championName].id}
-                        display="flex"
-                        justifyContent="center"
-                        width="100%"
-                    >
-                        <ChampionPreviewCard
-                            championName={championName}
-                            stats={stats[championName]}
-                        />
-                    </MUI.Box>
-                ))}
-            </MUI.Box>
-        </MUI.Box>
+      <MUI.Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <MUI.CircularProgress size={60} sx={{ color: 'black' }} />
+      </MUI.Box>
     );
+  }
+
+  if (!championNames || championNames.length === 0) {
+    return (
+      <MUI.Box display="flex" justifyContent="center" minHeight="400px">
+        <NeoCard sx={{ bgcolor: '#FF9A8B' }}>
+          <MUI.Typography variant="h5" fontWeight="bold">
+            NO CHAMPIONS FOUND.
+          </MUI.Typography>
+          <MUI.Typography fontFamily="monospace">
+            SYSTEM RETURNED 0 RESULTS FOR QUERY.
+          </MUI.Typography>
+          <MUI.Button onClick={onReset}>
+            RESET FILTERS
+          </MUI.Button>
+        </NeoCard>
+      </MUI.Box>
+    );
+  }
+
+  return (
+    <MUI.Box
+      maxWidth="1200px"
+      mx="auto"
+      px={2}
+    >
+      <MUI.Box
+        display="grid"
+        gridTemplateColumns={{
+          xs: '1fr',
+          sm: 'repeat(2, 1fr)',
+          md: 'repeat(3, 1fr)',
+          lg: 'repeat(4, 1fr)',
+          xl: 'repeat(5, 1fr)'
+        }}
+        gap={3}
+        width="100%"
+      >
+        {championNames.map((championName) => (
+          <MUI.Box
+            key={stats[championName].id}
+            display="flex"
+            justifyContent="center"
+            width="100%"
+          >
+            <ChampionPreviewCard
+              championName={championName}
+              stats={stats[championName]}
+            />
+          </MUI.Box>
+        ))}
+      </MUI.Box>
+    </MUI.Box>
+  );
 });
 
 // --- Main Component ---
 
 const RatingLanding = () => {
-    const { stats, isLoading: statsLoading, refreshAllStats } = useChampionStats();
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedRole, setSelectedRole] = useState(null);
-    const [selectedDamage, setSelectedDamage] = useState(null);
-    const [showFilters, setShowFilters] = useState(false);
+  const { stats, isLoading: statsLoading, refreshAllStats } = useChampionStats();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [selectedDamage, setSelectedDamage] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
 
-    // Constants
-    const ROLES = ['fighter', 'tank', 'mage', 'assassin', 'support', 'marksman'];
-    const DAMAGE_TYPES = ['kPhysical', 'kMagic', 'kMixed'];
+  // Constants
+  const ROLES = ['fighter', 'tank', 'mage', 'assassin', 'support', 'marksman'];
+  const DAMAGE_TYPES = ['kPhysical', 'kMagic', 'kMixed'];
 
-    const formatDamageType = (type) => {
-        if (type === 'kPhysical') return 'PHYSICAL';
-        if (type === 'kMagic') return 'MAGIC';
-        if (type === 'kMixed') return 'MIXED';
-        return type;
-    };
+  const formatDamageType = (type) => {
+    if (type === 'kPhysical') return 'PHYSICAL';
+    if (type === 'kMagic') return 'MAGIC';
+    if (type === 'kMixed') return 'MIXED';
+    return type;
+  };
 
-    const { version } = useVersion();
+  const { version } = useVersion();
 
-    // Filter Logic
-    const filteredChampionNames = useMemo(() => {
-        if (!stats) return [];
-        let names = Object.keys(stats);
+  // Filter Logic
+  const filteredChampionNames = useMemo(() => {
+    if (!stats) return [];
+    let names = Object.keys(stats);
 
-        if (searchQuery) {
-            names = names.filter(name => name.toLowerCase().includes(searchQuery.toLowerCase()));
-        }
+    if (searchQuery) {
+      names = names.filter(name => name.toLowerCase().includes(searchQuery.toLowerCase()));
+    }
 
-        if (selectedRole) {
-            names = names.filter(name => stats[name]?.roles?.includes(selectedRole));
-        }
+    if (selectedRole) {
+      names = names.filter(name => stats[name]?.roles?.includes(selectedRole));
+    }
 
-        if (selectedDamage) {
-            names = names.filter(name => {
-                const champ = stats[name];
-                return champ?.damageType === selectedDamage || champ?.tacticalInfo?.damageType === selectedDamage;
-            });
-        }
+    if (selectedDamage) {
+      names = names.filter(name => {
+        const champ = stats[name];
+        return champ?.damageType === selectedDamage || champ?.tacticalInfo?.damageType === selectedDamage;
+      });
+    }
 
-        return names;
-    }, [stats, searchQuery, selectedRole, selectedDamage]);
+    return names;
+  }, [stats, searchQuery, selectedRole, selectedDamage]);
 
-    const handleReset = () => {
-        setSearchQuery('');
-        setSelectedRole(null);
-        setSelectedDamage(null);
-    };
+  const handleReset = () => {
+    setSearchQuery('');
+    setSelectedRole(null);
+    setSelectedDamage(null);
+  };
 
-    const scrollToTop = () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-    return (
-        <MUI.Box
-            component="main"
-            minHeight="100vh"
-            py={6}
-            px={{ xs: 2, sm: 3, md: 4 }}
-            bgcolor="#f0f0f0"
-        >
-            {/* Header Section */}
+  return (
+    <MUI.Box
+      component="main"
+      minHeight="100vh"
+      py={6}
+      px={{ xs: 2, sm: 3, md: 4 }}
+      bgcolor="#f0f0f0"
+    >
+      {/* Header Section */}
+      <MUI.Box
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        mb={8}
+      >
+        <NeoCard sx={{
+          maxWidth: '900px',
+          width: '100%',
+          textAlign: 'center',
+          bgcolor: '#FFEB3B',
+          position: 'relative',
+          overflow: 'visible'
+        }}>
+          {/* Decorative Bolts */}
+          {[0, 1, 2, 3].map((i) => (
             <MUI.Box
-                display="flex"
-                flexDirection="column"
-                alignItems="center"
-                mb={8}
-            >
-                <NeoCard sx={{
-                    maxWidth: '900px',
-                    width: '100%',
-                    textAlign: 'center',
-                    bgcolor: '#FFEB3B',
-                    position: 'relative',
-                    overflow: 'visible'
-                }}>
-                    {/* Decorative Bolts */}
-                    {[0, 1, 2, 3].map((i) => (
-                        <MUI.Box
-                            key={i}
-                            sx={{
-                                position: 'absolute',
-                                width: 12,
-                                height: 12,
-                                bgcolor: 'black',
-                                top: i < 2 ? 8 : 'auto',
-                                bottom: i >= 2 ? 8 : 'auto',
-                                left: i % 2 === 0 ? 8 : 'auto',
-                                right: i % 2 !== 0 ? 8 : 'auto',
-                            }}
-                        />
-                    ))}
-
-                    <MUI.Typography
-                        variant="h2"
-                        component="h1"
-                        sx={{
-                            fontWeight: 900,
-                            textTransform: 'uppercase',
-                            fontSize: { xs: '2rem', md: '3.5rem' },
-                            letterSpacing: '-0.02em',
-                            mb: 1,
-                            textShadow: '3px 3px 0px white'
-                        }}
-                    >
-                        Champion Rating
-                    </MUI.Typography>
-
-                    <VersionTag count={version} />
-
-                    {/* Main Controls */}
-                    <MUI.Stack 
-                        direction={{ xs: 'column', sm: 'row' }} 
-                        spacing={2} 
-                        justifyContent="center"
-                        alignItems="center"
-                        mb={2}
-                    >
-                        <MUI.Box sx={{ position: 'relative', width: { xs: '100%', sm: '400px' } }}>
-                            <MUI.TextField 
-                                fullWidth
-                                placeholder="SEARCH CHAMPION..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                InputProps={{
-                                    sx: {
-                                        borderRadius: 0,
-                                        bgcolor: 'white',
-                                        border: '2px solid black',
-                                        fontWeight: 'bold',
-                                        fontFamily: 'monospace',
-                                        '& fieldset': { border: 'none' },
-                                        height: '45px',
-                                        paddingRight: '40px'
-                                    }
-                                }}
-                            />
-                            <SearchIcon sx={{ position: 'absolute', right: 10, top: 10, color: 'black' }} />
-                        </MUI.Box>
-
-                        <NeoButton
-                            onClick={() => setShowFilters(!showFilters)}
-                            color="#B2FF59"
-                            sx={{ height: '45px', minWidth: '120px' }}
-                        >
-                            <FilterListIcon sx={{ mr: 1 }}/> FILTERS
-                        </NeoButton>
-
-                        <NeoButton
-                            onClick={() => refreshAllStats(Object.keys(stats || {}))}
-                            disabled={statsLoading}
-                            color="#00E5FF"
-                            sx={{ height: '45px', minWidth: '120px' }}
-                        >
-                            {statsLoading ? <CircularProgress size={20} sx={{ color: 'black' }} /> : <RefreshIcon sx={{ mr: 1 }}/> }
-                            {!statsLoading && 'REFRESH'}
-                        </NeoButton>
-                    </MUI.Stack>
-
-                    {/* Filter Panel */}
-                    {showFilters && (
-                        <MUI.Box
-                            mt={3}
-                            p={2}
-                            border="2px solid black"
-                            bgcolor="white"
-                            textAlign="left"
-                        >
-                            <MUI.Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                                SELECT CLASS:
-                            </MUI.Typography>
-                            <MUI.Box display="flex" flexWrap="wrap" gap={1} mb={2}>
-                                {ROLES.map(role => (
-                                    <FilterChip 
-                                        key={role} 
-                                        label={role} 
-                                        active={selectedRole === role} 
-                                        onClick={() => setSelectedRole(prev => prev === role ? null : role)}
-                                        color="#FF9A8B"
-                                    />
-                                ))}
-                            </MUI.Box>
-
-                            <MUI.Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                                DAMAGE TYPE:
-                            </MUI.Typography>
-                            <MUI.Box display="flex" flexWrap="wrap" gap={1}>
-                                {DAMAGE_TYPES.map(dtype => (
-                                    <FilterChip 
-                                        key={dtype} 
-                                        label={formatDamageType(dtype)} 
-                                        active={selectedDamage === dtype} 
-                                        onClick={() => setSelectedDamage(prev => prev === dtype ? null : dtype)}
-                                        color="#80D8FF"
-                                    />
-                                ))}
-                            </MUI.Box>
-                        </MUI.Box>
-                    )}
-                </NeoCard>
-            </MUI.Box>
-
-            <ChampionGrid 
-                championNames={filteredChampionNames} 
-                stats={stats} 
-                loading={statsLoading} 
-                onReset={handleReset}
+              key={i}
+              sx={{
+                position: 'absolute',
+                width: 12,
+                height: 12,
+                bgcolor: 'black',
+                top: i < 2 ? 8 : 'auto',
+                bottom: i >= 2 ? 8 : 'auto',
+                left: i % 2 === 0 ? 8 : 'auto',
+                right: i % 2 !== 0 ? 8 : 'auto',
+              }}
             />
-
-            <MUI.Box display="flex" justifyContent="center" mt={8} mb={4}>
-                <MUI.Typography
-                    variant="caption"
-                    fontWeight="bold"
-                    fontFamily="monospace"
-                    sx={{ bgcolor: 'black', color: 'white', px: 2, py: 1 }}
-                >
-                    TOTAL_ENTRIES: {filteredChampionNames.length} // END_OF_FILE
-                </MUI.Typography>
-            </MUI.Box>
-
-            <MUI.Box
-                position="sticky"
-                bottom="24px"
-                display="flex"
-                justifyContent="flex-end"
-                pr={{ xs: 2, sm: 3, md: 4 }}
-                zIndex={1300}
+          ))}
+          <MUI.Box
+            display="flex"
+            alignItems="center"
+            marginX="auto"
+            width="fit-content"
+            marginBottom="10px"
+            gap="10px"
+          >
+            <MUI.Typography
+              variant="h2"
+              component="h1"
+              sx={{
+                fontWeight: 900,
+                textTransform: 'uppercase',
+                fontSize: { xs: '2rem', md: '3.5rem' },
+                letterSpacing: '-0.02em',
+                textShadow: '3px 3px 0px white'
+              }}
             >
-                <NeoButton
-                    onClick={scrollToTop}
-                    color="#ffffff"
-                    sx={{
-                        border: '3px solid #000',
-                        boxShadow: '6px 6px 0px #000',
-                    }}
-                >
-                    <ArrowUpwardIcon sx={{ mr: 1 }} />
-                    TOP
-                </NeoButton>
+              RATING
+            </MUI.Typography>
+
+            <VersionTag count={version} />
+          </MUI.Box>
+
+          {/* Main Controls */}
+          <MUI.Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={2}
+            justifyContent="center"
+            alignItems="center"
+            mb={2}
+          >
+            <MUI.Box sx={{ position: 'relative', width: { xs: '100%', sm: '400px' } }}>
+              <MUI.TextField
+                fullWidth
+                placeholder="SEARCH CHAMPION..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                InputProps={{
+                  sx: {
+                    borderRadius: 0,
+                    bgcolor: 'white',
+                    border: '2px solid black',
+                    fontWeight: 'bold',
+                    fontFamily: 'monospace',
+                    '& fieldset': { border: 'none' },
+                    height: '45px',
+                    paddingRight: '40px'
+                  }
+                }}
+              />
+              <SearchIcon sx={{ position: 'absolute', right: 10, top: 10, color: 'black' }} />
             </MUI.Box>
-        </MUI.Box>
-    );
+
+            <NeoButton
+              size="small"
+              onClick={() => setShowFilters(!showFilters)}
+              color={theme.palette.button.redSide_hover}
+              sx={{
+                height: '45px',
+                minWidth: '120px',
+                fontSize: '0.875rem'
+              }}
+            >
+              <FilterListIcon sx={{ mr: 1 }} /> FILTERS
+            </NeoButton>
+
+            <NeoButton
+              size="small"
+              onClick={() => refreshAllStats(Object.keys(stats || {}))}
+              disabled={statsLoading}
+              color={theme.palette.button.blueSide_hover}
+              sx={{
+                height: '45px',
+                minWidth: '120px',
+                fontSize: '0.875rem'
+              }}
+            >
+              {statsLoading ? <CircularProgress size={20} sx={{ color: 'black' }} /> : <RefreshIcon sx={{ mr: 1 }} />}
+              {!statsLoading && 'REFRESH'}
+            </NeoButton>
+          </MUI.Stack>
+
+          {/* Filter Panel */}
+          {showFilters && (
+            <MUI.Box
+              mt={3}
+              p={2}
+              border="2px solid black"
+              bgcolor="white"
+              textAlign="left"
+            >
+              <MUI.Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                SELECT CLASS:
+              </MUI.Typography>
+              <MUI.Box display="flex" flexWrap="wrap" gap={1} mb={2}>
+                {ROLES.map(role => (
+                  <FilterChip
+                    key={role}
+                    label={role}
+                    active={selectedRole === role}
+                    onClick={() => setSelectedRole(prev => prev === role ? null : role)}
+                    color="#FF9A8B"
+                  />
+                ))}
+              </MUI.Box>
+
+              <MUI.Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                DAMAGE TYPE:
+              </MUI.Typography>
+              <MUI.Box display="flex" flexWrap="wrap" gap={1}>
+                {DAMAGE_TYPES.map(dtype => (
+                  <FilterChip
+                    key={dtype}
+                    label={formatDamageType(dtype)}
+                    active={selectedDamage === dtype}
+                    onClick={() => setSelectedDamage(prev => prev === dtype ? null : dtype)}
+                    color="#80D8FF"
+                  />
+                ))}
+              </MUI.Box>
+            </MUI.Box>
+          )}
+        </NeoCard>
+      </MUI.Box>
+
+      <ChampionGrid
+        championNames={filteredChampionNames}
+        stats={stats}
+        loading={statsLoading}
+        onReset={handleReset}
+      />
+
+      <MUI.Box display="flex" justifyContent="center" mt={8} mb={4}>
+        <MUI.Typography
+          variant="caption"
+          fontWeight="bold"
+          fontFamily="monospace"
+          sx={{ bgcolor: 'black', color: 'white', px: 2, py: 1 }}
+        >
+          TOTAL_ENTRIES: {filteredChampionNames.length} // END_OF_FILE
+        </MUI.Typography>
+      </MUI.Box>
+
+      <MUI.Box
+        position="sticky"
+        bottom="24px"
+        display="flex"
+        justifyContent="flex-end"
+        pr={{ xs: 2, sm: 3, md: 4 }}
+        zIndex={1300}
+      >
+        <NeoButton
+          onClick={scrollToTop}
+          color="#ffffff"
+          sx={{
+            border: '3px solid #000',
+            boxShadow: '6px 6px 0px #000',
+          }}
+        >
+          <ArrowUpwardIcon sx={{ mr: 1 }} />
+          TOP
+        </NeoButton>
+      </MUI.Box>
+    </MUI.Box>
+  );
 };
 
 export default RatingLanding;

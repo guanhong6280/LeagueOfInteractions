@@ -1,12 +1,13 @@
 import React from 'react';
 import * as MUI from '@mui/material';
 import {
-  ThumbUp as ThumbUpIcon,
   ChatBubble as ChatBubbleIcon,
   Person as PersonIcon,
 } from '@mui/icons-material';
 import { NeoBadge } from '../rating_system/components/design/NeoComponents';
+import LikeButton from '../button/LikeButton';
 import { formatRelativeDateUpper } from '../../utils/dateUtils';
+import theme from '../../theme/theme';
 
 const DiscussionCard = ({ post, onClick }) => {
   const {
@@ -100,10 +101,10 @@ const DiscussionCard = ({ post, onClick }) => {
       {(selectedChampion || selectedGameMode) && (
         <MUI.Box mb={2} display="flex" flexWrap="wrap" gap={1}>
           {selectedChampion && (
-            <NeoBadge label={selectedChampion} color="#A5D6A7" />
+            <NeoBadge label={selectedChampion} color={theme.palette.button.redSide} />
           )}
           {selectedGameMode && (
-            <NeoBadge label={selectedGameMode} color="#80D8FF" />
+            <NeoBadge label={selectedGameMode} color={theme.palette.button.blueSide} />
           )}
         </MUI.Box>
       )}
@@ -158,49 +159,16 @@ const DiscussionCard = ({ post, onClick }) => {
             >
               {user?.username || 'Anonymous'}
             </MUI.Typography>
-            {user?.rank && (
-              <MUI.Typography
-                variant="caption"
-                sx={{
-                  fontFamily: 'monospace',
-                  color: 'text.secondary',
-                  fontSize: '0.7rem',
-                }}
-              >
-                {user.rank}
-              </MUI.Typography>
-            )}
           </MUI.Box>
         </MUI.Box>
 
         {/* Stats */}
         <MUI.Box display="flex" gap={1}>
-          <MUI.Button
-            size="small"
-            startIcon={<ThumbUpIcon sx={{ fontSize: 16 }} />}
-            sx={{
-              minWidth: 'auto',
-              px: 1.5,
-              py: 0.5,
-              border: '2px solid black',
-              borderRadius: 0,
-              bgcolor: 'white',
-              color: 'black',
-              fontWeight: 900,
-              fontSize: '0.7rem',
-              textTransform: 'uppercase',
-              boxShadow: '2px 2px 0px black',
-              transition: 'all 0.1s ease-in-out',
-              '&:hover': {
-                bgcolor: '#F5F5F5',
-                transform: 'translate(-1px, -1px)',
-                boxShadow: '3px 3px 0px black',
-              },
-              pointerEvents: 'none', // Not clickable in card preview
-            }}
-          >
-            {likeCount}
-          </MUI.Button>
+          <LikeButton
+            isLiked={false} // Preview cards don't show user's like state usually, or pass it if available
+            likeCount={likeCount}
+            sx={{ pointerEvents: 'none' }} // Non-interactive
+          />
           
           <MUI.Button
             size="small"

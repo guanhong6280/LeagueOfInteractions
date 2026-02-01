@@ -3,6 +3,7 @@ import * as MUI from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import CloseIcon from '@mui/icons-material/Close';
+import theme from '../theme/theme';
 
 // Hooks
 import { useServerStatus } from '../hooks/useServerStatus';
@@ -165,15 +166,15 @@ const AddInteractions = () => {
             top: { md: '50%' },
             transform: { md: 'translate(-50%, -50%)' },
             zIndex: 10,
-            backgroundColor: 'black',
-            color: 'white',
+            backgroundColor: "#51ca46",
+            color: "white",
             width: '80px',
             height: '80px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            border: '4px solid white',
-            boxShadow: '0px 0px 0px 4px black',
+            border: '2px solid white',
+            boxShadow: '0px 0px 0px 3px black',
             alignSelf: 'center'
           }}
         >
@@ -200,13 +201,26 @@ const AddInteractions = () => {
         sx={{
           border: '4px solid black',
           padding: '30px',
-          backgroundColor: '#f8f9fa',
-          boxShadow: '12px 12px 0px 0px black',
+          backgroundColor: theme.palette.background.neutralSide,
+          boxShadow: '4px 4px 0px 0px black',
         }}
       >
-        <MUI.Typography variant="h5" fontWeight="900" mb={3} textTransform="uppercase">
-          Video Upload
-        </MUI.Typography>
+      <MUI.Typography
+        variant="h5"
+        fontWeight="900"
+        textTransform="uppercase"
+        sx={{
+          width: 'fit-content',
+          backgroundColor: "#51ca46",
+          color: 'white',
+          padding: '5px 20px',
+          border: `3px solid black`,
+          boxShadow: `2px 2px 0px 0px black`,
+          marginBottom: '20px'
+        }}
+      >
+        Video Upload
+      </MUI.Typography>
 
         <MUI.Stack spacing={3}>
           <MUI.Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} gap={2}>
@@ -217,7 +231,7 @@ const AddInteractions = () => {
                 display="flex"
                 alignItems="center"
                 justifyContent="space-between"
-                sx={{ border: '3px solid black', padding: '10px 20px', backgroundColor: '#e6ffe6', fontWeight: 'bold' }}
+                sx={{ border: '3px solid black', padding: '10px 20px', backgroundColor: '#80ffb3', fontWeight: 'bold' }}
               >
                 <MUI.Typography fontWeight="bold" noWrap sx={{ maxWidth: '200px' }}>{selectedFile.name}</MUI.Typography>
                 <MUI.IconButton onClick={() => setSelectedFile(null)} size="small" sx={{ color: 'black' }}><CloseIcon /></MUI.IconButton>
@@ -233,6 +247,7 @@ const AddInteractions = () => {
                   border: '3px solid black',
                   borderRadius: '0px',
                   color: 'black',
+                  bgcolor:"white",
                   fontWeight: 'bold',
                   textTransform: 'uppercase',
                   '&:hover': { backgroundColor: 'black', color: 'white', border: '3px solid black' }
@@ -245,22 +260,23 @@ const AddInteractions = () => {
 
             {/* Link Input */}
             <MUI.TextField
-              label="OR PASTE VIDEO LINK"
+              label="OR PASTE VIDEO LINK (NOT YET SUPPORTED)"
               variant="outlined"
               fullWidth
               value={videoLink || ''}
               onChange={(e) => setVideoLink(e.target.value)}
-              disabled={hasFile}
+              disabled="true"
               sx={{
                 flex: 2,
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '0px',
                   backgroundColor: 'white',
                   '& fieldset': { border: '3px solid black' },
-                  '&:hover fieldset': { border: '3px solid black' },
+                  // '&:hover fieldset': { border: '3px solid black' },
                   '&.Mui-focused fieldset': { border: '3px solid black', boxShadow: '4px 4px 0px 0px black' },
                 },
-                '& .MuiInputLabel-root': { fontWeight: 'bold', color: 'black', textTransform: 'uppercase' }
+                '& .MuiInputLabel-root': { fontWeight: 'bold', color: 'gray', textTransform: 'uppercase' },
+                '& .MuiInputLabel-root.Mui-focused': { color: 'black !important' }
               }}
             />
           </MUI.Box>
@@ -299,18 +315,18 @@ const AddInteractions = () => {
             fullWidth
             sx={{
               height: '60px',
-              backgroundColor: 'black',
-              color: 'white',
+              backgroundColor: "#80ffb3",
+              color: 'black',
               fontSize: '1.2rem',
               fontWeight: '900',
               textTransform: 'uppercase',
               borderRadius: '0px',
-              border: '3px solid black',
-              boxShadow: '6px 6px 0px 0px #888',
+              border: '2px solid black',
+              boxShadow: '2px 2px 0px 0px black',
               transition: 'all 0.1s',
-              '&:hover': { backgroundColor: '#333', transform: 'translate(-2px, -2px)', boxShadow: '8px 8px 0px 0px #888' },
-              '&:active': { transform: 'translate(2px, 2px)', boxShadow: '2px 2px 0px 0px #888' },
-              '&.Mui-disabled': { backgroundColor: '#ccc', color: '#666', border: '3px solid #999', boxShadow: 'none' }
+              '&:hover': { backgroundColor: theme.palette.button.neutralSide_hover, transform: 'translate(-2px, -2px)', boxShadow: '4px 4px 0px 0px black' },
+              '&:active': { transform: 'translate(2px, 2px)', boxShadow: '2px 2px 0px 0px black' },
+              '&.Mui-disabled': { backgroundColor: '#ccc', color: '#666', border: '2px solid black', boxShadow: 'none' }
             }}
           >
             CONFIRM UPLOAD

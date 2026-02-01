@@ -2,6 +2,7 @@ import React from 'react';
 import * as MUI from '@mui/material';
 import { useVersion } from '../contextProvider/VersionProvider.jsx';
 import { constructImageUrl } from '../utils/imageUtils';
+import theme from '../theme/theme';
 
 // Exporting this so the parent can use it for API payloads too
 export const AbilityMap = {
@@ -22,7 +23,7 @@ const ChampionUploadSelectCard = ({
 }) => {
   const { version } = useVersion();
   const isRed = themeColor === 'red';
-  const mainColor = isRed ? '#ff4d4d' : '#4d79ff';
+  const mainColor = isRed ? theme.palette.button.redSide : theme.palette.button.blueSide;
   const borderColor = '#000';
 
   // Helper 1: Champion Image
@@ -47,14 +48,14 @@ const ChampionUploadSelectCard = ({
       gap="20px"
       sx={{
         border: `4px solid ${borderColor}`,
-        backgroundColor: isRed ? '#fff5f5' : '#f0f4ff',
+        backgroundColor: isRed ? theme.palette.background.redSide : theme.palette.background.blueSide,
         padding: '30px',
-        boxShadow: `12px 12px 0px 0px ${borderColor}`,
+        boxShadow: `4px 4px 0px 0px ${borderColor}`,
         position: 'relative',
         transition: 'transform 0.2s',
         '&:hover': {
           transform: 'translate(-2px, -2px)',
-          boxShadow: `16px 16px 0px 0px ${borderColor}`,
+          boxShadow: `4px 4px 0px 0px ${borderColor}`,
         }
       }}
     >
@@ -68,7 +69,7 @@ const ChampionUploadSelectCard = ({
           color: 'white',
           padding: '5px 20px',
           border: `3px solid ${borderColor}`,
-          boxShadow: `4px 4px 0px 0px ${borderColor}`,
+          boxShadow: `2px 2px 0px 0px ${borderColor}`,
           marginBottom: '10px'
         }}
       >
@@ -83,12 +84,12 @@ const ChampionUploadSelectCard = ({
           displayEmpty
           sx={{
             borderRadius: '0px',
-            border: `3px solid ${borderColor}`,
+            border: `2px solid ${borderColor}`,
             fontWeight: 'bold',
             backgroundColor: 'white',
             '& .MuiSelect-select': { padding: '10px 15px' },
             '& fieldset': { border: 'none' },
-            boxShadow: `4px 4px 0px 0px ${borderColor}`,
+            boxShadow: `2px 2px 0px 0px ${borderColor}`,
           }}
           renderValue={(selected) => {
             if (!selected) return <MUI.Typography color="text.secondary" fontWeight="bold">SELECT CHAMPION</MUI.Typography>;
@@ -107,11 +108,11 @@ const ChampionUploadSelectCard = ({
           width: '200px',
           height: '200px',
           backgroundColor: '#e0e0e0',
-          border: `4px solid ${borderColor}`,
+          border: `1px solid ${borderColor}`,
           backgroundImage: getChampionUrl() ? `url(${getChampionUrl()})` : 'none',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          boxShadow: `8px 8px 0px 0px ${borderColor}`,
+          boxShadow: `2px 2px 0px 0px ${borderColor}`,
           marginBottom: '10px',
           display: 'flex',
           justifyContent: 'center',

@@ -3,6 +3,7 @@ import * as MUI from '@mui/material';
 import Logo from '../navigation/Logo.jsx';
 import SocialMediaBar from './SocialMediaBar.jsx';
 import { Link } from 'react-router-dom';
+import theme from '../../theme/theme';
 
 const Footer = () => {
   const FooterLink = ({ text, to }) => (
@@ -33,6 +34,7 @@ const Footer = () => {
   return (
     <MUI.Stack
       alignItems="center"
+      bgcolor={theme.palette.background.blueSide_light}
     >
       {/* Top Section: Links */}
       <MUI.Box
@@ -40,6 +42,7 @@ const Footer = () => {
         justifyContent="center"
         gap="30px"
         flexWrap="wrap"
+        bgcolor="white"
         sx={{
           borderBottom: '3px solid black',
           borderTop: '3px solid black',

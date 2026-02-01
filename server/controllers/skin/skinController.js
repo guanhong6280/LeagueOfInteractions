@@ -20,7 +20,7 @@ exports.getAllSkins = async (req, res) => {
     }
 
     const skins = await Skin.find(filter);
-
+    
     res.json({
       success: true,
       count: skins.length,

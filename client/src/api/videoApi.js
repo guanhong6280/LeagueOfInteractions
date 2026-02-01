@@ -5,8 +5,12 @@ export const fetchVideoData = async (params) => {
   try {
     const response = await api.get('/api/videos', { params });
     return response.data;
-  } catch (error) {
-    console.error('Error fetching video data:', error);
+  } catch (err) {
+    // No video for this interaction is a normal case — don't treat 404 as an error
+    if (err.response?.status === 404) {
+      return null;
+    }
+    console.error('Error fetching video data:', err);
     return null;
   }
 };

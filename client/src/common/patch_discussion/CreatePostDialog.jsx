@@ -3,6 +3,7 @@ import * as MUI from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 import { NeoButton, FilterChip } from '../rating_system/components/design/NeoComponents';
 import { useChampionNames } from '../../hooks/useChampionNames';
+import theme from '../../theme/theme';
 
 const GAME_MODES = [
   'Ranked Solo/Duo',
@@ -281,14 +282,14 @@ const CreatePostDialog = ({ open, onClose, onSubmit }) => {
       >
         <NeoButton
           onClick={handleClose}
-          color="#E0E0E0"
+          color="#ffffff"
           sx={{ minWidth: '100px' }}
         >
           Cancel
         </NeoButton>
         <NeoButton
           onClick={handleSubmit}
-          color="#B2FF59"
+          color={theme.palette.button.blueSide_hover}
           sx={{ minWidth: '100px' }}
         >
           Post

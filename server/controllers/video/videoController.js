@@ -146,7 +146,8 @@ exports.getVideoByInteraction = async (req, res) => {
       
       res.json(videoObj);
     } else {
-      res.status(404).json({ message: 'No video found for the selected interaction.' });
+      // No video for this interaction is a normal case, not an error — return 200 with null
+      res.status(200).json(null);
     }
   } catch (error) {
     console.error('Error fetching video:', error);

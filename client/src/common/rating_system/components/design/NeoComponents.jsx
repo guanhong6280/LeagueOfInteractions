@@ -268,6 +268,53 @@ export const StatBar = ({ label, value, color = '#2196F3', icon: Icon }) => (
   </MUI.Box>
 );
 
+export const NeoHighlightCard = ({ title, value, badgeValue, badgeIcon, color = 'white' }) => (
+  <MUI.Box
+    sx={{
+      border: '2px solid black',
+      boxShadow: '4px 4px 0px black',
+      bgcolor: color,
+      p: 2,
+      transition: 'transform 0.2s',
+      '&:hover': {
+        transform: 'translate(-2px, -2px)',
+        boxShadow: '6px 6px 0px black',
+      }
+    }}
+  >
+    <MUI.Typography variant="caption" fontWeight="900" textTransform="uppercase" sx={{ display: 'block', mb: 1, opacity: 0.8 }}>
+      {title}
+    </MUI.Typography>
+    
+    <MUI.Box display="flex" alignItems="center" justifyContent="space-between" gap={1}>
+      <MUI.Typography variant="body1" fontWeight="900" sx={{ lineHeight: 1.2 }}>
+        {value}
+      </MUI.Typography>
+      
+      {badgeValue && (
+        <MUI.Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            bgcolor: 'white',
+            border: '2px solid black',
+            px: 1,
+            py: 0.5,
+            gap: 0.5,
+            flexShrink: 0,
+            boxShadow: '2px 2px 0px black'
+          }}
+        >
+          {badgeIcon && React.cloneElement(badgeIcon, { sx: { fontSize: 16 } })}
+          <MUI.Typography fontWeight="900" variant="body2">
+            {badgeValue}
+          </MUI.Typography>
+        </MUI.Box>
+      )}
+    </MUI.Box>
+  </MUI.Box>
+);
+
 export const StatCard = memo(({
   icon,
   label,

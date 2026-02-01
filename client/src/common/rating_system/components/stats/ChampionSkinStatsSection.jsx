@@ -10,12 +10,13 @@ import {
 } from '@mui/icons-material';
 import { useVersion } from '../../../../contextProvider/VersionProvider';
 import { getChampionSquareAssetUrl } from '../../../../utils/championNameUtils';
-import { NeoCard, StatCard, ChampionImage } from '../design/NeoComponents';
+import { NeoCard, StatCard, ChampionImage, NeoHighlightCard } from '../design/NeoComponents';
 import RatingDistributionChart from './RatingDistributionChart';
 import RarityDistributionChart from './RarityDistributionChart';
+import theme from '../../../../theme/theme';
 
 const PopularSkinsSection = ({ mostPopularSkin, highestRatedSkin }) => (
-  <MUI.Box
+  <MUI.Box  
     sx={{
       border: '2px solid #000',
       p: 2,
@@ -28,37 +29,19 @@ const PopularSkinsSection = ({ mostPopularSkin, highestRatedSkin }) => (
     </MUI.Typography>
 
     <MUI.Stack spacing={2}>
-      <MUI.Box>
-        <MUI.Typography variant="subtitle2" fontWeight="bold" color="text.secondary">
-          MOST POPULAR
-        </MUI.Typography>
-        <MUI.Typography variant="body1" fontWeight="bold" color="primary.main">
-          {mostPopularSkin?.name || '—'}
-        </MUI.Typography>
-      </MUI.Box>
+      <NeoHighlightCard
+        title="Most Popular"
+        value={mostPopularSkin?.name || 'None'}
+        color={theme.palette.button.redSide}
+      />
 
-      <MUI.Box>
-        <MUI.Typography variant="subtitle2" fontWeight="bold" color="text.secondary">
-          HIGHEST RATED
-        </MUI.Typography>
-        <MUI.Stack direction="row" alignItems="center" spacing={1}>
-          <MUI.Typography variant="body1" fontWeight="bold" color="warning.main">
-            {highestRatedSkin?.name || '—'}
-          </MUI.Typography>
-          {highestRatedSkin && (
-            <MUI.Chip
-              icon={<StarIcon style={{ color: '#000' }} />}
-              label={highestRatedSkin.averageRating.toFixed(1)}
-              size="small"
-              sx={{
-                bgcolor: '#FFD740',
-                border: '1px solid #000',
-                fontWeight: 'bold'
-              }}
-            />
-          )}
-        </MUI.Stack>
-      </MUI.Box>
+      <NeoHighlightCard
+        title="Highest Rated"
+        value={highestRatedSkin?.name || 'None'}
+        badgeValue={highestRatedSkin?.averageRating?.toFixed(1)}
+        badgeIcon={<StarIcon />}
+        color={theme.palette.button.blueSide}
+      />
     </MUI.Stack>
   </MUI.Box>
 );

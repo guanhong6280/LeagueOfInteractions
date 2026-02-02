@@ -88,6 +88,7 @@ const VideoModeration = () => {
     onSuccess: (_, { videoId }) => {
       removeVideoFromCache(videoId);
       queryClient.invalidateQueries({ queryKey: ['moderation', 'videos'] });
+      queryClient.invalidateQueries({ queryKey: ['interaction-video'] });
       setSnackbar({
         open: true,
         message: 'Video approved and moved out of the queue.',
@@ -113,6 +114,7 @@ const VideoModeration = () => {
     onSuccess: (_, { videoId }) => {
       removeVideoFromCache(videoId);
       queryClient.invalidateQueries({ queryKey: ['moderation', 'videos'] });
+      queryClient.invalidateQueries({ queryKey: ['interaction-video'] });
       setSnackbar({
         open: true,
         message: 'Video rejected.',

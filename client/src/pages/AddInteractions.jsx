@@ -300,8 +300,8 @@ const AddInteractions = () => {
               ) : (
                 <MUI.Typography fontWeight="bold">
                   {isProcessing && 'Processing video... (This may take a moment)'}
-                  {isReady && '✅ Ready! Interaction created successfully.'}
-                  {isFailed && '❌ Processing failed. Please try again.'}
+                  {isReady && 'Interaction is submitted successfully!, Once the video is approved, it will be available to view in the Interactions page.'}
+                  {isFailed && 'Processing failed. Please try again.'}
                 </MUI.Typography>
               )}
             </MUI.Box>

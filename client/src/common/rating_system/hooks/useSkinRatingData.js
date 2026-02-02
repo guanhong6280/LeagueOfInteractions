@@ -3,14 +3,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { submitSkinRating, getUserSkinRating } from '../../../api/championApi';
 import { toastMessages, useToast } from '../../../toast/useToast';
 import useCurrentUser from '../../../hooks/useCurrentUser';
+import { queryKeys as ratingSectionQueryKeys } from '../../../hooks/useRatingSectionData';
 
 const queryKeys = {
   userRating: (skinId, userId) => ['user-skin-rating', skinId, userId],
-  // This matches the key used in your SkinStats section (if using React Query there too)
-  skinStats: (skinId) => ['skin-stats', skinId],
+  /** Key used by useSkinData (carousel) so community averages refetch. */
+  championSkins: (championName) => ['champion-skins', championName],
 };
 
-const useSkinRatingData = (currentSkinId) => {
+const useSkinRatingData = (currentSkinId, options = {}) => {
+  const { championId, championName } = options;
   const { user } = useCurrentUser();
   const queryClient = useQueryClient();
   const { success, error, info } = useToast();
@@ -54,16 +56,25 @@ const useSkinRatingData = (currentSkinId) => {
     onSuccess: (response) => {
       if (response.success) {
         success(toastMessages.rating.skin.success);
-        
-        // Invalidate User Rating (so the form stays updated with "server truth")
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.userRating(currentSkinId, user?.id) 
+
+        // Invalidate user rating so form reflects saved state
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.userRating(currentSkinId, user?.id),
         });
-        
-        // Invalidate Skin Stats (so the "Community Score" updates immediately)
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.skinStats(currentSkinId) 
-        });
+
+        // Invalidate champion stats (page-level stats and skin highlights)
+        if (championId) {
+          queryClient.invalidateQueries({
+            queryKey: ratingSectionQueryKeys.championStatsPrefix(championId),
+          });
+        }
+
+        // Invalidate skin list so carousel/currentSkin get updated community averages
+        if (championName) {
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.championSkins(championName),
+          });
+        }
       } else {
         error(response.error || toastMessages.rating.skin.error);
       }

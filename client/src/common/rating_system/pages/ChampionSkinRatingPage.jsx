@@ -132,6 +132,8 @@ const ChampionSkinRatingPage = () => {
             <SkinRatingSection
               currentSkinId={currentSkin?.skinId}
               skinStats={currentSkin}
+              championId={id}
+              championName={championName}
             />
           </MUI.Box>
         ) : (

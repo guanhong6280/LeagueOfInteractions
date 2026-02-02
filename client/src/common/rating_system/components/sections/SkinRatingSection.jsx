@@ -10,7 +10,7 @@ import NeoRatingCard from '../common/NeoRatingCard';
 import NeoStatsCard from '../common/NeoStatsCard';
 import theme from '../../../../theme/theme';
 
-const SkinRatingSection = ({ currentSkinId, skinStats }) => {
+const SkinRatingSection = ({ currentSkinId, skinStats, championId, championName }) => {
   const {
     userRating,
     isSubmitting,
@@ -19,7 +19,7 @@ const SkinRatingSection = ({ currentSkinId, skinStats }) => {
     updateSplashArtRating,
     updateInGameModelRating,
     submitRating,
-  } = useSkinRatingData(currentSkinId);
+  } = useSkinRatingData(currentSkinId, { championId, championName });
 
   const handleRatingSubmit = async () => {
     await submitRating();

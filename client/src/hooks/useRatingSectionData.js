@@ -3,8 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchChampionSpecificStats } from '../api/championApi';
 
 // Centralize keys (prevents typos, ensures consistent caching)
+// Champion stats API uses championId (MongoDB _id from URL param), not champion name.
 export const queryKeys = {
-  championStats: (championName, include) => ['champion-specific-stats', championName, include ?? 'all'],
+  championStats: (championId, include) => ['champion-specific-stats', championId, include ?? 'all'],
+  /** Prefix to invalidate all stats queries for a champion (used after submit rating). */
+  championStatsPrefix: (championId) => ['champion-specific-stats', championId],
 };
 
 /**

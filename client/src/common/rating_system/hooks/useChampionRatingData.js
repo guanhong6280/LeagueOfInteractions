@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { submitChampionRating, getUserChampionRating } from "../../../api/championApi";
 import { toastMessages, useToast } from '../../../toast/useToast';
 import useCurrentUser from '../../../hooks/useCurrentUser';
+import { queryKeys as ratingSectionQueryKeys } from '../../../hooks/useRatingSectionData';
 
 const initialRatings = {
   fun: 0,
@@ -16,8 +17,6 @@ const initialRatings = {
 
 const queryKeys = {
   userRating: (championId, userId) => ['user-champion-rating', championId, userId],
-  // You might want a key for aggregate stats if you refetch those too
-  stats: (championId) => ['champion-specific-rating-stats', championId], 
 };
 
 const useChampionRatingData = (championId) => {
@@ -67,12 +66,12 @@ const useChampionRatingData = (championId) => {
     onSuccess: (response) => {
       if (response.success) {
         success(toastMessages.rating.champion.success);
-        
-        // Invalidate queries to refresh data
+
+        // Invalidate user rating so form reflects saved state
         queryClient.invalidateQueries({ queryKey: queryKeys.userRating(championId, user?.id) });
-        
-        // Also refresh the main stats so the user sees the average change immediately!
-        queryClient.invalidateQueries({ queryKey: ['champion-specific-stats', championId] });
+
+        // Invalidate champion stats (same key as useRatingSectionData) so averages re-render
+        queryClient.invalidateQueries({ queryKey: ratingSectionQueryKeys.championStatsPrefix(championId) });
       } else {
         error(response.error || toastMessages.rating.champion.error);
       }

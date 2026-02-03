@@ -38,10 +38,6 @@ export const useRatingSectionData = (championId, options = {}) => {
     gcTime: 10 * 60_000,        // keep cached for 10 min after unused
     retry: 2,
     refetchOnWindowFocus: false,
-
-    // Keeps UI from flashing empty when switching params quickly
-    // (v5: use placeholderData to keep previous)
-    placeholderData: (prev) => prev,
   });
 
   return useMemo(() => ({

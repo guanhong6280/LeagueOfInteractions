@@ -42,28 +42,60 @@ const DiscussionCard = ({ post, onClick }) => {
         },
       }}
     >
-      {/* Header with Patch Version */}
-      <MUI.Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <MUI.Box
-          sx={{
-            bgcolor: '#FFEB3B',
-            border: '2px solid #000',
-            px: 1.5,
-            py: 0.5,
-            fontWeight: 900,
-            fontSize: '0.75rem',
-            boxShadow: '2px 2px 0px #000',
-          }}
-        >
-          PATCH {patchVersion}
+      {/* Header: left = patch + status, right = date */}
+      <MUI.Box display="flex" justifyContent="space-between" alignItems="center" mb={2} gap={1}>
+        <MUI.Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
+          <MUI.Box
+            sx={{
+              bgcolor: '#FFEB3B',
+              border: '2px solid #000',
+              px: 1.5,
+              py: 0.5,
+              fontWeight: 900,
+              fontSize: '0.75rem',
+              boxShadow: '2px 2px 0px #000',
+            }}
+          >
+            PATCH {patchVersion}
+          </MUI.Box>
+          {post.status === 'needsReview' && (
+            <MUI.Chip
+              label="Under Review"
+              size="medium"
+              sx={{
+                height: 20,
+                fontSize: '0.75rem',
+                fontWeight: 'bold',
+                borderRadius: 0,
+                border: '1px solid black',
+                bgcolor: '#ffffff',
+                color: 'black'
+              }}
+            />
+          )}
+          {post.status === 'rejected' && (
+            <MUI.Chip
+              label="Rejected"
+              size="medium"
+              sx={{
+                height: 20,
+                fontSize: '0.75rem',
+                fontWeight: 'bold',
+                borderRadius: 0,
+                border: '1px solid black',
+                bgcolor: '#ffffff',
+                color: 'black'
+              }}
+            />
+          )}
         </MUI.Box>
-        
         <MUI.Typography
           variant="caption"
           sx={{
             fontFamily: 'monospace',
             fontWeight: 'bold',
             color: 'text.secondary',
+            flexShrink: 0,
           }}
         >
           {formatRelativeDateUpper(createdAt)}
@@ -148,7 +180,7 @@ const DiscussionCard = ({ post, onClick }) => {
               <PersonIcon sx={{ fontSize: 20 }} />
             </MUI.Box>
           )}
-          
+
           <MUI.Box>
             <MUI.Typography
               variant="body2"
@@ -169,7 +201,7 @@ const DiscussionCard = ({ post, onClick }) => {
             likeCount={likeCount}
             sx={{ pointerEvents: 'none' }} // Non-interactive
           />
-          
+
           <MUI.Button
             size="small"
             startIcon={<ChatBubbleIcon sx={{ fontSize: 16 }} />}

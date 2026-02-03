@@ -367,7 +367,6 @@ export const usePostById = (postId) => {
     queryKey: queryKeys.post(postId),
     queryFn: async () => {
       const response = await getPostById(postId);
-      console.log(response);
       if (response.success) {
         // Increment view count when fetching post
         incrementView(postId);

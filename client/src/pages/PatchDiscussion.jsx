@@ -88,7 +88,6 @@ const PatchDiscussion = () => {
   };
 
   const handleSubmitPost = async (formData) => {
-    console.log('formData', formData);
     const result = await submitPost({
       ...formData,
       patchVersion: version,
@@ -97,7 +96,7 @@ const PatchDiscussion = () => {
     if (result.success) {
       setCreateDialogOpen(false);
       // Optionally navigate to the new post
-      if (result.data?.id) {
+      if (result.data?.status === 'approved') {
         navigate(`/patch-discussion/${result.data.id}`);
       }
     }

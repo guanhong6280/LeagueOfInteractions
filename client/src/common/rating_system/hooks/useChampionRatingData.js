@@ -63,13 +63,15 @@ const useChampionRatingData = (championId) => {
   const mutation = useMutation({
     mutationFn: (payload) => submitChampionRating(championId, payload),
     
-    onSuccess: (response) => {
+    onSuccess: async (response) => {
       if (response.success) {
         success(toastMessages.rating.champion.success);
 
         // Invalidate user rating so form reflects saved state
         queryClient.invalidateQueries({ queryKey: queryKeys.userRating(championId, user?.id) });
 
+        // Cancel in-flight stats requests so an older GET can't overwrite the refetch
+        await queryClient.cancelQueries({ queryKey: ratingSectionQueryKeys.championStatsPrefix(championId) });
         // Invalidate champion stats (same key as useRatingSectionData) so averages re-render
         queryClient.invalidateQueries({ queryKey: ratingSectionQueryKeys.championStatsPrefix(championId) });
       } else {

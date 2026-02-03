@@ -281,7 +281,8 @@ const getChampionSpecificStats = async (req, res) => {
       };
     }
 
-    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=120');
+    // Dynamic data (updated on rating submit); React Query handles caching — don't cache in browser
+    res.set('Cache-Control', 'private, no-store');
     sendSuccess(res, responseData, {
       extra: { timestamp: new Date().toISOString() },
     });
@@ -294,11 +295,6 @@ const getChampionSpecificStats = async (req, res) => {
       data: null,
     });
   }
-};
-
-module.exports = {
-  getChampionStats,
-  getChampionSpecificStats
 };
 
 module.exports = {

@@ -4,7 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchChampionSkins } from '../../../api/championApi';
 import { getSkinImageUrl as buildSkinImageUrl } from '../utils/getSkinImageUrl';
 
-const useSkinData = (championName) => {
+const useSkinData = (championName, options = {}) => {
+  const { selectedSkinId } = options; // When set, preserve this skin after refetch (e.g. after rating submit)
   // UI State (Local state is fine for this)
   const [currentIndex, setCurrentIndex] = useState(0);
   const [imageLoadingStates, setImageLoadingStates] = useState({});
@@ -43,9 +44,16 @@ const useSkinData = (championName) => {
 
     // Reset loading states when skins change
     setImageLoadingStates({});
-    
-    // Reset index when champion changes (React Query handles data change, we handle UI reset)
-    setCurrentIndex(0);
+
+    // Preserve selected skin after refetch (e.g. after rating submit); otherwise reset to first
+    if (selectedSkinId != null && selectedSkinId !== '') {
+      const index = skins.findIndex(
+        (s) => String(s.skinId) === String(selectedSkinId)
+      );
+      setCurrentIndex(index >= 0 ? index : 0);
+    } else {
+      setCurrentIndex(0);
+    }
 
     skins.forEach((skin, index) => {
       const imageUrl = getSkinImageUrl(skin);
@@ -68,7 +76,7 @@ const useSkinData = (championName) => {
         img.src = imageUrl;
       }
     });
-  }, [skins, getSkinImageUrl, championName]); // Add championName dependency to trigger reset
+  }, [skins, getSkinImageUrl, championName, selectedSkinId]);
 
   // 4. NAVIGATION LOGIC
   const goToNext = useCallback(() => {

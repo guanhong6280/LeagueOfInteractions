@@ -5,7 +5,7 @@ import useSkinData from '../../hooks/useSkinData';
 import { getSkinImageUrl } from '../../utils/getSkinImageUrl';
 import { getRarityColor, formatRarityName, getRarityChipStyles, getRarityGradientStyles } from '../../constants/rarityColors';
 
-const SkinCarousel = ({ championName, onSkinChange }) => {
+const SkinCarousel = ({ championName, onSkinChange, selectedSkinId }) => {
   const {
     skins,
     currentSkin,
@@ -17,7 +17,7 @@ const SkinCarousel = ({ championName, onSkinChange }) => {
     goToNext,
     goToPrevious,
     goToSlide,
-  } = useSkinData(championName);
+  } = useSkinData(championName, { selectedSkinId });
 
   // Fullscreen state
   const [isFullscreen, setIsFullscreen] = useState(false);

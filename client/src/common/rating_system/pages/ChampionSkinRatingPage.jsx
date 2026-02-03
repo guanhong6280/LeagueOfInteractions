@@ -34,6 +34,9 @@ const ChampionSkinRatingPage = () => {
 
   const [currentSkin, setCurrentSkin] = useState(null);
 
+  // Source of truth for which skin is selected (URL or state) — keeps selection after refetch (e.g. rating submit)
+  const selectedSkinId = searchParams.get('skinId') || currentSkin?.skinId;
+
   // Handle skin selection change
   const handleSkinChange = useCallback((skin) => {
     setCurrentSkin(skin);
@@ -69,6 +72,7 @@ const ChampionSkinRatingPage = () => {
         <SkinCarousel
           championName={championName}
           onSkinChange={handleSkinChange}
+          selectedSkinId={selectedSkinId}
         />
       </MUI.Box>
 

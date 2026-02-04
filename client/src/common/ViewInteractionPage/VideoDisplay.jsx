@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Card, Typography, CardMedia, Stack, Button, CircularProgress, Chip } from '@mui/material';
+import { Box, Card, Typography, CardMedia, Stack, Button, CircularProgress, Chip, Tooltip } from '@mui/material';
 import MuxPlayer from '@mux/mux-player-react';
 import { useNavigate } from 'react-router-dom';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -240,22 +240,27 @@ const VideoPlayer = ({ videoData, autoplay = false, isLoading, selectionsComplet
             <Typography variant="h5" sx={{ fontWeight: 900, color: '#000', textTransform: 'uppercase', textAlign: 'center' }}>
               NO INTERACTION FOUND
             </Typography>
-            <Button
-              variant="contained"
-              onClick={() => navigate('/add', {
-                state: {
-                  preselected: {
-                    champion1: currentSelections?.champion1?.id,
-                    champion2: currentSelections?.champion2?.id,
-                    ability1: currentSelections?.ability1,
-                    ability2: currentSelections?.ability2
-                  }
-                }
-              })}
-              sx={buttonStyles}
-            >
-              Add Interaction
-            </Button>
+            <Tooltip title={!user ? 'Please sign in to add interaction!' : ''}>
+              <span>
+                <Button
+                  variant="contained"
+                  disabled={!user}
+                  onClick={() => navigate('/add', {
+                    state: {
+                      preselected: {
+                        champion1: currentSelections?.champion1?.id,
+                        champion2: currentSelections?.champion2?.id,
+                        ability1: currentSelections?.ability1,
+                        ability2: currentSelections?.ability2
+                      }
+                    }
+                  })}
+                  sx={buttonStyles}
+                >
+                  Add Interaction
+                </Button>
+              </span>
+            </Tooltip>
           </>
         ) : (
           <Typography variant="h6" sx={{ fontWeight: 900, color: '#000', textTransform: 'uppercase' }}>

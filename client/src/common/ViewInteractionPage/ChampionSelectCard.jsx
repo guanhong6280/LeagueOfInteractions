@@ -59,41 +59,50 @@ const ChampionSelectCard = (props) => {
           marginBottom: '20px',
         }}
       >
-        <MUI.FormControl fullWidth size="small">
-          <MUI.Select
-            value={props.champion?.id || ''}
-            onChange={props.handleChampionSelect}
-            displayEmpty
-            aria-label={`Select ${props.order} champion`}
-            inputProps={{
-              'aria-label': `Select ${props.order} champion`,
-            }}
-            sx={{
-              borderRadius: '0px',
+        <MUI.Autocomplete
+          fullWidth
+          value={props.champion?.id || null}
+          onChange={(event, newValue) => {
+            props.handleChampionSelect({ target: { value: newValue ?? '' } });
+          }}
+          options={props.championNames}
+          aria-label={`Select ${props.order} champion`}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 0,
               border: '2px solid black',
               fontWeight: 'bold',
               backgroundColor: 'white',
-              '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
-              '&:hover': { backgroundColor: '#fff' }, // Keep white on hover for contrast
               boxShadow: '3px 3px 0px 0px rgba(0,0,0,0.2)',
               textTransform: 'uppercase',
-              height: '45px',
               fontSize: '1rem',
-            }}
-            renderValue={(selected) => {
-              if (!selected) {
-                return <MUI.Typography sx={{ color: 'gray', fontWeight: 'bold', fontSize: '1rem' }}>SELECT {props.order}</MUI.Typography>;
-              }
-              return selected;
-            }}
-          >
-            {props.championNames.map((name, index) => (
-              <MUI.MenuItem key={index} value={name} sx={{ fontWeight: 'bold' }}>
-                {name}
-              </MUI.MenuItem>
-            ))}
-          </MUI.Select>
-        </MUI.FormControl>
+              '& fieldset': { border: 'none' },
+              '&:hover fieldset': { border: 'none' },
+              '&.Mui-focused fieldset': { border: 'none' },
+            },
+            '& .MuiOutlinedInput-input': {
+              boxSizing: 'border-box',
+              padding: '0 14px',
+            },
+          }}
+          renderInput={(params) => (
+            <MUI.TextField
+              {...params}
+              placeholder={`SELECT ${props.order.toUpperCase()}`}
+              inputProps={{
+                ...params.inputProps,
+                'aria-label': `Select ${props.order} champion`,
+              }}
+            />
+          )}
+          renderOption={(propsOption, option) => (
+            <li {...propsOption} key={option}>
+              <MUI.Typography fontWeight="bold" sx={{ textTransform: 'uppercase' }}>
+                {option}
+              </MUI.Typography>
+            </li>
+          )}
+        />
 
         <MUI.IconButton
           onClick={handleClearSelection}
